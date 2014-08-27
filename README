@@ -1,7 +1,10 @@
 Download and Installation:
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 sudo pip install -r requirements.txt
-
+wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz/download
+tar xvf mlpy-3.5.0.tar.gz
+cd mlpy-3.5.0
+sudo python setup.py install
 
  * * * * * * * * * * * * * * * * * * 
  RECORD AUDIO SEGMENTS

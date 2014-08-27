@@ -1,5 +1,4 @@
 numpy==1.7.1
-mlpy==3.5.0
 matplotlib==1.2.1
 scipy==0.12.0
 pyalsaaudio==0.5
