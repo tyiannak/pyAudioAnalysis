@@ -1,11 +1,16 @@
-Download and Installation:
+Download:
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
-sudo pip install -r requirements.txt
-wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz
-tar xvf mlpy-3.5.0.tar.gz
-cd mlpy-3.5.0
-sudo python setup.py install
-(needs GSL: sudo apt-get install libgsl0 libgsl0-dev)
+
+Dependencies: 
+MLPY:		wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz
+		tar xvf mlpy-3.5.0.tar.gz
+		cd mlpy-3.5.0
+		sudo python setup.py install
+NUMPY:		sudo apt-get install python-numpy
+MATPLOTLIB:	sudo apt-get install python-matplotlib
+SCIPY:		sudo apt-get install python-scipy
+GSL: 		sudo apt-get install libgsl0-dev
+AlsaAudio: 	sudo apt-get install python-alsaaudio
 
  * * * * * * * * * * * * * * * * * * 
  RECORD AUDIO SEGMENTS
