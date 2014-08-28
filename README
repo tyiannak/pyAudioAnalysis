@@ -71,11 +71,10 @@ File Segmentation & Classification
 	Function		mtFileClassification (audioSegmentation.py)
 				Example:
 				import audioSegmentation as aS
-				[segs, classes] = aS.mtFileClassification("speech_music_sample.wav", "svmSM", "svm", True)
+				[segs, classes] = aS.mtFileClassification("data/speech_music_sample.wav", "data/svmSM", "svm", True)
 	Command-line use:	python audioAnalysis.py -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>
-				Example:
-				python audioAnalysis.py -segmentClassifyFile svm svmSM speech_music_sample.wav
-
+				Example:				
+				python audioAnalysis.py -segmentClassifyFile svm data/svmSM data/speech_music_sample.wav 
 Audio thumbnailing
 Uses <wavFileName> as input music track and generates two thumbnails of <thumbnailDuration> length.
 Also, results are written in two wav files <wavFileName>_thumb1.wav and <wavFileName>_thumb2.wav
