@@ -9,15 +9,6 @@ Type the following in your terminal:  `git clone https://github.com/tyiannak/pyA
 
 ## Dependencies
 
-Check out this neat program I wrote:
-
-```
-x = 0
-x = 2 + 2
-what is x
-```
-
-
  * MLPY:
 
 ```
@@ -27,23 +18,23 @@ cd mlpy-3.5.0
 sudo python setup.py install
 ```
 
- * NUMPY:		sudo apt-get install python-numpy
- * MATPLOTLIB:	sudo apt-get install python-matplotlib
- * SCIPY:		sudo apt-get install python-scipy
- * GSL: 		sudo apt-get install libgsl0-dev
- * AlsaAudio: 	sudo apt-get install python-alsaaudio
+ * NUMPY:		`sudo apt-get install python-numpy`
+ * MATPLOTLIB:	`sudo apt-get install python-matplotlib`
+ * SCIPY:		`sudo apt-get install python-scipy`
+ * GSL: 		`sudo apt-get install libgsl0-dev`
+ * AlsaAudio: 	`sudo apt-get install python-alsaaudio`
 
 ## Basic Functionalities
 
-Record fix-sized audio segments
-	Function: 		recordAudioSegments(RecordPath, BLOCKSIZE) of audioAnalysis.py
-	Command-line use: 	python audioAnalysis.py -recordSegments "rSpeech" 2.0
+### Record fix-sized audio segments
+Function: 		`recordAudioSegments(RecordPath, BLOCKSIZE) of audioAnalysis.py`
+Command-line use: 	`python audioAnalysis.py -recordSegments "rSpeech" 2.0`
 
-Realtime fix-sized segments classification
-	Function: 		recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)
-	Command-line use:	python audioAnalysis.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
+### Realtime fix-sized segments classification
+Function: 		`recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)`
+Command-line use:	`python audioAnalysis.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn`
 
-Train Segment Classifier From Data
+### Train Segment Classifier From Data
 A segment classification functionality is provided in the library. Towards this end, the audioTrainTest.py file implements two types of classifiers, namelly the kNN and SVM methods.
 Below, we describe how to train a segment classifier from data (i.e. segments stored in WAV files, organized in directories that correspond to classes).
 	Function: 		featureAndTrain() from audioTrainTest.py
