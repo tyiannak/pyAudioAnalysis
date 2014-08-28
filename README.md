@@ -1,26 +1,39 @@
---------------------------------------------------------
-General:
+# pyAudioAnalysis: A Python Audio Analysis Library
+
+## General
 pyAudioAnalysis is a python library for basic audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
++++
 
---------------------------------------------------------
-Download:
-git clone https://github.com/tyiannak/pyAudioAnalysis.git
+## Download
+Type the following in your terminal:  `git clone https://github.com/tyiannak/pyAudioAnalysis.git`
 
---------------------------------------------------------
-Dependencies:
-Libray Name	How to install (in Linux) 
-MLPY:		wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz
-		tar xvf mlpy-3.5.0.tar.gz
-		cd mlpy-3.5.0
-		sudo python setup.py install
-NUMPY:		sudo apt-get install python-numpy
-MATPLOTLIB:	sudo apt-get install python-matplotlib
-SCIPY:		sudo apt-get install python-scipy
-GSL: 		sudo apt-get install libgsl0-dev
-AlsaAudio: 	sudo apt-get install python-alsaaudio
+## Dependencies
 
---------------------------------------------------------
-Basic Functionalities:
+Check out this neat program I wrote:
+
+```
+x = 0
+x = 2 + 2
+what is x
+```
+
+
+ * MLPY:
+
+```
+wget http://sourceforge.net/projects/mlpy/files/mlpy%203.5.0/mlpy-3.5.0.tar.gz
+tar xvf mlpy-3.5.0.tar.gz
+cd mlpy-3.5.0
+sudo python setup.py install
+```
+
+ * NUMPY:		sudo apt-get install python-numpy
+ * MATPLOTLIB:	sudo apt-get install python-matplotlib
+ * SCIPY:		sudo apt-get install python-scipy
+ * GSL: 		sudo apt-get install libgsl0-dev
+ * AlsaAudio: 	sudo apt-get install python-alsaaudio
+
+## Basic Functionalities
 
 Record fix-sized audio segments
 	Function: 		recordAudioSegments(RecordPath, BLOCKSIZE) of audioAnalysis.py
