@@ -1,7 +1,7 @@
 # pyAudioAnalysis: A Python Audio Analysis Library
 
 ## General
-pyAudioAnalysis is a python library for basic audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
+pyAudioAnalysis is a Python library for basic audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
 
 *Author: [Theodoros Giannakopoulos]*
 
@@ -52,29 +52,17 @@ In the `data/` folder, a couple of audio sample files are provided, along with s
 
 ## Basic Functionalities
 
-### Record fix-sized audio segments
-Function `recordAudioSegments(RecordPath, BLOCKSIZE)` from the `audioAnalysis.py` file.
+### Audio Feature Extraction
+TODO
 
-Command-line use example: 
-```
-python audioAnalysis.py -recordSegments "rSpeech" 2.0
-```
-
-### Realtime fix-sized segments classification
-Function `recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)` from the `audioAnalysis.py` file. 
-
-Command-line use example 
-```
-python audioAnalysis.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
-```
-
-### Train Segment Classifier From Data
+### Audio Classification
+#### Train Segment Classifier From Data
 A segment classification functionality is provided in the library. Towards this end, the `audioTrainTest.py` file implements two types of classifiers, namelly the kNN and SVM methods. Below, we describe how to train a segment classifier from data (i.e. segments stored in WAV files, organized in directories that correspond to classes).
 
 
-The function used to train a segment classifier model is `featureAndTrain()` from `audioTrainTest.py`. Example:
+The function used to train a segment classifier model is `featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName)` from `audioTrainTest.py`. The first argument is list of paths of directories. Each directory contains a signle audio class whose samples are stored in seperate WAV files. Then, the function takes the mid-term window size and step and the short-term window size and step respectively. Finally, the last two arguments are associated to the classifier type and name. Example:
 ```
-import audioTrainTest as aT
+from audioAnalysisLibrary import audioTrainTest as aT
 aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmMusicGenre3")
 aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "knn", "knnMusicGenre3")
 aT.featureAndTrain(["/home/tyiannak/Desktop/5Class/Silence/","/home/tyiannak/Desktop/5Class/SpeechMale/","/home/tyiannak/Desktop/5Class/SpeechFemale/","/home/tyiannak/Desktop/5Class/ObjectsOther/","/home/tyiannak/Desktop/5Class/Music/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svm5Classes")
@@ -98,13 +86,12 @@ python audioAnalysis.py -trainClassifier knn /home/tyiannak/Desktop/MusicGenre/C
 python audioAnalysis.py -trainClassifier svm /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/svmMusicGenre3
 ```
 
-### Single File Classification
-
+#### Single File Classification
 Function `fileClassification(inputFile, modelName, modelType)` from `audioTrainTest.py` file can be used to classify a single wav file based on an already trained segment classifier. 
 
 Example:
 ```
-import audioTrainTest as aT
+from audioAnalysisLibrary import audioTrainTest as aT
 aT.fileClassification("TrueFaith.wav", "data/svmMusicGenre3","svm")
 ```
 
@@ -120,20 +107,28 @@ python audioAnalysis.py -classifyFile knn data/knnMusicGenre3 data/TrueFaith.wav
 python audioAnalysis.py -classifyFile svm data/svmMusicGenre3 data/TrueFaith.wav
 ```
 
-### Folder Classification
+#### Folder Classification
 Classifies each WAV file found in the given folder and generates stdout resutls:
 Command-line use examples:
 ```
 python audioAnalysis.py -classifyFolder svm data/svmSM RecSegments/Speech/ 0 (only generates freq counts for each audio class)
 python audioAnalysis.py -classifyFolder svm data/svmSM RecSegments/Speech/ 1 (also outputs the result of each singe WAV file)
 ```
+#### Realtime fix-sized segments classification
+Function `recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)` from the `audioAnalysis.py` file. 
 
-### File Segmentation & Classification
+Command-line use example 
+```
+python audioAnalysis.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
+```
+
+### Audio Segmentation
+#### File Segmentation & Classification
 Function		`mtFileClassification` from `audioSegmentation.py`.
 
 Example:
 ```
-import audioSegmentation as aS
+from audioAnalysisLibrary import audioSegmentation as aS
 [segs, classes] = aS.mtFileClassification("data/speech_music_sample.wav", "data/svmSM", "svm", True)
 ```
 Command-line use:
@@ -145,7 +140,7 @@ Example:
 python audioAnalysis.py -segmentClassifyFile svm data/svmSM data/speech_music_sample.wav 
 ```
 
-### Audio thumbnailing
+#### Audio thumbnailing
 
 [Audio thumbnailing] is an important application of music information retrieval that focuses on detecting instances of the most representative part of a music recording. In `pyAudioAnalysisLibrary` this has been implemented in the `musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0)` function from the `audioSegmentation.py`. The function uses the given wav file as an input music track and generates two thumbnails of `<thumbnailDuration>` length. It results are written in two wav files `<wavFileName>_thumb1.wav` and `<wavFileName>_thumb2.wav`
 
@@ -154,6 +149,14 @@ It uses `selfSimilarityMatrix()` that calculates the self-similarity matrix of a
 Command-line use:
 ```
 python audioAnalysis.py -thumbnail <wavFileName> <thumbnailDuration>
+```
+### Other functionalities
+#### Record fix-sized audio segments
+Function `recordAudioSegments(RecordPath, BLOCKSIZE)` from the `audioAnalysis.py` file.
+
+Command-line use example: 
+```
+python audioAnalysis.py -recordSegments "rSpeech" 2.0
 ```
 
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak
