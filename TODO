@@ -1,6 +1,5 @@
 0) Recording functionalities:
-    a) recording + classification
-    b) recording for training - calibration?
+    a) recording + classification    
 1) Segmentation:
     a) Train for segmented data: input: (a) wav stream (b) segments with class labels. Both the classifiers and a viterbi probability set will be trained!
     b) flags2segs() enchancment (maybe smoothing or viterbi?)
@@ -9,7 +8,9 @@
     b) why does it appear?
 3) Finalize speakerDiarization()
     a) use LDA (semi-supervised) for better results
-    b) number of clusters???
+    b) number of clusters: 
+     b1) finish with silluete
+     b2) finish with arguments
 4) Check features:
     a) Harmonic is disabled now (is it needed?)
     b) Chroma?

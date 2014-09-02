@@ -254,23 +254,42 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 	return segmentLimits
 
 
-def speakerDiarization(x, Fs, mtSize, mtStep):
-	numOfSpeakers = 4;
+def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	x = aF.stereo2mono(x);
 	Duration = len(x) / Fs
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.040), round(Fs*0.020));
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])	
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
+
 	cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=numOfSpeakers, plus=True)	
 	print cls
-	print means.shape
-	print MidTermFeaturesNorm.shape
 
-	# compute confidence (TODO)
+	# compute siluete:
+	silA = []; silB = []
+	for c in range(numOfSpeakers):
+		MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]
+		Yt = distance.pdist(MidTermFeaturesNormTemp.T)
+		silA.append(numpy.mean(Yt))
+		silBs = []
+		for c2 in range(numOfSpeakers):
+			if c2!=c:
+				MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
+				Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
+				silBs.append(numpy.mean(Yt))
+		silBs = numpy.array(silBs)
+		silB.append(min(silBs))
+	silA = numpy.array(silA); silB = numpy.array(silB); 
+
+	sil = []
+	for c in range(numOfSpeakers):
+		sil.append( ( silB[c] - silA[c]) / max(silB[c],  silA[c]) )
+	print numpy.mean(sil)	
+	# A. find distance of each mid-term feature vector from each cluster's centroid
 	Y = distance.cdist(MidTermFeaturesNorm.T, means, 'euclidean')	
-	print Y.shape
-	#for i in range(MidTermFeaturesNorm.shape[1]):	# for each mid-term window:		
-		#print Y
+
+# 	TODO: CHECK WITH THIS CODE IF SILLUET IS OK
+#	for i in range(MidTermFeaturesNorm.shape[1]):	# for each mid-term window:		
+#		print Y.shape
 
 	classNames = ["speaker{0:d}".format(c) for c in range(numOfSpeakers)];
 	fig = plt.figure()	
