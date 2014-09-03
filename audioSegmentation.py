@@ -261,37 +261,49 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])	
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
-	cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=numOfSpeakers, plus=True)	
-	print cls
 
-	# compute siluete:
-	silA = []; silB = []
-	for c in range(numOfSpeakers):
-		MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]
-		Yt = distance.pdist(MidTermFeaturesNormTemp.T)
-		silA.append(numpy.mean(Yt))
-		silBs = []
-		for c2 in range(numOfSpeakers):
-			if c2!=c:
-				MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
-				Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
-				silBs.append(numpy.mean(Yt))
-		silBs = numpy.array(silBs)
-		silB.append(min(silBs))
-	silA = numpy.array(silA); silB = numpy.array(silB); 
+	if numOfSpeakers<=0:
+		sRange = range(2,6)
+	else:
+		sRange = [numOfSpeakers]
+	clsAll = []
+	silAll = []
+	for iSpeakers in sRange:
+		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)			
+		clsAll.append(cls)
+			# compute siluete:
+		silA = []; silB = []
+		for c in range(iSpeakers):
+			MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]
+			Yt = distance.pdist(MidTermFeaturesNormTemp.T)
+			silA.append(numpy.mean(Yt))
+			silBs = []
+			for c2 in range(iSpeakers):
+				if c2!=c:
+					MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
+					Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
+					silBs.append(numpy.mean(Yt))
+			silBs = numpy.array(silBs)
+			silB.append(min(silBs))
+		silA = numpy.array(silA); silB = numpy.array(silB); 
+		sil = []
+		for c in range(iSpeakers):
+			sil.append( ( silB[c] - silA[c]) / max(silB[c],  silA[c]) )
+		silAll.append(numpy.mean(sil))
+		# A. find distance of each mid-term feature vector from each cluster's centroid
+		Y = distance.cdist(MidTermFeaturesNorm.T, means, 'euclidean')	
 
-	sil = []
-	for c in range(numOfSpeakers):
-		sil.append( ( silB[c] - silA[c]) / max(silB[c],  silA[c]) )
-	print numpy.mean(sil)	
-	# A. find distance of each mid-term feature vector from each cluster's centroid
-	Y = distance.cdist(MidTermFeaturesNorm.T, means, 'euclidean')	
+		# 	TODO: CHECK WITH THIS CODE IF SILLUET IS OK
+		#	for i in range(MidTermFeaturesNorm.shape[1]):	# for each mid-term window:		
+		#		print Y.shape
 
-# 	TODO: CHECK WITH THIS CODE IF SILLUET IS OK
-#	for i in range(MidTermFeaturesNorm.shape[1]):	# for each mid-term window:		
-#		print Y.shape
 
-	classNames = ["speaker{0:d}".format(c) for c in range(numOfSpeakers)];
+	imax = numpy.argmax(silAll)
+	nSpeakersFinal = sRange[imax]
+	cls = clsAll[imax]
+	print silAll[imax]
+
+	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
 	fig = plt.figure()	
 	ax1 = fig.add_subplot(111)
 	ax1.set_yticks(numpy.array(range(len(classNames))))
