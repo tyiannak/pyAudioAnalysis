@@ -24,6 +24,7 @@ def smoothMovingAvg(inputSignal, windowLen=11):
 
 def selfSimilarityMatrix(featureVectors):
 	'''
+	This function computes the self-similarity matrix for a sequence of feature vectors.	
 	ARGUMENTS:
 	 - featureVectors: 	a numpy matrix (nDims x nVectors) whose i-th column corresponds to the i-th feature vector
 	
@@ -263,54 +264,65 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 
 
 	if numOfSpeakers<=0:
-		sRange = range(2,6)
+		sRange = range(2,10)
 	else:
 		sRange = [numOfSpeakers]
 	clsAll = []
 	silAll = []
+
 	for iSpeakers in sRange:
-		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)			
+		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
+		# Y = distance.squareform(distance.pdist(MidTermFeaturesNorm.T))
 		clsAll.append(cls)
-			# compute siluete:
 		silA = []; silB = []
-		for c in range(iSpeakers):
-			MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]
-			Yt = distance.pdist(MidTermFeaturesNormTemp.T)
-			silA.append(numpy.mean(Yt))
-			silBs = []
-			for c2 in range(iSpeakers):
-				if c2!=c:
-					MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
-					Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
-					silBs.append(numpy.mean(Yt))
-			silBs = numpy.array(silBs)
-			silB.append(min(silBs))
-		silA = numpy.array(silA); silB = numpy.array(silB); 
+		for c in range(iSpeakers):								# for each speaker (i.e. for each extracted cluster)
+			clusterPerCent = numpy.nonzero(cls==c)[0].shape[0] / float(len(cls))
+			if clusterPerCent < 0.010:
+				silA.append(0.0)
+				silB.append(0.0)
+			else:
+				MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]				# get subset of feature vectors
+				Yt = distance.pdist(MidTermFeaturesNormTemp.T)					# compute average distance between samples that belong to the cluster (a values)
+				silA.append(numpy.mean(Yt)*clusterPerCent)
+				silBs = []
+				for c2 in range(iSpeakers):							# compute distances from samples of other clusters
+					if c2!=c:
+						clusterPerCent2 = numpy.nonzero(cls==c2)[0].shape[0] / float(len(cls))
+						MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
+						Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
+						silBs.append(numpy.mean(Yt)*(clusterPerCent+clusterPerCent2)/2.0)
+				silBs = numpy.array(silBs)							
+				silB.append(min(silBs))								# ... and keep the minimum value (i.e. the distance from the "nearest" cluster)
+		silA = numpy.array(silA); 
+		silB = numpy.array(silB); 
 		sil = []
-		for c in range(iSpeakers):
-			sil.append( ( silB[c] - silA[c]) / max(silB[c],  silA[c]) )
-		silAll.append(numpy.mean(sil))
-		# A. find distance of each mid-term feature vector from each cluster's centroid
-		Y = distance.cdist(MidTermFeaturesNorm.T, means, 'euclidean')	
+		for c in range(iSpeakers):								# for each cluster (speaker)
+			sil.append( ( silB[c] - silA[c]) / (max(silB[c],  silA[c])+0.00001)  )		# compute silhouette
 
-		# 	TODO: CHECK WITH THIS CODE IF SILLUET IS OK
-		#	for i in range(MidTermFeaturesNorm.shape[1]):	# for each mid-term window:		
-		#		print Y.shape
+		silAll.append(numpy.mean(sil))								# keep the AVERAGE SILLOUETTE
 
-
-	imax = numpy.argmax(silAll)
-	nSpeakersFinal = sRange[imax]
-	cls = clsAll[imax]
-	print silAll[imax]
+	imax = numpy.argmax(silAll)									# position of the maximum sillouette value
+	nSpeakersFinal = sRange[imax]									# optimal number of clusters
+	cls = clsAll[imax]										# optimal clustering
+	sil = silAll[imax]										# final sillouette
 
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
 	fig = plt.figure()	
-	ax1 = fig.add_subplot(111)
+	if numOfSpeakers>0:
+		ax1 = fig.add_subplot(111)
+	else:
+		ax1 = fig.add_subplot(211)
 	ax1.set_yticks(numpy.array(range(len(classNames))))
 	ax1.axis((0, Duration, -1, len(classNames)))
 	ax1.set_yticklabels(classNames)
 	ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
 	plt.xlabel("time (seconds)")
+	print sRange, silAll	
+	if numOfSpeakers<=0:
+		plt.subplot(212)
+		plt.plot(sRange, silAll)
+		plt.xlabel("number of clusters");
+		plt.ylabel("average clustering's sillouette");
 	plt.show()
 
 
