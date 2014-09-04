@@ -259,9 +259,21 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	x = aF.stereo2mono(x);
 	Duration = len(x) / Fs
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.040), round(Fs*0.020));
-	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])	
+	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
+
+	# TODO: dimensionality reduction here
+
+	numOfWindows = MidTermFeatures.shape[1]
+
+	# remove outliers:
+	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
+	MDistancesAll = numpy.mean(DistancesAll)
+	iNonOutLiers = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
+	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
+	print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
+	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
 
 	if numOfSpeakers<=0:
 		sRange = range(2,10)
@@ -270,6 +282,8 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	clsAll = []
 	silAll = []
 
+#	MidTermFeaturesNorm = numpy.dot(numpy.random.rand(2, MidTermFeaturesNorm.shape[0]),  MidTermFeaturesNorm)
+#	print MidTermFeaturesNorm
 	for iSpeakers in sRange:
 		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
 		# Y = distance.squareform(distance.pdist(MidTermFeaturesNorm.T))
@@ -303,9 +317,14 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 
 	imax = numpy.argmax(silAll)									# position of the maximum sillouette value
 	nSpeakersFinal = sRange[imax]									# optimal number of clusters
-	cls = clsAll[imax]										# optimal clustering
-	sil = silAll[imax]										# final sillouette
 
+	# generate the final set of cluster labels
+	# (important: need to retrieve the outlier windows: this is achieved by giving them the value of their nearest non-outlier window)
+	cls = numpy.zeros((numOfWindows,1))
+	for i in range(numOfWindows):
+		j = numpy.argmin(numpy.abs(i-iNonOutLiers))
+		cls[i] = clsAll[imax][j]
+	sil = silAll[imax]										# final sillouette
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
 	fig = plt.figure()	
 	if numOfSpeakers>0:
