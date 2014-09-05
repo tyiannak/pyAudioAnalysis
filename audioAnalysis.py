@@ -153,7 +153,7 @@ def main(argv):
 			inputFile = argv[2]
 			[Fs, x] = aF.readAudioFile(inputFile)
 			#speechLimits = aS.speechSegmentation(x, Fs, 2.0, 0.10, True)
-			aS.speakerDiarization(x, Fs, 2.0, 0.5, int(argv[3]));
+			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
 			#print speechLimits
 
 	elif argv[1] == "-trainClassifier": 		# Segment classifier training (OK)
