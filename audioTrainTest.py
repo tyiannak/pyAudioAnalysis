@@ -502,17 +502,17 @@ def lda(data,labels,redDim):
     data -= data.mean(axis=0)
     nData = numpy.shape(data)[0]
     nDim = numpy.shape(data)[1]
-
+    print nData, nDim
     Sw = numpy.zeros((nDim,nDim))
     Sb = numpy.zeros((nDim,nDim))
     
     C = numpy.cov((data.T))
-    
-    # Loop over classes
+
+    # Loop over classes    
     classes = numpy.unique(labels)
     for i in range(len(classes)):
         # Find relevant datapoints
-        indices = numpy.squeeze(numpy.where(labels==classes[i]))
+        indices = (numpy.where(labels==classes[i]))
         d = numpy.squeeze(data[indices,:])
         classcov = numpy.cov((d.T))
         Sw += float(numpy.shape(indices)[0])/nData * classcov
@@ -531,12 +531,12 @@ def lda(data,labels,redDim):
 
 
     newData = numpy.dot(data,w)
-    for i in range(newData.shape[0]):
-    	plt.text(newData[i,0],newData[i,1],str(labels[i]))
+    #for i in range(newData.shape[0]):
+    #	plt.text(newData[i,0],newData[i,1],str(labels[i]))
 
-    plt.xlim([newData[:,0].min(), newData[:,0].max()])
-    plt.ylim([newData[:,1].min(), newData[:,1].max()])
-    plt.show()
+    #plt.xlim([newData[:,0].min(), newData[:,0].max()])
+    #plt.ylim([newData[:,1].min(), newData[:,1].max()])
+    #plt.show()
     return newData,w
 
 

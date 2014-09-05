@@ -262,9 +262,6 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
-
-	# TODO: dimensionality reduction here
-
 	numOfWindows = MidTermFeatures.shape[1]
 
 	# remove outliers:
@@ -274,6 +271,30 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
 	print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
+
+	# TODO: dimensionality reduction here
+
+	"""
+	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));
+	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])
+	mtFeaturesToReduce = mtFeaturesToReduce[0].T
+	DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
+	MDistancesAll = numpy.mean(DistancesAll)
+	iNonOutLiers2 = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
+	print mtFeaturesToReduce.shape
+	mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
+	print mtFeaturesToReduce.shape
+
+	Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
+	for i in range(Labels.shape[0]):
+		Labels[i] = int(i/10);
+	
+	_, w = aT.lda(mtFeaturesToReduce.T,Labels.T, 20)
+	MidTermFeaturesNorm = numpy.dot(w.T, MidTermFeaturesNorm)
+	"""
+	##
+
+
 
 	if numOfSpeakers<=0:
 		sRange = range(2,10)
