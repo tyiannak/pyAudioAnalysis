@@ -1,17 +1,12 @@
-import sys, time, os, glob
-import numpy
+import sys, time, os, glob, numpy, mlpy, cPickle, aifc
 from numpy import NaN, Inf, arange, isscalar, array
 import scipy.io.wavfile as wavfile
 from scipy.fftpack import rfft
 from scipy.fftpack import fft
 from scipy.fftpack.realtransforms import dct
 from scipy.signal import fftconvolve
-import mlpy
-import cPickle
 from matplotlib.mlab import find
 import matplotlib.pyplot as plt
-import scipy.io as sIO
-import aifc
 from scipy import linalg as la
 import audioTrainTest as aT
 
@@ -38,7 +33,7 @@ def stEnergyEntropy(frame, numOfShortBlocks = 10):
 	subWindows = frame.reshape(subWinLength, numOfShortBlocks, order='F').copy()
 
 	# compute normalized sub-frame energies:
-	s = numpy.sum(subWindows**2, axis=0) / (Eol+eps) 			# NOTE: use axis=0 for numpy.sum with matrices, otherwise TOTAL MATRIX sum will be returned
+	s = numpy.sum(subWindows**2, axis=0) / (Eol+eps) 
 
 	# compute entropy of the normalized sub-frame energies:
 	Entropy = -numpy.sum(s*numpy.log2(s+eps))
@@ -63,7 +58,6 @@ def stSpectralCentroidAndSpread(X, fs):
 
 def stSpectralEntropy(X, numOfShortBlocks = 10):
 	"""Computes the spectral entropy"""
-
 	# number of frame samples:
 	L = len(X);
 
@@ -160,48 +154,61 @@ def stHarmonic(frame, fs):
 #	print HR, f0
 	return (HR, f0)
 
-def mfcc_tfb(fs, nfft, lowfreq, linsc, logsc, nlinfilt, nlogfilt):
-    """Compute triangular filterbank for MFCC computation."""
-    # Total number of filters
-    nfilt = nlinfilt + nlogfilt
+def mfccInitFilterBanks(fs, nfft):
+	"""	
+	Computes the triangular filterbank for MFCC computation (used in the stFeatureExtraction function before the stMFCC function call)
+	This function is taken from the scikits.talkbox library (MIT Licence):
+	https://pypi.python.org/pypi/scikits.talkbox
+	"""
 
-    # Compute frequency points of the triangle:
-    freqs = numpy.zeros(nfilt+2)
-    freqs[:nlinfilt] = lowfreq + numpy.arange(nlinfilt) * linsc
-    freqs[nlinfilt:] = freqs[nlinfilt-1] * logsc ** numpy.arange(1, nlogfilt + 3)
-    heights = 2./(freqs[2:] - freqs[0:-2])
+	# filter bank params:
+	lowfreq = 133.33; linsc = 200/3.; logsc = 1.0711703; numLinFiltTotal = 13; numLogFilt = 27; 
+	if fs < 8000:
+		nlogfil = 5
 
-    # Compute filterbank coeff (in fft domain, in bins)
-    fbank = numpy.zeros((nfilt, nfft))
-    # FFT bins (in Hz)
-    nfreqs = numpy.arange(nfft) / (1. * nfft) * fs
-    
-    for i in range(nfilt):
-        low = freqs[i]
-        cen = freqs[i+1]
-        hi = freqs[i+2]
+	# Total number of filters
+	nFiltTotal = numLinFiltTotal + numLogFilt
 
-        lid = numpy.arange(numpy.floor(low * nfft / fs) + 1,
-                        numpy.floor(cen * nfft / fs) + 1, dtype=numpy.int)
-        lslope = heights[i] / (cen - low)
-        rid = numpy.arange(numpy.floor(cen * nfft / fs) + 1,
-                        numpy.floor(hi * nfft / fs) + 1, dtype=numpy.int)
-        rslope = heights[i] / (hi - cen)
-        fbank[i][lid] = lslope * (nfreqs[lid] - low)
-        fbank[i][rid] = rslope * (hi - nfreqs[rid])
+	# Compute frequency points of the triangle:
+	freqs = numpy.zeros(nFiltTotal+2)
+	freqs[:numLinFiltTotal] = lowfreq + numpy.arange(numLinFiltTotal) * linsc
+	freqs[numLinFiltTotal:] = freqs[numLinFiltTotal-1] * logsc ** numpy.arange(1, numLogFilt + 3)
+	heights = 2./(freqs[2:] - freqs[0:-2])
 
-    return fbank, freqs
+	# Compute filterbank coeff (in fft domain, in bins)
+	fbank = numpy.zeros((nFiltTotal, nfft))
+	nfreqs = numpy.arange(nfft) / (1. * nfft) * fs
+	
+	for i in range(nFiltTotal):
+		lowTrFreq  = freqs[i]
+		cenTrFreq  = freqs[i+1]
+		highTrFreq = freqs[i+2]
+
+		lid = numpy.arange(numpy.floor(lowTrFreq * nfft / fs) + 1,
+						numpy.floor(cenTrFreq * nfft / fs) + 1, dtype=numpy.int)
+		lslope = heights[i] / (cenTrFreq - lowTrFreq)
+		rid = numpy.arange(numpy.floor(cenTrFreq * nfft / fs) + 1,
+						numpy.floor(highTrFreq * nfft / fs) + 1, dtype=numpy.int)
+		rslope = heights[i] / (highTrFreq - cenTrFreq)
+		fbank[i][lid] = lslope * (nfreqs[lid] - lowTrFreq)
+		fbank[i][rid] = rslope * (highTrFreq - nfreqs[rid])
+
+	return fbank, freqs
 
 def stMFCC(X, fbank, nceps):
-	"""
-	compute MFCCs
+	"""	
+	Computes the MFCCs of a frame, given the fft mag
 	
 	ARGUMENTS:
-		X:	abs(FFT)
-		fbank:	filter bank (see mfcc_tfb)
+		X:	fft magnitude abs(FFT)
+		fbank:	filter bank (see mfccInitFilterBanks)
 	RETURN
-		ceps:	MFCCs (13)
+		ceps:	MFCCs (13 element vector)
+
+	Note:	MFCC calculation is, in general, taken from the scikits.talkbox library (MIT Licence), 
+	#	with a small number of modifications to make it more compact and suitable for the pyAudioAnalysis Lib
 	"""
+
 	mspec = numpy.log10(numpy.dot(X, fbank.T)+eps)
 	ceps = dct(mspec, type=2, norm='ortho', axis=-1)[:nceps]
 	return ceps
@@ -286,26 +293,21 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 	signal = numpy.double(signal)
 	signal = signal / (2.0**15)
 	DC     = signal.mean()	
-        MAX    = (numpy.abs(signal)).max()
+	MAX    = (numpy.abs(signal)).max()
 	signal = (signal - DC) / MAX
 	# print (numpy.abs(signal)).max()
 
 	N = len(signal)		# total number of signals
 	curPos = 0
 	countFrames = 0
-   	# MFCC parameters: taken from auditory toolbox
+	nFFT = Win/2
 
-	# MFCCs taken from http://pydoc.net/Python/scikits.talkbox/0.2.5/scikits.talkbox.features.mfcc/ (NOT USED DIRECTLY FROM THERE... only DCT HAS BEEN USED AS IT IS):
-    	lowfreq = 133.33; linsc = 200/3.; logsc = 1.0711703; nlinfil = 13; nlogfil = 27; nceps = 13; nfil = nlinfil + nlogfil; nfft = Win / 2
-	if Fs < 8000:
-		nlogfil = 5
-		nfil = nlinfil + nlogfil; nfft = Win / 2
-
-	# compute filter banks for mfcc:
-	[fbank, freqs] = mfcc_tfb(Fs, nfft, lowfreq, linsc, logsc, nlinfil, nlogfil)
+	# Compute the triangular filter banks used in the mfcc calculation:
+	[fbank, freqs] = mfccInitFilterBanks(Fs, nFFT)
 
 	numOfTimeSpectralFeatures = 8
 	numOfHarmonicFeatures = 0
+	nceps = 13
 	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
 	stFeatures = numpy.array([], dtype=numpy.float64)
 
@@ -314,7 +316,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 		x = signal[curPos:curPos+Win]
 		curPos = curPos + Step		
 		X = abs(fft(x))
-		X = X[0:nfft]
+		X = X[0:nFFT]
 		X = X / len(X)
 		if countFrames==1:
 			Xprev = X.copy()
@@ -363,7 +365,7 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 		nfil = nlinfil + nlogfil; nfft = Win / 2
 
 	# compute filter banks for mfcc:
-	[fbank, freqs] = mfcc_tfb(Fs, nfft, lowfreq, linsc, logsc, nlinfil, nlogfil)
+	[fbank, freqs] = mfccInitFilterBanks(Fs, nfft, lowfreq, linsc, logsc, nlinfil, nlogfil)
 
 	numOfTimeSpectralFeatures = 8
 	numOfHarmonicFeatures = 1
