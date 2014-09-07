@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from sklearn.lda import LDA
 
 # # # # # # # # # # # # # # #
 # General utility functions #
@@ -273,6 +274,22 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
 
 	# TODO: dimensionality reduction here
+
+	"""
+	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));
+	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])
+	mtFeaturesToReduce = mtFeaturesToReduce[0].T
+	DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
+	MDistancesAll = numpy.mean(DistancesAll)
+	iNonOutLiers2 = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
+	mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
+	Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
+	for i in range(Labels.shape[0]):
+		Labels[i] = int(i/50);
+	clf = LDA(n_components=5)
+	clf.fit(mtFeaturesToReduce.T, Labels)	
+	MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
+	"""
 
 	"""
 	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));

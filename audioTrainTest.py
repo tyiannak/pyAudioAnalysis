@@ -529,7 +529,6 @@ def lda(data,labels,redDim):
     w = evecs[:,:redDim]
     #print evals, w
 
-
     newData = numpy.dot(data,w)
     #for i in range(newData.shape[0]):
     #	plt.text(newData[i,0],newData[i,1],str(labels[i]))
