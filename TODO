@@ -1,17 +1,17 @@
-0) Recording functionalities:
-    a) recording + classification    
-1) Segmentation:
+0) Feature extraction wrappers in audioAnalysis
+1) Music visualization (use dirWavFeatureExtraction + LDA + ffmpeg for application on mp3s)
+2) Segmentation:
     a) Train for segmented data: input: (a) wav stream (b) segments with class labels. Both the classifiers and a viterbi probability set will be trained!
     b) flags2segs() enchancment (maybe smoothing or viterbi?)
-2) Check wav file read warning: 
+3) Check wav file read warning: 
     a) is it crucial?
     b) why does it appear?
-3) Finalize speakerDiarization()
+4) Finalize speakerDiarization()
     a) use LDA (semi-supervised) for better results
     b) number of clusters: 
      b1) finish with silluete
      b2) finish with arguments
-4) Check features:
+5) Check features:
     a) Harmonic is disabled now (is it needed?)
     b) Chroma?
-5) AUDIO REGRESSION!!! (Maybe to be trained from a list of mappings of audio files to regression values - e.g. in a spreadsheet)
+6) AUDIO REGRESSION!!! (Maybe to be trained from a list of mappings of audio files to regression values - e.g. in a spreadsheet)

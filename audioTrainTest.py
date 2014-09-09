@@ -92,8 +92,6 @@ def randSplitFeatures(features, partTrain):
 def trainKNN(features, K):
 	'''
 	Train a kNN  classifier.
-	Note: 	This function is simply a wrapper to the mlpy-knn classifier
-		See function trainKNN_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
 	ARGUMENTS:
 		- features: 		a list ([numOfClasses x 1]) whose elements containt numpy matrices of features.
 					each matrix features[i] of class i is [numOfSamples x numOfDimensions] 

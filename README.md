@@ -49,8 +49,13 @@ In the `data/` folder, a couple of audio sample files are provided, along with s
 ## Basic Functionalities
 
 ### Audio Feature Extraction
-TODO
+#### Single-file feature extraction - storing to file
+The function used to generate short-term and mid-term features is `mtFeatureExtraction` from the `audioFeatureExtraction.py` file. A command-line wrapped functionality for feature extraction that also includes storing to CSV files is implemented in `audioAnalysis.py` as presented in the following example:
 
+```
+python audioAnalysis.py -featureExtractionFile data/speech_music_sample.wav 1.0 1.0 0.050 0.050
+```
+The result of this procedure are two comma-seperated files: `speech_music_sample.wav_mt.csv` for the mid-term features and `speech_music_sample.wav_st.csv` for the short-term features. In each case, each feature sequence is stored in a seperate column, in other words, colums correspond to features and rows to time windows (short or long-term). Also, note that for the mid-term feature matrix, the number of features (columns) is two times higher than for the short-term analysis: this is due to the fact that the mid-term features are actually two statistics of the short-term features, namely the average value and the standard deviation. Also, note that in the mid-term feature matrix the first half of the values (in each time window) correspond to the average value, while the second half to the standard deviation of the respective short-term feature.
 ### Audio Classification
 #### Train Segment Classifier From Data
 A segment classification functionality is provided in the library. Towards this end, the `audioTrainTest.py` file implements two types of classifiers, namelly the kNN and SVM methods. Below, we describe how to train a segment classifier from data (i.e. segments stored in WAV files, organized in directories that correspond to classes).
@@ -139,7 +144,7 @@ Command-line use:
 python audioAnalysis.py -thumbnail <wavFileName> <thumbnailDuration>
 ```
 ### Recording-related functionalities
-* Note: Some basic recording functionalities are also supported and demonstrated in `audioAnalysisRecordAlsa.py`. However, this requires the alsa-audio python library, only available in Linux, (`sudo apt-get install python-alsaaudio`) *
+Note: Some basic recording functionalities are also supported and demonstrated in `audioAnalysisRecordAlsa.py`. However, this requires the alsa-audio python library, only available in Linux, (`sudo apt-get install python-alsaaudio`) *
 
 #### Record fix-sized audio segments
 Function `recordAudioSegments(RecordPath, BLOCKSIZE)` from the `audioAnalysisRecordAlsa.py` file.

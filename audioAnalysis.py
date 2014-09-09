@@ -7,8 +7,53 @@ import audioTrainTest as aT
 import audioSegmentation as aS
 from scipy.fftpack import fft
 
+def isfloat(x):
+	try:
+		a = float(x)
+	except ValueError:
+		return False
+	else:
+		return True
+
+def isint(x):
+	try:
+		a = float(x)
+		b = int(a)
+	except ValueError:
+		return False
+	else:
+		return a == b
+
+def isNum(x):
+	return isfloat(x) or isint(x)
+
 def main(argv):
-	if argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
+	if argv[1] == "-featureExtractionFile":		# short-term and mid-term feature extraction to files (csv and numpy)
+		if len(argv)==7:
+			wavFileName = argv[2]
+			if not os.path.isfile(wavFileName):
+				raise Exception("Input audio file not found!")
+
+			if not (isNum(argv[3]) and isNum(argv[4]) and isNum(argv[5]) and isNum(argv[6])):
+				raise Exception("Mid-term and short-term window sizes and steps must be numbers!")
+			mtWin = float(argv[3])
+			mtStep = float(argv[4])
+			stWin = float(argv[5])
+			stStep = float(argv[6])
+
+			[Fs, x] = aF.readAudioFile(wavFileName)
+			x = aF.stereo2mono(x)
+
+			mtF, stF = aF.mtFeatureExtraction(x, Fs, mtWin*Fs, mtStep*Fs, stWin*Fs, stStep*Fs)
+			numpy.savetxt(wavFileName+"_st.csv", stF.T, delimiter = ",")
+			numpy.savetxt(wavFileName+"_mt.csv", mtF.T, delimiter = ",")
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
+
+	elif argv[1] == '-featureExtractionDir':	# long-term averages of mid-term features for a series of files in a given directory:
+			print "TODO"			# TODO: use the dirWavFeatureExtraction() 
+			
+	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
 			if len(argv)==3:
 				wavFileName = argv[2]		
 				if not os.path.isfile(wavFileName):
