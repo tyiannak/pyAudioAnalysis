@@ -36,10 +36,6 @@ sudo apt-get install python-scipy
 ```
 sudo apt-get install libgsl0-dev
 ```
- * AlsaAudio
-```
-sudo apt-get install python-alsaaudio
-```
 
 ## General Structure
 The library code is organized in 4 Python files. In particular:
@@ -77,7 +73,7 @@ Examples:
 python audioAnalysis.py -trainClassifier svm /home/tyiannak/Desktop/SpeechMusic/music /home/tyiannak/Desktop/SpeechMusic/speech data/svmSM
 ```
 ```
-python audioAnalysis.py -trainClassifier knn /home/tyiannak/Desktop/ /home/tyiannak/Desktop/SpeechMusic/speech data/knnSM
+python audioAnalysis.py -trainClassifier knn ./data/SpeechMusic/speech ./data/SpeechMusic/music data/knnSM
 ```
 ```
 python audioAnalysis.py -trainClassifier knn /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/knnMusicGenre3
@@ -114,14 +110,6 @@ Command-line use examples:
 python audioAnalysis.py -classifyFolder svm data/svmSM RecSegments/Speech/ 0 (only generates freq counts for each audio class)
 python audioAnalysis.py -classifyFolder svm data/svmSM RecSegments/Speech/ 1 (also outputs the result of each singe WAV file)
 ```
-#### Realtime fix-sized segments classification
-Function `recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)` from the `audioAnalysis.py` file. 
-
-Command-line use example 
-```
-python audioAnalysis.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
-```
-
 ### Audio Segmentation
 #### File Segmentation & Classification
 Function		`mtFileClassification` from `audioSegmentation.py`.
@@ -150,14 +138,25 @@ Command-line use:
 ```
 python audioAnalysis.py -thumbnail <wavFileName> <thumbnailDuration>
 ```
-### Other functionalities
+### Recording-related functionalities
+* Note: Some basic recording functionalities are also supported and demonstrated in `audioAnalysisRecordAlsa.py`. However, this requires the alsa-audio python library, only available in Linux, (`sudo apt-get install python-alsaaudio`) *
+
 #### Record fix-sized audio segments
-Function `recordAudioSegments(RecordPath, BLOCKSIZE)` from the `audioAnalysis.py` file.
+Function `recordAudioSegments(RecordPath, BLOCKSIZE)` from the `audioAnalysisRecordAlsa.py` file.
 
 Command-line use example: 
 ```
-python audioAnalysis.py -recordSegments "rSpeech" 2.0
+python audioAnalysisRecordAlsa.py -recordSegments "rSpeech" 2.0
 ```
+
+#### Realtime fix-sized segments classification
+Function `recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName, modelType)` from the `audioAnalysisRecordAlsa.py` file. 
+
+Command-line use example 
+```
+python audioAnalysisRecordAlsa.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
+```
+
 
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak
 [Audio thumbnailing]: https://www.google.gr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&sqi=2&ved=0CB4QFjAA&url=http%3A%2F%2Fmusic.ucsd.edu%2F~sdubnov%2FCATbox%2FReader%2FThumbnailingMM05.pdf&ei=pTX_U-i_K8S7ObiegMAP&usg=AFQjCNGT172T0VNB81IizPOyIYi3f58HJg&sig2=WAKASz6pvddafIMQlajXiA&bvm=bv.74035653,d.bGQ

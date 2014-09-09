@@ -26,7 +26,7 @@ def stEnergyEntropy(frame, numOfShortBlocks = 10):
 	"""Computes entropy of energy"""
 	Eol = numpy.sum(frame**2);	# total frame energy
 	L = len(frame);
-	subWinLength = numpy.floor(L / numOfShortBlocks);
+	subWinLength = int(numpy.floor(L / numOfShortBlocks));
 	if L!=subWinLength* numOfShortBlocks:
     		frame = frame[0:subWinLength* numOfShortBlocks]
 	# subWindows is of size [numOfShortBlocks x L]	
@@ -65,7 +65,7 @@ def stSpectralEntropy(X, numOfShortBlocks = 10):
 	Eol = numpy.sum(X**2);
 
 	# length of sub-frame:
-	subWinLength = numpy.floor(L / numOfShortBlocks);
+	subWinLength = int(numpy.floor(L / numOfShortBlocks));
 	if L!=subWinLength* numOfShortBlocks:
 		X = X[0:subWinLength* numOfShortBlocks];
 
@@ -226,7 +226,8 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 		PLOT:		flag, 1 if results are to be ploted
 	RETURNS:
 	"""
-
+	Win = int(Win); 
+	Step = int(Step)
 	signal = numpy.double(signal)
 	signal = signal / (2.0**15)
 	DC     = signal.mean()
@@ -236,7 +237,7 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 	N = len(signal)		# total number of signals
 	curPos = 0
 	countFrames = 0
-	nfft = Win / 2
+	nfft = int(Win / 2)
 	specgram = numpy.array([], dtype=numpy.float64)
 
 	while (curPos+Win-1<N):
@@ -289,7 +290,8 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 	RETURNS
 		stFeatures
 	"""
-
+	Win = int(Win); 
+	Step = int(Step)
 	signal = numpy.double(signal)
 	signal = signal / (2.0**15)
 	DC     = signal.mean()	
@@ -405,9 +407,8 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
 	Mid-term feature extraction
 	"""
 
-	mtWinRatio  = round(mtWin  / stStep);
-	mtStepRatio = round(mtStep / stStep);
-
+	mtWinRatio  = int(round(mtWin  / stStep));
+	mtStepRatio = int(round(mtStep / stStep));
 
 	mtFeatures = []
 	

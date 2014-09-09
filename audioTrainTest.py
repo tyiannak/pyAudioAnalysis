@@ -540,36 +540,7 @@ def lda(data,labels,redDim):
 
 
 def main(argv):
-
-
-	if argv[1]=='-c': # CALIBRATION:
-		if len(argv)>6:
-			
-			numOfBlocks = float(argv[2])
-			midTermBufferSizeSec = float(argv[3])
-			calibrationFileName = argv[4]
-			calibrationPath = argv[5]
-			modelName = argv[6]
-			otherClasses = argv[7:len(argv)]
-			print otherClasses
-			if os.path.isfile(modelName):
-
-				os.system("stty cbreak -echo")
-				print "A model already exists with the same file name. Are you sure you want to continue (the existing model will be replaced) (y/n):",
-				ANS = sys.stdin.read(1)
-				os.system("stty -cbreak echo")
-
-				if ANS.lower()=='y':
-					os.remove(modelName)
-					if os.path.isfile(modelName+"MEANS"):
-						os.remove(modelName + "MEANS")
-				else:
-					return
-
-			calibrationClasses, dirNames = calibrationTraining2(numOfBlocks, midTermBufferSizeSec, calibrationFileName, calibrationPath)
-			dirNames = dirNames + otherClasses
-			trainSVM_feature(dirNames, midTermBufferSizeSec, midTermBufferSizeSec, shortTermWindow, shortTermStep, modelName)
-
+	return 0
 	
 if __name__ == '__main__':
 	main(sys.argv)
