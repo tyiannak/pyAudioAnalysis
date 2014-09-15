@@ -29,11 +29,11 @@ sudo apt-get install python-numpy
 sudo apt-get install python-matplotlib
 ```
  * SCIPY 
-```
+ ```
 sudo apt-get install python-scipy
 ```
  * GSL
-```
+ ```
 sudo apt-get install libgsl0-dev
 ```
 
