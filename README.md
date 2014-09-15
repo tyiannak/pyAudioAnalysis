@@ -50,12 +50,31 @@ In the `data/` folder, a couple of audio sample files are provided, along with s
 
 ### Audio Feature Extraction
 #### Single-file feature extraction - storing to file
-The function used to generate short-term and mid-term features is `mtFeatureExtraction` from the `audioFeatureExtraction.py` file. A command-line wrapped functionality for feature extraction that also includes storing to CSV files is implemented in `audioAnalysis.py` as presented in the following example:
+The function used to generate short-term and mid-term features is `mtFeatureExtraction` from the `audioFeatureExtraction.py` file. 
+This wrapping functionality also includes storing to CSV files and NUMPY files the short-term and mid-term feature matrices.
+The command-line way to call this functionality is presented in the following example:
 
 ```
 python audioAnalysis.py -featureExtractionFile data/speech_music_sample.wav 1.0 1.0 0.050 0.050
 ```
-The result of this procedure are two comma-seperated files: `speech_music_sample.wav_mt.csv` for the mid-term features and `speech_music_sample.wav_st.csv` for the short-term features. In each case, each feature sequence is stored in a seperate column, in other words, colums correspond to features and rows to time windows (short or long-term). Also, note that for the mid-term feature matrix, the number of features (columns) is two times higher than for the short-term analysis: this is due to the fact that the mid-term features are actually two statistics of the short-term features, namely the average value and the standard deviation. Also, note that in the mid-term feature matrix the first half of the values (in each time window) correspond to the average value, while the second half to the standard deviation of the respective short-term feature.
+The result of this procedure are two comma-seperated files: `speech_music_sample.wav.csv` for the mid-term features and `speech_music_sample.wav_st.csv` for the short-term features. In each case, each feature sequence is stored in a seperate column, in other words, colums correspond to features and rows to time windows (short or long-term). Also, note that for the mid-term feature matrix, the number of features (columns) is two times higher than for the short-term analysis: this is due to the fact that the mid-term features are actually two statistics of the short-term features, namely the average value and the standard deviation. Also, note that in the mid-term feature matrix the first half of the values (in each time window) correspond to the average value, while the second half to the standard deviation of the respective short-term feature.
+In the same way, the two feature matrices are stored in two numpy files (in this case: `speech_music_sample.wav.npy` and `speech_music_sample.wav_st.npy`). 
+So in total four files are created during this process: two for mid-term features and two for short-term features. 
+
+#### Feature extraction - storing to file for a sequence of WAV files stored in a given path
+This functionality is the same as the one described above, however it works in a batch mode, i.e. it extracts four feature files for each WAV stored in the given folder.
+Command-line example:
+```
+python audioAnalysis.py -featureExtractionDir data/ 1.0 1.0 0.050 0.050
+```
+The result of the above function is to generate feature files (2 CSVs and 2 NUMPY as described above), for each WAV file in the `data` folder.
+
+Note: the feature extraction process described in the last two paragraphs, does not perform long-term averaging on the feature sequences, therefore a feature matrix is computed for each file (not a single feature vector).
+See functions `dirWavFeatureExtraction()` and `dirsWavFeatureExtraction` for long-term averaging after the feature extraction process.
+
+#### Data visualization 
+TODO
+
 ### Audio Classification
 #### Train Segment Classifier From Data
 A segment classification functionality is provided in the library. Towards this end, the `audioTrainTest.py` file implements two types of classifiers, namelly the kNN and SVM methods. Below, we describe how to train a segment classifier from data (i.e. segments stored in WAV files, organized in directories that correspond to classes).

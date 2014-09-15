@@ -1,10 +1,10 @@
 import sys, numpy, time, os, glob, mlpy, cPickle, shutil, audioop, signal
-import scipy.io.wavfile as wavfile
+import audioFeatureExtraction as aF
+import audioBasicIO
 from matplotlib.mlab import find
 import matplotlib.pyplot as plt
 import scipy.io as sIO
 from scipy import linalg as la
-import audioFeatureExtraction as aF
 from scipy.spatial import distance
 
 def signal_handler(signal, frame):
@@ -17,7 +17,6 @@ signal.signal(signal.SIGINT, signal_handler)
 shortTermWindow = 0.020
 shortTermStep = 0.020
 eps = 0.00000001
-
 
 class kNN:
 	def __init__(self, X, Y, k):
@@ -484,8 +483,8 @@ def fileClassification(inputFile, modelName, modelType):
 	elif modelType=='knn':
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = loadKNNModel(modelName)
 			
-	[Fs, x] = aF.readAudioFile(inputFile)		# read audio file and convert to mono
-	x = aF.stereo2mono(x);
+	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# read audio file and convert to mono
+	x = audioBasicIO.stereo2mono(x);
 	# feature extraction:
 	[MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
 	MidTermFeatures = MidTermFeatures.mean(axis=1)		# long term averaging of mid-term statistics

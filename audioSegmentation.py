@@ -1,6 +1,7 @@
 import numpy, mlpy, time, scipy, os
 import audioFeatureExtraction as aF
 import audioTrainTest as aT
+import audioBasicIO
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
@@ -98,10 +99,10 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 	elif modelType=='knn':
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadKNNModel(modelName)
 			
-	[Fs, x] = aF.readAudioFile(inputFile)			# load input file
+	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# load input file
 	if Fs == -1:						# could not read file
 		return 
-	x = aF.stereo2mono(x);					# convert stereo (if) to mono
+	x = audioBasicIO.stereo2mono(x);					# convert stereo (if) to mono
 	Duration = len(x) / Fs					
 								# mid-term feature extraction:
 	[MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
@@ -189,7 +190,7 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 		midTermSize:	++++
 	'''
 	stWindow = 0.10
-	x = aF.stereo2mono(x);
+	x = audioBasicIO.stereo2mono(x);
 	# STEP A: extract mid and short-term features:
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, midTermSize * Fs, midTermStep * Fs, round(Fs*stWindow), round(Fs*stWindow));
 
@@ -257,7 +258,7 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 
 
 def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
-	x = aF.stereo2mono(x);
+	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.040), round(Fs*0.020));
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
@@ -411,13 +412,13 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 
 	USAGE EXAMPLE:
   	 import audioFeatureExtraction as aF
-	 [Fs, x] = aF.readAudioFile(inputFile)
+	 [Fs, x] = basicIO.readAudioFile(inputFile)
 	 [A1, A2, B1, B2] = musicThumbnailing(x, Fs)
 
 	[1] Bartsch, M. A., & Wakefield, G. H. (2005). Audio thumbnailing of popular music using chroma-based representations. 
 	Multimedia, IEEE Transactions on, 7(1), 96-104.
 	'''
-	x = aF.stereo2mono(x);
+	x = audioBasicIO.stereo2mono(x);
 	# feature extraction:
 	stFeatures = aF.stFeatureExtraction(x, Fs, Fs*shortTermSize, Fs*shortTermStep)
 
@@ -425,7 +426,7 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 	S = selfSimilarityMatrix(stFeatures)
 
 	# moving filter:
-	M = round(thumbnailSize / shortTermStep)
+	M = int(round(thumbnailSize / shortTermStep))
 	B = numpy.eye(M,M)
 	S = scipy.signal.convolve2d(S, B, 'valid')
 

@@ -1,31 +1,11 @@
 import sys, os, audioop, numpy, glob,  scipy, subprocess, wave, mlpy, cPickle, threading, shutil
 import matplotlib.pyplot as plt
-import scipy.io.wavfile as wavfile
-from scipy.fftpack import rfft
 import audioFeatureExtraction as aF	
 import audioTrainTest as aT
 import audioSegmentation as aS
-from scipy.fftpack import fft
-
-def isfloat(x):
-	try:
-		a = float(x)
-	except ValueError:
-		return False
-	else:
-		return True
-
-def isint(x):
-	try:
-		a = float(x)
-		b = int(a)
-	except ValueError:
-		return False
-	else:
-		return a == b
-
-def isNum(x):
-	return isfloat(x) or isint(x)
+import audioBasicIO
+import utilities as uT
+import scipy.io.wavfile as wavfile
 
 def main(argv):
 	if argv[1] == "-featureExtractionFile":		# short-term and mid-term feature extraction to files (csv and numpy)
@@ -33,40 +13,50 @@ def main(argv):
 			wavFileName = argv[2]
 			if not os.path.isfile(wavFileName):
 				raise Exception("Input audio file not found!")
-
-			if not (isNum(argv[3]) and isNum(argv[4]) and isNum(argv[5]) and isNum(argv[6])):
+			if not (uT.isNum(argv[3]) and uT.isNum(argv[4]) and uT.isNum(argv[5]) and uT.isNum(argv[6])):
 				raise Exception("Mid-term and short-term window sizes and steps must be numbers!")
 			mtWin = float(argv[3])
 			mtStep = float(argv[4])
 			stWin = float(argv[5])
 			stStep = float(argv[6])
-
-			[Fs, x] = aF.readAudioFile(wavFileName)
-			x = aF.stereo2mono(x)
-
-			mtF, stF = aF.mtFeatureExtraction(x, Fs, mtWin*Fs, mtStep*Fs, stWin*Fs, stStep*Fs)
-			numpy.savetxt(wavFileName+"_st.csv", stF.T, delimiter = ",")
-			numpy.savetxt(wavFileName+"_mt.csv", mtF.T, delimiter = ",")
+			outFile = wavFileName
+			aF.mtFeatureExtractionToFile(wavFileName, mtWin, mtStep, stWin, stStep, outFile, True, True, True)
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
 
-	elif argv[1] == '-featureExtractionDir':	# long-term averages of mid-term features for a series of files in a given directory:
-			print "TODO"			# TODO: use the dirWavFeatureExtraction() 
-			
+	elif argv[1] == '-featureExtractionDir':	# same as -featureExtractionFile, in a batch mode (i.e. for each WAV file in the provided path)
+		if len(argv)==7:
+			path = argv[2]
+			if not os.path.isdir(path):
+				raise Exception("Input path not found!")
+			if not (uT.isNum(argv[3]) and uT.isNum(argv[4]) and uT.isNum(argv[5]) and uT.isNum(argv[6])):
+				raise Exception("Mid-term and short-term window sizes and steps must be numbers!")
+			mtWin = float(argv[3])
+			mtStep = float(argv[4])
+			stWin = float(argv[5])
+			stStep = float(argv[6])
+			aF.mtFeatureExtractionToFileDir(path, mtWin, mtStep, stWin, stStep, True, True, True)
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -featureExtractionDir <path> <mtWin> <mtStep> <stWin> <stStep>"
+
+	elif argv[1] == '-featureVisualizationDir':	# TODO dirsWavFeatureExtraction + dimensionality reduction (ffmpeg????)
+		if len(argv)==7:
+			print "A"			
+
 	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
 			if len(argv)==3:
 				wavFileName = argv[2]		
 				if not os.path.isfile(wavFileName):
 					raise Exception("Input audio file not found!")
-				[Fs, x] = aF.readAudioFile(wavFileName)
-				x = aF.stereo2mono(x)
+				[Fs, x] = audioBasicIO.readAudioFile(wavFileName)
+				x = audioBasicIO.stereo2mono(x)
 				specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, Fs, round(Fs*0.020), round(Fs*0.020), True)
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -fileSpectrogram <fileName>"
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
-			[Fs, x] = aF.readAudioFile(inputFile)
+			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
 			#speechLimits = aS.speechSegmentation(x, Fs, 2.0, 0.10, True)
 			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
 			#print speechLimits
@@ -169,7 +159,7 @@ def main(argv):
 					raise Exception("Input audio file not found!")
 
 
-				[Fs, x] = aF.readAudioFile(inputFile)						# read file
+				[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read file
 				if Fs == -1:	# could not read file
 					return
 				try:
@@ -177,12 +167,12 @@ def main(argv):
 				except ValueError:
 					print "Thumbnail size must be a float (in seconds)"
 					return 
-				[A1, A2, B1, B2] = aS.musicThumbnailing(x, Fs, 1.0, 0.5, thumbnailSize)		# find thumbnail endpoints
+				[A1, A2, B1, B2] = aS.musicThumbnailing(x, Fs, 1.0, 0.5, thumbnailSize)	# find thumbnail endpoints
 				# write thumbnails to WAV files:
 				thumbnailFileName1 = inputFile.replace(".wav","_thumb1.wav")
 				thumbnailFileName2 = inputFile.replace(".wav","_thumb2.wav")
-				wavfile.write(thumbnailFileName1, Fs, x[round(Fs*A1):round(Fs*A2)])
-				wavfile.write(thumbnailFileName2, Fs, x[round(Fs*B1):round(Fs*B2)])
+				wavfile.write(thumbnailFileName1, Fs, x[int(Fs*A1):int(Fs*A2)])
+				wavfile.write(thumbnailFileName2, Fs, x[int(Fs*B1):int(Fs*B2)])
 				print "1st thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName1, A1, A2)
 				print "2nd thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName2, B1, B2)
 			else: 
