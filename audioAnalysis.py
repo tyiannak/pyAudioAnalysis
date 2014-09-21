@@ -178,6 +178,5 @@ def main(argv):
 			else: 
 				print "Error.\nSyntax: " + argv[0] + " -thumbnail <filename> <thumbnailsize(seconds)>"
 
-	
 if __name__ == '__main__':
 	main(sys.argv)
