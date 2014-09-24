@@ -140,9 +140,17 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 	# STEP A: Feature Extraction:
 	[features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep)
 
+
 	if len(features)==0:
 		print "trainSVM_feature ERROR: No data found in any input folder!"
 		return
+
+	numOfFeatures = features[0].shape[1]
+	featureNames = [ "features" + str(d+1) for d in range(numOfFeatures)]
+
+	writeTrainDataToARFF(modelName, features, classNames, featureNames);
+
+
 	for i,f in enumerate(features):
 		if len(f)==0:
 			print "trainSVM_feature ERROR: " + listOfDirs[i] + " folder is empty or non-existing!"
@@ -534,6 +542,24 @@ def lda(data,labels,redDim):
     #plt.ylim([newData[:,1].min(), newData[:,1].max()])
     #plt.show()
     return newData,w
+
+def writeTrainDataToARFF(modelName, features, classNames, featureNames):
+	f = open(modelName + ".arff", 'w')
+	f.write('@RELATION ' + modelName + '\n');
+	for fn in featureNames:
+		f.write('@ATTRIBUTE ' + fn + ' NUMERIC\n')
+	f.write('@ATTRIBUTE class {')
+	for c in range(len(classNames)-1):
+		f.write(classNames[c] + ',')
+	f.write(classNames[-1] + '}\n\n')
+	f.write('@DATA\n')
+	for c, fe in enumerate(features):
+		for i in range(fe.shape[0]):
+			for j in range(fe.shape[1]):
+				f.write("{0:f},".format(fe[i,j]))
+			f.write(classNames[c]+"\n")
+	f.close()
+
 
 
 def main(argv):
