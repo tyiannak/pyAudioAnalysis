@@ -1,5 +1,4 @@
-0) Feature extraction wrappers in audioAnalysis
-1) Music visualization (use dirWavFeatureExtraction + LDA + ffmpeg for application on mp3s)
+1) Music visualization: TODO semi-supervised: user gives similarities and LDA is used
 2) Segmentation:
     a) Train for segmented data: input: (a) wav stream (b) segments with class labels. Both the classifiers and a viterbi probability set will be trained!
     b) flags2segs() enchancment (maybe smoothing or viterbi?)

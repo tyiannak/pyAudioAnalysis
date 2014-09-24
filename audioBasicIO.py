@@ -1,5 +1,15 @@
-import os
+import os, glob
 import scipy.io.wavfile as wavfile
+
+def convertDirMP3ToWav(dirName, Fs, nC):
+	types = (dirName+os.sep+'*.mp3',) # the tuple of file types
+	filesToProcess = []
+	for files in types:
+		filesToProcess.extend(glob.glob(files))		
+	for f in filesToProcess:
+		command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + f.replace(".mp3",".wav") + "\"";
+		print command
+		os.system(command)
 
 def readAudioFile(path):
 	extension = os.path.splitext(path)[1]

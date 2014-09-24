@@ -1,4 +1,4 @@
-import sys, os, audioop, numpy, glob,  scipy, subprocess, wave, mlpy, cPickle, threading, shutil
+import sys, os, audioop, numpy, glob,  scipy, subprocess, wave, mlpy, cPickle, threading, shutil, ntpath
 import matplotlib.pyplot as plt
 import audioFeatureExtraction as aF	
 import audioTrainTest as aT
@@ -8,7 +8,20 @@ import utilities as uT
 import scipy.io.wavfile as wavfile
 
 def main(argv):
-	if argv[1] == "-featureExtractionFile":		# short-term and mid-term feature extraction to files (csv and numpy)
+	if argv[1] == "-dirMp3toWAV":				# convert mp3 to wav (batch)
+		if len(argv)==5:			
+			path = argv[2]
+			if argv[3] not in ["8000", "16000", "32000", "44100"]:
+				print "Error. Unsupported sampling rate (must be: 8000, 16000, 32000 or 44100)."; return
+			if argv[4] not in ["1","2"]:
+				print "Error. Number of output channels must be 1 or 2"; return
+			if not os.path.isdir(path):
+				raise Exception("Input path not found!")	
+			audioBasicIO.convertDirMP3ToWav(path, int(argv[3]), int(argv[4]))
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -dirMp3toWAV <dirName> <sampling Freq> <numOfChannels>"
+
+	elif argv[1] == "-featureExtractionFile":		# short-term and mid-term feature extraction to files (csv and numpy)
 		if len(argv)==7:
 			wavFileName = argv[2]
 			if not os.path.isfile(wavFileName):
@@ -40,8 +53,24 @@ def main(argv):
 			print "Error.\nSyntax: " + argv[0] + " -featureExtractionDir <path> <mtWin> <mtStep> <stWin> <stStep>"
 
 	elif argv[1] == '-featureVisualizationDir':	# TODO dirsWavFeatureExtraction + dimensionality reduction (ffmpeg????)
-		if len(argv)==7:
-			print "A"			
+		if len(argv)==3:
+			allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(argv[2], 10.0, 10.0, 0.050, 0.050)
+			(F, MEAN, STD) = aT.normalizeFeatures(numpy.matrix(allMtFeatures))
+			F = numpy.concatenate(F)
+
+			pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
+			pca.learn(F)
+			coeff = pca.coeff()
+			finalDims = pca.transform(F, k=2)
+
+			for i in range(finalDims.shape[0]):			
+				plt.text(finalDims[i,0], finalDims[i,1], ntpath.basename(wavFilesList[i].replace('.wav','')), horizontalalignment='center', verticalalignment='center', fontsize=10)
+				plt.plot(finalDims[i,0], finalDims[i,1], '*r')
+			plt.xlim([1.2*finalDims[:,0].min(), 1.2*finalDims[:,0].max()])
+			plt.ylim([1.2*finalDims[:,1].min(), 1.2*finalDims[:,1].max()])
+			
+			plt.show()
+
 
 	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
 			if len(argv)==3:
@@ -157,7 +186,6 @@ def main(argv):
 
 				if not os.path.isfile(inputFile):
 					raise Exception("Input audio file not found!")
-
 
 				[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read file
 				if Fs == -1:	# could not read file
