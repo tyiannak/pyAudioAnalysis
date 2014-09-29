@@ -36,6 +36,12 @@ sudo apt-get install python-scipy
  ```
 sudo apt-get install libgsl0-dev
 ```
+ * Simplejson
+```
+sudo easy_install simplejson
+```
+
+
 
 ## General Structure
 The library code is organized in 4 Python files. In particular:

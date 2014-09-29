@@ -430,6 +430,9 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 	B = numpy.eye(M,M)
 	S = scipy.signal.convolve2d(S, B, 'valid')
 
+#	plt.imshow(S)
+#	plt.show()
+
 	# post-processing (remove main diagonal elements)
 	MIN = numpy.min(S)
 	for i in range(S.shape[0]):

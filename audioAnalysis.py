@@ -1,11 +1,13 @@
-import sys, os, audioop, numpy, glob,  scipy, subprocess, wave, mlpy, cPickle, threading, shutil, ntpath
+import sys, os, audioop, numpy, glob,  scipy, subprocess, wave, cPickle, threading, shutil, ntpath
 import matplotlib.pyplot as plt
 import audioFeatureExtraction as aF	
 import audioTrainTest as aT
 import audioSegmentation as aS
+import audioVisualization as aV
 import audioBasicIO
 import utilities as uT
 import scipy.io.wavfile as wavfile
+
 
 def main(argv):
 	if argv[1] == "-dirMp3toWAV":				# convert mp3 to wav (batch)
@@ -54,23 +56,7 @@ def main(argv):
 
 	elif argv[1] == '-featureVisualizationDir':	# TODO dirsWavFeatureExtraction + dimensionality reduction (ffmpeg????)
 		if len(argv)==3:
-			allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(argv[2], 10.0, 10.0, 0.050, 0.050)
-			(F, MEAN, STD) = aT.normalizeFeatures(numpy.matrix(allMtFeatures))
-			F = numpy.concatenate(F)
-
-			pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
-			pca.learn(F)
-			coeff = pca.coeff()
-			finalDims = pca.transform(F, k=2)
-
-			for i in range(finalDims.shape[0]):			
-				plt.text(finalDims[i,0], finalDims[i,1], ntpath.basename(wavFilesList[i].replace('.wav','')), horizontalalignment='center', verticalalignment='center', fontsize=10)
-				plt.plot(finalDims[i,0], finalDims[i,1], '*r')
-			plt.xlim([1.2*finalDims[:,0].min(), 1.2*finalDims[:,0].max()])
-			plt.ylim([1.2*finalDims[:,1].min(), 1.2*finalDims[:,1].max()])
-			
-			plt.show()
-
+			aV.visualizeFeaturesFolder(argv[2])
 
 	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
 			if len(argv)==3:
