@@ -109,6 +109,7 @@ def visualizeFeaturesFolder(folder):
 	SM = 1.0 - distance.squareform(distance.pdist(finalDims, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
+#	namesToVisualize = [ntpath.basename(w).replace('.wav','').split("-")[0] for w in wavFilesList]; # TODO
 	namesToVisualize = [ntpath.basename(w).replace('.wav','') for w in wavFilesList];
 	chordialDiagram("visualization", SM, namesToVisualize)
 
