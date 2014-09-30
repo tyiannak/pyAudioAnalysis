@@ -18,8 +18,9 @@ def main(argv):
 			if argv[4] not in ["1","2"]:
 				print "Error. Number of output channels must be 1 or 2"; return
 			if not os.path.isdir(path):
-				raise Exception("Input path not found!")	
-			audioBasicIO.convertDirMP3ToWav(path, int(argv[3]), int(argv[4]))
+				raise Exception("Input path not found!")
+			useMp3TagsAsNames = True
+			audioBasicIO.convertDirMP3ToWav(path, int(argv[3]), int(argv[4]), useMp3TagsAsNames)
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -dirMp3toWAV <dirName> <sampling Freq> <numOfChannels>"
 

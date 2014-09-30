@@ -40,6 +40,10 @@ sudo apt-get install libgsl0-dev
 ```
 sudo easy_install simplejson
 ```
+ * eyeD3
+```
+sudo apt-get install python-eyed3
+```
 
 
 

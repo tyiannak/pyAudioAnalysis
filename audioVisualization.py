@@ -58,22 +58,20 @@ def textListToColors(names):
 	colors = [textmaps[int(c)] for c in textToColor]
 	return colors
 
-def chordialDiagram(fileStr, SM, names):
+def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	'''
 	Generates a d3js chordial diagram that illustrates similarites
 	'''
-
-	colors = textListToColors(names)
+	colors = textListToColors(namesCategories)
 	SM2 = SM.copy()
-	for i in range(SM2.shape[0]):
-#		M = 0.85
-		a = np.sort(SM2[i,:])[::-1]
-		print a
-		M = np.mean(a[0:int(SM2.shape[1]/10+1)])
-		print M
-		SM2[i,SM2[i,:]<M] = 0;
-	SM2 = SM2 + SM2.T
 	print SM2
+	for i in range(SM2.shape[0]):
+		M = Threshold
+#		a = np.sort(SM2[i,:])[::-1]
+#		M = np.mean(a[0:int(SM2.shape[1]/3+1)])
+		SM2[i,SM2[i,:]<M] = 0;
+	print SM2
+	SM2 = SM2 + SM2.T
 	dirChordial = fileStr + "_Chordial"
 	if not os.path.isdir(dirChordial):
 		os.mkdir(dirChordial)
@@ -109,7 +107,13 @@ def visualizeFeaturesFolder(folder):
 	SM = 1.0 - distance.squareform(distance.pdist(finalDims, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
-#	namesToVisualize = [ntpath.basename(w).replace('.wav','').split("-")[0] for w in wavFilesList]; # TODO
-	namesToVisualize = [ntpath.basename(w).replace('.wav','') for w in wavFilesList];
-	chordialDiagram("visualization", SM, namesToVisualize)
+	namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
+	namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
+	chordialDiagram("visualization", SM, 0.95, namesToVisualize, namesCategoryToVisualize)
+
+	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
+	for i in range(SM.shape[0]):
+		SM[i,i] = 0.0;
+	chordialDiagram("visualizationInitial", SM, 0.70, namesToVisualize, namesCategoryToVisualize)
+
 
