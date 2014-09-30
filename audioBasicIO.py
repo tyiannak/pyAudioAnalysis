@@ -22,7 +22,12 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
 	for f in filesToProcess:
 		tag.link(f)
 		if useMp3TagsAsName:
-			wavFileName = ntpath.split(f)[0] + os.sep + tag.getArtist() + " --- " + tag.getTitle() + ".wav"
+			artist = tag.getArtist()
+			title = tag.getTitle()
+			if len(title)>0 and len(artist)>0:
+				wavFileName = ntpath.split(f)[0] + os.sep + artist + " --- " + title + ".wav"
+			else:
+				wavFileName = f.replace(".mp3",".wav")	
 		else:
 			wavFileName = f.replace(".mp3",".wav")		
 		command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + wavFileName + "\"";
