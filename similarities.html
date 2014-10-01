@@ -36,10 +36,10 @@ display: none;
  
 var width = 1080,
 height = 1080,
-outerRadius = Math.min(width, height) / 2 ,
+outerRadius = Math.min(width, height) / 2 - 300, // make a bit smaller so that text doesn't crop
 innerRadius = outerRadius - 20;
  
-var formatPercent = d3.format(".1f");
+var formatPercent = d3.format(".f%");
  
 var arc = d3.svg.arc()
 .innerRadius(innerRadius)
@@ -58,7 +58,7 @@ var svg = d3.select("body").append("svg")
 .attr("height", height)
 .append("g")
 .attr("id", "circle")
-.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+.attr("transform", "translate(" + (width / 2) + "," + (height / 2) + ")"); // leave some more slack
  
 svg.append("circle")
 .attr("r", outerRadius);
@@ -88,6 +88,7 @@ var groupPath = group.append("path")
 .style("fill", function(d, i) { return cities[i].color; });
  
 // Add a text label.
+/*
 var groupText = group.append("text")
 .attr("x", 6)
 .attr("dy", 15);
@@ -99,6 +100,30 @@ groupText.append("textPath")
 // Remove the labels that don't fit. :(
 groupText.filter(function(d, i) { return groupPath[0][i].getTotalLength() / 2 - 16 < this.getComputedTextLength(); })
 .remove();
+*/
+  
+      var groupText = group.append("text")
+      .each(function(d) {
+        d.angle = 0.5 * (d.startAngle + d.endAngle);            // The angle of the label
+      })
+      .attr("dy", "1em")                                        // ... or anything really
+      .attr("transform", function(d) {
+        return "rotate(" + (d.angle*180 / Math.PI - 90) + ")" + // rotate the text according to the angle
+          "translate(" + (outerRadius + 10) + ")" +             // move it outside the graph
+          (d.angle > Math.PI ? "rotate(180)" : "");             // make readable
+      })
+      .style("text-anchor", function(d) {
+        return d.angle > Math.PI ? "end" : null;                // make readable pt. II
+      })
+      .text(function(d, i) {                                    // name same as previously
+        if (cities[i].name.split(" --- ").length > 1) 
+            return cities[i].name.split(" --- ")[1]; 
+        else return cities[i].name; 
+    });
+  
+  
+  
+
  
 // Add the chords.
 var chord = svg.selectAll(".chord")
