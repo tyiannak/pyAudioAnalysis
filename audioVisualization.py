@@ -71,7 +71,7 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 #		M = np.mean(a[0:int(SM2.shape[1]/3+1)])
 		SM2[i,SM2[i,:]<M] = 0;
 	print SM2
-	SM2 = SM2 + SM2.T
+	SM2 = (SM2 + SM2.T) / 2.0
 	dirChordial = fileStr + "_Chordial"
 	if not os.path.isdir(dirChordial):
 		os.mkdir(dirChordial)
@@ -109,7 +109,7 @@ def visualizeFeaturesFolder(folder):
 		SM[i,i] = 0.0;
 	namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
 	namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
-	chordialDiagram("visualization", SM, 0.95, namesToVisualize, namesCategoryToVisualize)
+	chordialDiagram("visualization", SM, 0.98, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
 	for i in range(SM.shape[0]):

@@ -25,7 +25,7 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
 			artist = tag.getArtist()
 			title = tag.getTitle()
 			if len(title)>0 and len(artist)>0:
-				wavFileName = ntpath.split(f)[0] + os.sep + artist + " --- " + title + ".wav"
+				wavFileName = ntpath.split(f)[0] + os.sep + artist.replace(","," ") + " --- " + title.replace(","," ") + ".wav"
 			else:
 				wavFileName = f.replace(".mp3",".wav")	
 		else:
