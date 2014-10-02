@@ -58,11 +58,30 @@ def textListToColors(names):
 	colors = [textmaps[int(c)] for c in textToColor]
 	return colors
 
+def textListToColorsSimple(names):
+	'''
+	Generates a list of colors based on a list of names (strings). Similar strings correspond to similar colors. 
+	'''
+	uNames = list(set(names))
+	uNames.sort()
+	print uNames
+	textToColor = [ uNames.index(n) for n in names ]
+	print textToColor
+	textToColor = np.array(textToColor)
+	textToColor = 255 * (textToColor - textToColor.min()) / (textToColor.max() - textToColor.min())
+	textmaps = generateColorMap();
+	colors = [textmaps[int(c)] for c in textToColor]
+	
+	# colors = [c for (n, c) in sorted(zip(names, colors))]
+
+	return colors
+
 def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	'''
 	Generates a d3js chordial diagram that illustrates similarites
 	'''
-	colors = textListToColors(namesCategories)
+	#colors = textListToColors(namesCategories)
+	colors = textListToColorsSimple(namesCategories)
 	SM2 = SM.copy()
 	print SM2
 	for i in range(SM2.shape[0]):
@@ -89,7 +108,7 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	shutil.copyfile("style.css", dirChordial+os.sep+"style.css")
 
 def visualizeFeaturesFolder(folder):
-	allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 10.0, 10.0, 0.050, 0.050)
+	allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040)
 	(F, MEAN, STD) = aT.normalizeFeatures(np.matrix(allMtFeatures))
 	F = np.concatenate(F)
 	pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
@@ -109,11 +128,25 @@ def visualizeFeaturesFolder(folder):
 		SM[i,i] = 0.0;
 	namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
 	namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
-	chordialDiagram("visualization", SM, 0.98, namesToVisualize, namesCategoryToVisualize)
+	chordialDiagram("visualization", SM, 0.99, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
 	chordialDiagram("visualizationInitial", SM, 0.70, namesToVisualize, namesCategoryToVisualize)
+
+	# plot super-categories (i.e. artistname
+	uNamesCategoryToVisualize = sort(list(set(namesCategoryToVisualize)))
+	finalDimsGroup = np.zeros( (len(uNamesCategoryToVisualize), finalDims.shape[1] ) )
+	for i, uname in enumerate(uNamesCategoryToVisualize):
+		indices = [j for j, x in enumerate(namesCategoryToVisualize) if x == uname]
+		f = finalDims[indices, :]
+		finalDimsGroup[i, :] = f.mean(axis=0)
+
+	SMgroup = 1.0 - distance.squareform(distance.pdist(finalDimsGroup, 'cosine'))
+	for i in range(SMgroup.shape[0]):
+		SMgroup[i,i] = 0.0;
+	chordialDiagram("visualizationGroup", SMgroup, 0.90, uNamesCategoryToVisualize, uNamesCategoryToVisualize)
+
 
 

@@ -51,9 +51,9 @@ sudo apt-get install python-scipy
 sudo apt-get install libgsl0-dev
 ```
  * SKLEARN
- ```
-sudo apt-get install python-sklearn
 ```
+sudo apt-get install python-sklearn
+ ```
  * Simplejson
 ```
 sudo easy_install simplejson
@@ -62,8 +62,6 @@ sudo easy_install simplejson
 ```
 sudo apt-get install python-eyed3
  ```
-
-
 
 ## General Structure
 The library code is organized in 4 Python files. In particular:
