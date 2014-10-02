@@ -17,7 +17,7 @@ In order to be able to call the pyAudioAnalysis library from any path you need t
 export PYTHONPATH=$PYTHONPATH:"/home/bla/bla"
 ```
 
-(use the exact path where the ```pyAudioAnalysis``` folder is contained)
+(use the exact path where the ```pyAudioAnalysis``` folder is contained - without the ```pyAudioAnalysis``` name, e.g. if the library is contained in ```/home/tyiannak/Research/libraries/pyAudioAnalysis```, then use ```/home/tyiannak/Research/libraries``` in the ```bashrc``` file)
 
 Then, you need to update the path details:
 
