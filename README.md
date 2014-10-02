@@ -11,6 +11,20 @@ Type the following in your terminal:
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 ```
 
+In order to be able to call the pyAudioAnalysis library from any path you need to add the folder that contains it in the ```~/.bashrc``` file. In particular, add a line as the follow in ```~/.bashrc```:
+
+```
+export PYTHONPATH=$PYTHONPATH:"/home/bla/bla"
+```
+
+(use the exact path where the ```pyAudioAnalysis``` folder is contained)
+
+Then, you need to update the path details:
+
+```
+ source ~/.bashrc
+```
+
 ## Dependencies
 Below you can find a list of library dependencies, along with the Linux commands to install them. 
  * MLPY
