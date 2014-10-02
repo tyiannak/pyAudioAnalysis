@@ -514,6 +514,48 @@ def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep):
 				classNames.append(d.split(os.sep)[-1])
 	return features, classNames, fileNames
 
+def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
+	"""
+	This function extracts the mid-term features of the WAVE files of a particular folder without averaging each file.
+
+	
+	ARGUMENTS:
+		- dirName:		the path of the WAVE directory
+		- mtWin, mtStep:	mid-term window and step (in seconds)
+		- stWin, stStep:	short-term window and step (in seconds)
+	RETURNS:
+		- X:			A feature matrix
+		- Y:			A matrix of file labels 
+		- filenames:
+	"""
+
+	allMtFeatures = numpy.array([])
+	signalIndices = numpy.array([])
+ 	processingTimes = []
+
+	types = ('*.wav', '*.aif',  '*.aiff')
+	wavFilesList = []
+	for files in types:
+		wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
+	
+	wavFilesList = sorted(wavFilesList)
+	
+	for i, wavFile in enumerate(wavFilesList):
+		[Fs, x] = audioBasicIO.readAudioFile(wavFile)			# read file	
+		x = audioBasicIO.stereo2mono(x);				# convert stereo to mono
+		[MidTermFeatures, _] = 	mtFeatureExtraction(x, Fs, round(mtWin*Fs), round(mtStep*Fs), round(Fs*stWin), round(Fs*stStep)) # mid-term feature
+
+		MidTermFeatures = numpy.transpose(MidTermFeatures)
+#		MidTermFeatures = MidTermFeatures.mean(axis=0)		# long term averaging of mid-term statistics
+		if len(allMtFeatures)==0:				# append feature vector
+			allMtFeatures = MidTermFeatures
+			signalIndices = numpy.ones( (MidTermFeatures.shape[0], ) )
+		else:
+			allMtFeatures = numpy.vstack((allMtFeatures, MidTermFeatures))			
+			signalIndices = numpy.append( signalIndices, (i+1)*numpy.ones( (MidTermFeatures.shape[0], ) ))
+
+	return (allMtFeatures, signalIndices, wavFilesList)
+
 
 # The following two feature extraction wrappers extract features for given audio files, however
 # NO LONG-TERM AVERAGING is performed. Therefore, the output for each audio file is NOT A SINGLE FEATURE VECTOR

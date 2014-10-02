@@ -6,6 +6,7 @@ from pylab import *
 import ntpath
 import audioFeatureExtraction as aF	
 import audioTrainTest as aT
+from sklearn.lda import LDA
 
 def generateColorMap():
 	'''
@@ -107,15 +108,33 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	shutil.copyfile("similarities.html", dirChordial+os.sep+"similarities.html")
 	shutil.copyfile("style.css", dirChordial+os.sep+"style.css")
 
-def visualizeFeaturesFolder(folder):
-	allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040)
-	(F, MEAN, STD) = aT.normalizeFeatures(np.matrix(allMtFeatures))
-	F = np.concatenate(F)
-	pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
-	pca.learn(F)
-	coeff = pca.coeff()
-	finalDims = pca.transform(F, k=2)
+def visualizeFeaturesFolder(folder, dimReductionMethod):
+	if dimReductionMethod=="pca":
+		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040)
+		(F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
+		F = np.concatenate(F)
+		pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
+		pca.learn(F)
+		coeff = pca.coeff()
+		finalDims = pca.transform(F, k=2)
+	else:	
+		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 20.0, 0.040, 0.040)
+		(F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
+		F = np.array(F[0])
+	
+		clf = LDA(n_components=2)
+		clf.fit(F, Ys)	
+		reducedDims =  clf.transform(F)
 
+		uLabels = np.sort(np.unique((Ys)))		# uLabels must have as many labels as the number of wavFilesList elements
+		reducedDimsAvg = np.zeros( (uLabels.shape[0], reducedDims.shape[1] ) )
+		finalDims = np.zeros( (uLabels.shape[0], 2) ) 
+		for i, u in enumerate(uLabels):
+			indices = [j for j, x in enumerate(Ys) if x == u]
+			f = reducedDims[indices, :]
+			finalDims[i, :] = f.mean(axis=0)
+
+	 
 	for i in range(finalDims.shape[0]):			
 		plt.text(finalDims[i,0], finalDims[i,1], ntpath.basename(wavFilesList[i].replace('.wav','')), horizontalalignment='center', verticalalignment='center', fontsize=10)
 		plt.plot(finalDims[i,0], finalDims[i,1], '*r')
