@@ -50,18 +50,18 @@ sudo apt-get install python-scipy
  ```
 sudo apt-get install libgsl0-dev
 ```
- * sklearn
+ * SKLEARN
  ```
 sudo apt-get install python-sklearn
 ```
  * Simplejson
 ```
 sudo easy_install simplejson
-```
+ ```
  * eyeD3
 ```
 sudo apt-get install python-eyed3
-```
+ ```
 
 
 
