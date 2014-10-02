@@ -50,6 +50,10 @@ sudo apt-get install python-scipy
  ```
 sudo apt-get install libgsl0-dev
 ```
+ * sklearn
+ ```
+sudo apt-get install python-sklearn
+```
  * Simplejson
 ```
 sudo easy_install simplejson
