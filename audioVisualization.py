@@ -104,9 +104,12 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	shutil.copyfile("similarities.html", dirChordial+os.sep+"similarities.html")
 	shutil.copyfile("style.css", dirChordial+os.sep+"style.css")
 
-def visualizeFeaturesFolder(folder, dimReductionMethod):
+def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
 	if dimReductionMethod=="pca":
 		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040)
+		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
+		namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
+
 		(F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
 		F = np.concatenate(F)
 		pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
@@ -114,19 +117,33 @@ def visualizeFeaturesFolder(folder, dimReductionMethod):
 		coeff = pca.coeff()
 		finalDims = pca.transform(F, k=2)
 	else:	
-		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 1.0, 0.040, 0.040)
+		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040)
+		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
+		namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
+
+		ldaLabels = Ys
+		if priorKnowledge=="artist":
+			uNamesCategoryToVisualize = list(set(namesCategoryToVisualize))
+			YsNew = np.zeros( Ys.shape )
+			for i, uname in enumerate(uNamesCategoryToVisualize):		# for each unique artist name:
+				indicesUCategories = [j for j, x in enumerate(namesCategoryToVisualize) if x == uname]
+				for j in indicesUCategories:
+					indices = np.nonzero(Ys==j)
+					YsNew[indices] = i
+			ldaLabels = YsNew
+
 		(F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
 		F = np.array(F[0])
-		print F.shape
-	
+
 		clf = LDA(n_components=10)
-		clf.fit(F, Ys)	
+		clf.fit(F, ldaLabels)	
 		reducedDims =  clf.transform(F)
 
 		pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
-		pca.learn(F)
+		pca.learn(reducedDims)
 		coeff = pca.coeff()
-		reducedDims = pca.transform(F, k=2)
+		reducedDims = pca.transform(reducedDims, k=2)
+
 		# TODO: CHECK THIS ... SHOULD LDA USED IN SEMI-SUPERVISED ONLY????
 
 		uLabels = np.sort(np.unique((Ys)))		# uLabels must have as many labels as the number of wavFilesList elements
@@ -136,7 +153,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod):
 			indices = [j for j, x in enumerate(Ys) if x == u]
 			f = reducedDims[indices, :]
 			finalDims[i, :] = f.mean(axis=0)
-
+		print finalDims.shape
 	 
 	for i in range(finalDims.shape[0]):			
 		plt.text(finalDims[i,0], finalDims[i,1], ntpath.basename(wavFilesList[i].replace('.wav','')), horizontalalignment='center', verticalalignment='center', fontsize=10)
@@ -144,12 +161,12 @@ def visualizeFeaturesFolder(folder, dimReductionMethod):
 	plt.xlim([1.2*finalDims[:,0].min(), 1.2*finalDims[:,0].max()])
 	plt.ylim([1.2*finalDims[:,1].min(), 1.2*finalDims[:,1].max()])			
 	plt.show()
-#	return finalDims, wavFilesList
+
 	SM = 1.0 - distance.squareform(distance.pdist(finalDims, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
-	namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
-	namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
+
+	print SM
 	chordialDiagram("visualization", SM, 0.99, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))

@@ -299,6 +299,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 	Step = int(Step)
 	# Signal normalization
 	signal = numpy.double(signal)
+
 	signal = signal / (2.0**15)
 	DC     = signal.mean()	
 	MAX    = (numpy.abs(signal)).max()
@@ -549,10 +550,10 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
 #		MidTermFeatures = MidTermFeatures.mean(axis=0)		# long term averaging of mid-term statistics
 		if len(allMtFeatures)==0:				# append feature vector
 			allMtFeatures = MidTermFeatures
-			signalIndices = numpy.ones( (MidTermFeatures.shape[0], ) )
+			signalIndices = numpy.zeros( (MidTermFeatures.shape[0], ) )
 		else:
 			allMtFeatures = numpy.vstack((allMtFeatures, MidTermFeatures))			
-			signalIndices = numpy.append( signalIndices, (i+1)*numpy.ones( (MidTermFeatures.shape[0], ) ))
+			signalIndices = numpy.append( signalIndices, i*numpy.ones( (MidTermFeatures.shape[0], ) ))
 
 	return (allMtFeatures, signalIndices, wavFilesList)
 

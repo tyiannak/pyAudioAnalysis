@@ -57,7 +57,7 @@ def main(argv):
 
 	elif argv[1] == '-featureVisualizationDir':	# TODO dirsWavFeatureExtraction + dimensionality reduction (ffmpeg????)
 		if len(argv)==3:
-			aV.visualizeFeaturesFolder(argv[2], "lda")
+			aV.visualizeFeaturesFolder(argv[2], "lda", "artist")
 
 	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file
 			if len(argv)==3:
