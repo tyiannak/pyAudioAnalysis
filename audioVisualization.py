@@ -65,9 +65,7 @@ def textListToColorsSimple(names):
 	'''
 	uNames = list(set(names))
 	uNames.sort()
-	print uNames
 	textToColor = [ uNames.index(n) for n in names ]
-	print textToColor
 	textToColor = np.array(textToColor)
 	textToColor = 255 * (textToColor - textToColor.min()) / (textToColor.max() - textToColor.min())
 	textmaps = generateColorMap();
@@ -84,13 +82,11 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	#colors = textListToColors(namesCategories)
 	colors = textListToColorsSimple(namesCategories)
 	SM2 = SM.copy()
-	print SM2
 	for i in range(SM2.shape[0]):
 		M = Threshold
 #		a = np.sort(SM2[i,:])[::-1]
 #		M = np.mean(a[0:int(SM2.shape[1]/3+1)])
 		SM2[i,SM2[i,:]<M] = 0;
-	print SM2
 	SM2 = (SM2 + SM2.T) / 2.0
 	dirChordial = fileStr + "_Chordial"
 	if not os.path.isdir(dirChordial):
@@ -118,13 +114,20 @@ def visualizeFeaturesFolder(folder, dimReductionMethod):
 		coeff = pca.coeff()
 		finalDims = pca.transform(F, k=2)
 	else:	
-		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 20.0, 0.040, 0.040)
+		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 1.0, 0.040, 0.040)
 		(F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
 		F = np.array(F[0])
+		print F.shape
 	
-		clf = LDA(n_components=2)
+		clf = LDA(n_components=10)
 		clf.fit(F, Ys)	
 		reducedDims =  clf.transform(F)
+
+		pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
+		pca.learn(F)
+		coeff = pca.coeff()
+		reducedDims = pca.transform(F, k=2)
+		# TODO: CHECK THIS ... SHOULD LDA USED IN SEMI-SUPERVISED ONLY????
 
 		uLabels = np.sort(np.unique((Ys)))		# uLabels must have as many labels as the number of wavFilesList elements
 		reducedDimsAvg = np.zeros( (uLabels.shape[0], reducedDims.shape[1] ) )
