@@ -70,6 +70,18 @@ def main(argv):
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -fileSpectrogram <fileName>"
 
+	elif argv[1] == '-fileChromagram':		# show spectogram of a sound stored in a file
+			if len(argv)==3:
+				wavFileName = argv[2]		
+				if not os.path.isfile(wavFileName):
+					raise Exception("Input audio file not found!")
+				[Fs, x] = audioBasicIO.readAudioFile(wavFileName)
+				x = audioBasicIO.stereo2mono(x)
+				specgram, TimeAxis, FreqAxis = aF.stChromagram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
+			else:
+				print "Error.\nSyntax: " + argv[0] + " -fileSpectrogram <fileName>"
+
+
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
 			[Fs, x] = audioBasicIO.readAudioFile(inputFile)

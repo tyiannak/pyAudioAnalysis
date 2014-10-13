@@ -214,11 +214,122 @@ def stMFCC(X, fbank, nceps):
 	return ceps
 
 def stChromaFeatures(X, fs):
-	freqs = numpy.arange(0, fs/2, (fs/2) / len(X))+(fs/2) / len(X)
-	Cp = 440.0
-	nChroma = 12.0 * numpy.log2(freqs / Cp) + 69 
+
+	chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+		
+	spec = X**2
+	nfft = len(X)
+	freqs = numpy.array([((f+1) * fs) / (2*nfft)  for f in range(spec.shape[0])])
+#	print freqs
+#	print X.shape, freqs.shape
+	Cp = 27.50
+	nChroma = 12.0 * numpy.log2(freqs / Cp)
+#	print nChroma
 	C = numpy.zeros((nChroma.shape[0],))
 
+#	for i in range(freqs.shape[0]):
+#		print freqs[i], nChroma[i]
+
+	nFreqsPerChroma = numpy.zeros((nChroma.shape[0],))
+	for i, f in enumerate(freqs):
+		if f>=Cp:
+			curChroma = int(numpy.round(nChroma[i]))
+			nFreqsPerChroma[curChroma] += 1
+#			print f, curChroma, nChroma[i]
+#	print nFreqsPerChroma, nChroma
+#	plt.plot(nChroma, nFreqsPerChroma); plt.show()
+	for i, f in enumerate(freqs):
+		if f>=Cp:
+			curChroma = int(numpy.round(nChroma[i]))
+			#print f, curChroma, spec[i], nFreqsPerChroma[curChroma]
+			C[curChroma] += spec[i] 
+
+	for i in range(C.shape[0]):
+		curChroma = int(numpy.round(nChroma[i]))
+		if nFreqsPerChroma[curChroma]>0:
+			C[i] /= nFreqsPerChroma[curChroma]
+		else:
+			C[i] = 0.0
+	finalC = numpy.zeros((12,1))
+	for i in range(12):
+		finalC[i] = numpy.sum(C[i:C.shape[0]:12])
+	finalC /= sum(spec)
+#	ax = plt.gca()
+#	plt.hold(False)
+#	plt.plot(finalC)
+#	ax.set_xticks(range(len(chromaNames)))
+#	ax.set_xticklabels(chromaNames)
+#	xaxis = numpy.arange(0, 0.02, 0.01);
+#	ax.set_yticks(range(len(xaxis)))
+#	ax.set_yticklabels(xaxis)
+#	plt.show(block=False)
+#	plt.draw()
+
+	return chromaNames, finalC
+
+def stChromagram(signal, Fs, Win, Step, PLOT=False):
+	"""
+	Short-term FFT mag for spectogram estimation:
+	Returns:
+		a numpy array (nFFT x numOfShortTermWindows)
+	ARGUMENTS:
+		signal:		the input signal samples
+		Fs:		the sampling freq (in Hz)
+		Win:		the short-term window size (in samples)
+		Step:		the short-term window step (in samples)
+		PLOT:		flag, 1 if results are to be ploted
+	RETURNS:
+	"""
+	Win = int(Win); 
+	Step = int(Step)
+	signal = numpy.double(signal)
+	signal = signal / (2.0**15)
+	DC     = signal.mean()
+        MAX    = (numpy.abs(signal)).max()
+	signal = (signal - DC) / (MAX - DC)
+
+	N = len(signal)		# total number of signals
+	curPos = 0
+	countFrames = 0
+	nfft = int(Win / 2)
+	specgram = numpy.array([], dtype=numpy.float64)
+
+	while (curPos+Win-1<N):
+		countFrames += 1
+		x = signal[curPos:curPos+Win]
+		curPos = curPos + Step		
+		X = abs(fft(x))
+		X = X[0:nfft]
+		X = X / len(X)
+		nChroma, C = stChromaFeatures(X, Fs)
+		C = C[:,0]
+		if countFrames==1:
+			specgram = C
+		else:
+			specgram = numpy.vstack((specgram, C))
+
+	FreqAxis = nChroma
+	TimeAxis = [(t * Step) / Fs for t in range(specgram.shape[0])]
+
+	if (PLOT):	
+		fig, ax = plt.subplots()
+		imgplot = plt.imshow(specgram.transpose()[ ::-1,:])
+		Fstep = int(nfft / 5.0)
+#		FreqTicks = range(0, int(nfft) + Fstep, Fstep)
+#		FreqTicksLabels = [str(Fs/2-int((f*Fs) / (2*nfft))) for f in FreqTicks]
+		ax.set_yticks(range(0,len(FreqAxis)))
+		ax.set_yticklabels(FreqAxis[ ::-1])
+		TStep = countFrames/3
+		TimeTicks = range(0, countFrames, TStep)
+		TimeTicksLabels = ['%.2f' % (float(t * Step) / Fs) for t in TimeTicks]
+		ax.set_xticks(TimeTicks)
+		ax.set_xticklabels(TimeTicksLabels)
+		ax.set_xlabel('time (secs)')
+		imgplot.set_cmap('jet')
+		plt.colorbar()
+		plt.show()
+
+	return (specgram, TimeAxis, FreqAxis)
 
 def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 	"""
@@ -321,6 +432,8 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 	numOfTimeSpectralFeatures = 8
 	numOfHarmonicFeatures = 0
 	nceps = 13
+#	numOfChromaFeatures = 13
+#	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
 	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
 	stFeatures = numpy.array([], dtype=numpy.float64)
 
@@ -342,6 +455,10 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 		curFV[6] = stSpectralFlux(X, Xprev)				# spectral flux
 		curFV[7] = stSpectralRollOff(X, 0.90, Fs)			# spectral rolloff
 		curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps,0] = stMFCC(X, fbank, nceps).copy()	# MFCCs
+#		nChroma, chromaF = stChromaFeatures(X, Fs)
+#		curFV[numOfTimeSpectralFeatures+nceps+1: numOfTimeSpectralFeatures+nceps+numOfChromaFeatures] = chromaF;
+#		curFV[numOfTimeSpectralFeatures+numOfChromaFeatures] = chromaF.sum();
+
 		#HR, curFV[numOfTimeSpectralFeatures+nceps] = stHarmonic(x, Fs)		
 		# curFV[numOfTimeSpectralFeatures+nceps+1] = freq_from_autocorr(x, Fs)
 		if countFrames==1:
