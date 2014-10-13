@@ -213,6 +213,13 @@ def stMFCC(X, fbank, nceps):
 	ceps = dct(mspec, type=2, norm='ortho', axis=-1)[:nceps]
 	return ceps
 
+def stChromaFeatures(X, fs):
+	freqs = numpy.arange(0, fs/2, (fs/2) / len(X))+(fs/2) / len(X)
+	Cp = 440.0
+	nChroma = 12.0 * numpy.log2(freqs / Cp) + 69 
+	C = numpy.zeros((nChroma.shape[0],))
+
+
 def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 	"""
 	Short-term FFT mag for spectogram estimation:
