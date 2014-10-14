@@ -1,3 +1,4 @@
+0) Beat and rythm features (not in a stFeatureExtraction, but in another long-term rationale - maybe only used for particular applications, like MIR)
 1) Music visualization: TODO semi-supervised: user gives similarities and LDA is used
 2) Segmentation:
     a) Train for segmented data: input: (a) wav stream (b) segments with class labels. Both the classifiers and a viterbi probability set will be trained!
@@ -10,7 +11,5 @@
     b) number of clusters: 
      b1) finish with silluete
      b2) finish with arguments
-5) Check features:
-    a) Harmonic is disabled now (is it needed?)
-    b) Chroma?
-6) AUDIO REGRESSION!!! (Maybe to be trained from a list of mappings of audio files to regression values - e.g. in a spreadsheet)
+5) Harmonic Feature is disabled now (is it needed?)
+6) Audio Regression (Maybe to be trained from a list of mappings of audio files to regression values - e.g. in a spreadsheet)
