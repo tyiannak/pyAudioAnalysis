@@ -213,47 +213,48 @@ def stMFCC(X, fbank, nceps):
 	ceps = dct(mspec, type=2, norm='ortho', axis=-1)[:nceps]
 	return ceps
 
+
+import time
 def stChromaFeatures(X, fs):
 
+	#TODO: 1 complexity
+	#TODO: 2 bug with large windows
+
+	t1 = time.clock()
 	chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 		
 	spec = X**2
 	nfft = len(X)
 	freqs = numpy.array([((f+1) * fs) / (2*nfft)  for f in range(spec.shape[0])])
-#	print freqs
-#	print X.shape, freqs.shape
 	Cp = 27.50
-	nChroma = 12.0 * numpy.log2(freqs / Cp)
-#	print nChroma
+	nChroma = numpy.round(12.0 * numpy.log2(freqs / Cp)).astype(int)
+
 	C = numpy.zeros((nChroma.shape[0],))
 
-#	for i in range(freqs.shape[0]):
-#		print freqs[i], nChroma[i]
-
 	nFreqsPerChroma = numpy.zeros((nChroma.shape[0],))
-	for i, f in enumerate(freqs):
-		if f>=Cp:
-			curChroma = int(numpy.round(nChroma[i]))
-			nFreqsPerChroma[curChroma] += 1
-#			print f, curChroma, nChroma[i]
-#	print nFreqsPerChroma, nChroma
-#	plt.plot(nChroma, nFreqsPerChroma); plt.show()
-	for i, f in enumerate(freqs):
-		if f>=Cp:
-			curChroma = int(numpy.round(nChroma[i]))
-			#print f, curChroma, spec[i], nFreqsPerChroma[curChroma]
-			C[curChroma] += spec[i] 
+	
+	t2 = time.clock()
+	uChroma = numpy.unique(nChroma)
+	for u in uChroma:
+		idx = numpy.nonzero(nChroma==u)
+		nFreqsPerChroma[idx] = idx[0].shape
+	t3 = time.clock()
+	C[nChroma] = spec
 
-	for i in range(C.shape[0]):
-		curChroma = int(numpy.round(nChroma[i]))
-		if nFreqsPerChroma[curChroma]>0:
-			C[i] /= nFreqsPerChroma[curChroma]
-		else:
-			C[i] = 0.0
+	C /= nFreqsPerChroma[nChroma]
+
+	t4 = time.clock()
 	finalC = numpy.zeros((12,1))
 	for i in range(12):
 		finalC[i] = numpy.sum(C[i:C.shape[0]:12])
 	finalC /= sum(spec)
+	t5 = time.clock()
+
+	print "A:{0:.1f}".format(1000.0*(t2-t1));
+	print "B:{0:.1f}".format(1000.0*(t3-t2));
+	print "C:{0:.1f}".format(1000.0*(t4-t3));
+	print "D:{0:.1f}".format(1000.0*(t5-t4));
+
 #	ax = plt.gca()
 #	plt.hold(False)
 #	plt.plot(finalC)
@@ -432,9 +433,9 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 	numOfTimeSpectralFeatures = 8
 	numOfHarmonicFeatures = 0
 	nceps = 13
-#	numOfChromaFeatures = 13
-#	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
-	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
+	numOfChromaFeatures = 13
+	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
+#	totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
 	stFeatures = numpy.array([], dtype=numpy.float64)
 
 	while (curPos+Win-1<N):							# for each short-term window until the end of signal
@@ -455,9 +456,9 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 		curFV[6] = stSpectralFlux(X, Xprev)				# spectral flux
 		curFV[7] = stSpectralRollOff(X, 0.90, Fs)			# spectral rolloff
 		curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps,0] = stMFCC(X, fbank, nceps).copy()	# MFCCs
-#		nChroma, chromaF = stChromaFeatures(X, Fs)
-#		curFV[numOfTimeSpectralFeatures+nceps+1: numOfTimeSpectralFeatures+nceps+numOfChromaFeatures] = chromaF;
-#		curFV[numOfTimeSpectralFeatures+numOfChromaFeatures] = chromaF.sum();
+		nChroma, chromaF = stChromaFeatures(X, Fs)
+		curFV[numOfTimeSpectralFeatures+nceps+1: numOfTimeSpectralFeatures+nceps+numOfChromaFeatures] = chromaF;
+		curFV[numOfTimeSpectralFeatures+numOfChromaFeatures] = chromaF.sum();
 
 		#HR, curFV[numOfTimeSpectralFeatures+nceps] = stHarmonic(x, Fs)		
 		# curFV[numOfTimeSpectralFeatures+nceps+1] = freq_from_autocorr(x, Fs)
