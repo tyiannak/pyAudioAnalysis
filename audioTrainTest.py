@@ -504,7 +504,7 @@ def fileClassification(inputFile, modelName, modelType):
 		MidTermFeatures = numpy.append(MidTermFeatures, beat);
 		MidTermFeatures = numpy.append(MidTermFeatures, beatConf);
 	curFV = (MidTermFeatures - MEAN) / STD;			# normalization
-	print curFV.shape
+
 	[Result, P] = classifierWrapper(Classifier, modelType, curFV)	# classification
 	return Result, P, classNames
 

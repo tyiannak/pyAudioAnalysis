@@ -46,7 +46,6 @@ def main(argv):
 			if not os.path.isfile(wavFileName):
 				raise Exception("Input audio file not found!")
 			[Fs, x] = audioBasicIO.readAudioFile(wavFileName);
-			x = x[Fs*10:Fs*70]
 			F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
 			BPM, ratio = aF.beatExtraction(F, 0.050)
 			print BPM, ratio
