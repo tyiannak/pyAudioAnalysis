@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from scipy import linalg as la
 import audioTrainTest as aT
 import audioBasicIO
+import utilities
 
 eps = 0.00000001
 
@@ -573,6 +574,43 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 	return numpy.array(stFeatures)
 
 
+def beatExtraction(stFeatures, winSize):
+	toWatch = [0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+	#toWatch = range(34)
+	maxBeatTime = int(round(2.0 / winSize));
+	HistAll = numpy.zeros((maxBeatTime,));
+	for i in toWatch:	
+		DifThres = 3.0*(numpy.abs(stFeatures[i,0:-1] - stFeatures[i,1::])).mean()		
+		[pos1, _] = utilities.peakdet(stFeatures[i,:], DifThres)
+
+		posDifs = []
+		for j in range(len(pos1)-1):
+			posDifs.append(pos1[j+1]-pos1[j])
+		[HistTimes, HistEdges] = numpy.histogram(posDifs, numpy.arange(0.5, maxBeatTime + 1.5))
+		HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
+		HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
+		HistAll += HistTimes
+		plt.clf()
+#		plt.subplot(3,1,1);plt.plot(F[i,:])
+#		for k in pos1:
+#			plt.plot(k, stFeatures[i, k], '*')
+#		plt.subplot(3,1,2); plt.plot(HistCenters, HistTimes)
+#		plt.text(HistCenters[HistCenters.shape[0]/2],0, str(i))
+#		plt.subplot(3,1,3);plt.plot(HistCenters, HistAll)
+#		plt.show(block=False)
+#		plt.draw()
+
+	I = numpy.argmax(HistAll)
+	BPM = 60 / (HistCenters[I] * winSize)
+	Ratio = HistAll[I] / HistAll.sum()
+#	plt.clf()
+#	plt.plot(60/(HistCenters * winSize), HistAll);
+#	plt.show(block=True)
+
+	return BPM, Ratio
+
+	
+
 # # # # # # # # # # # # # # # #
 # Feature Extraction Wrappers #
 # # # # # # # # # # # # # # # #
@@ -581,7 +619,7 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 # audio features for a list of WAV files stored in a given category.
 # It is important to note that, one single feature is extracted per WAV file (not the whole sequence of feature vectors)
 
-def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep):
+def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT = False):
 	"""
 	This function extracts the mid-term features of the WAVE files of a particular folder.
 
@@ -608,10 +646,17 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep):
 		[Fs, x] = audioBasicIO.readAudioFile(wavFile)			# read file
 		t1 = time.clock()
 		x = audioBasicIO.stereo2mono(x);				# convert stereo to mono
-		[MidTermFeatures, _] = 	mtFeatureExtraction(x, Fs, round(mtWin*Fs), round(mtStep*Fs), round(Fs*stWin), round(Fs*stStep)) # mid-term feature
+		if computeBEAT:							# mid-term feature extraction for current file
+			[MidTermFeatures, stFeatures] 	= mtFeatureExtraction(x, Fs, round(mtWin*Fs), round(mtStep*Fs), round(Fs*stWin), round(Fs*stStep))
+			[beat, beatConf] 		= beatExtraction(stFeatures, stStep)		
+		else:
+			[MidTermFeatures, _] 		= mtFeatureExtraction(x, Fs, round(mtWin*Fs), round(mtStep*Fs), round(Fs*stWin), round(Fs*stStep))
 
 		MidTermFeatures = numpy.transpose(MidTermFeatures)
 		MidTermFeatures = MidTermFeatures.mean(axis=0)		# long term averaging of mid-term statistics
+		if computeBEAT:
+			MidTermFeatures = numpy.append(MidTermFeatures, beat);
+			MidTermFeatures = numpy.append(MidTermFeatures, beatConf);
 		if len(allMtFeatures)==0:				# append feature vector
 			allMtFeatures = MidTermFeatures
 		else:
@@ -623,7 +668,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep):
 		print "Feature extraction complexity ratio: {0:.1f} x realtime".format((1.0/numpy.mean(numpy.array(processingTimes))))
 	return (allMtFeatures, wavFilesList)
 
-def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep):
+def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT = False):
 	'''
 	Same as dirWavFeatureExtraction, but instead of a single dir it takes a list of paths as input and returns a list of feature matrices.
 	EXAMPLE:
@@ -637,7 +682,7 @@ def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep):
 	classNames = []
 	fileNames = []
 	for i,d in enumerate(dirNames):
-		[f, fn] = dirWavFeatureExtraction(d, mtWin, mtStep, stWin, stStep)
+		[f, fn] = dirWavFeatureExtraction(d, mtWin, mtStep, stWin, stStep, computeBEAT = computeBEAT)
 		if f.shape[0] > 0: # if at least one audio file has been found in the provided folder:
 			features.append(f)
 			fileNames.append(fn)

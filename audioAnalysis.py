@@ -40,6 +40,21 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
 
+	elif argv[1] == "-beatExtraction":
+		if len(argv)==3:
+			wavFileName = argv[2]
+			if not os.path.isfile(wavFileName):
+				raise Exception("Input audio file not found!")
+			[Fs, x] = audioBasicIO.readAudioFile(wavFileName);
+			x = x[Fs*10:Fs*70]
+			F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
+			BPM, ratio = aF.beatExtraction(F, 0.050)
+			print BPM, ratio
+			
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
+
+
 	elif argv[1] == '-featureExtractionDir':	# same as -featureExtractionFile, in a batch mode (i.e. for each WAV file in the provided path)
 		if len(argv)==7:
 			path = argv[2]
@@ -90,13 +105,15 @@ def main(argv):
 			#print speechLimits
 
 	elif argv[1] == "-trainClassifier": 		# Segment classifier training (OK)
-			if len(argv)>5: 
+			if len(argv)>6: 
 				method = argv[2]
-				listOfDirs = argv[3:len(argv)-1]
+				beatFeatures = (int(argv[3])==1)
+				print beatFeatures
+				listOfDirs = argv[4:len(argv)-1]
 				modelName = argv[-1]			
-				aT.featureAndTrain(listOfDirs, 1, 1, aT.shortTermWindow, aT.shortTermStep, method.lower(), modelName)
+				aT.featureAndTrain(listOfDirs, 1, 1, aT.shortTermWindow, aT.shortTermStep, method.lower(), modelName, computeBEAT = beatFeatures)
 			else:
-				print "Error.\nSyntax: " + argv[0] + " -trainClassifier <method(svm or knn)> <directory 1> <directory 2> ... <directory N> <modelName>"
+				print "Error.\nSyntax: " + argv[0] + " -trainClassifier <method(svm or knn)> <beat features> <directory 1> <directory 2> ... <directory N> <modelName>"
 
 	elif argv[1] == "-classifyFile":		# Single File Classification (OK)
 			if len(argv)==5: 

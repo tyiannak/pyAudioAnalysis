@@ -73,9 +73,9 @@ def recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName,
 	'''
 
 	if modelType=='svm':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadSVModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
 	elif modelType=='knn':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadKNNModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
 	else:
 		Classifier = None
 

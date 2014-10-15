@@ -95,9 +95,9 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 
 	# Load classifier:
 	if modelType=='svm':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadSVModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
 	elif modelType=='knn':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadKNNModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
 			
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# load input file
 	if Fs == -1:						# could not read file

@@ -14,8 +14,8 @@ def signal_handler(signal, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-shortTermWindow = 0.020
-shortTermStep = 0.020
+shortTermWindow = 0.050
+shortTermStep = 0.050
 eps = 0.00000001
 
 class kNN:
@@ -125,7 +125,7 @@ def trainSVM(features, Cparam):
 	svm.learn(X, Y)	
 	return svm
 
-def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName):
+def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT = False):
 	'''
 	This function is used as a wrapper to segment-based audio feature extraction and classifier training.
 	ARGUMENTS:
@@ -138,8 +138,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		None. Resulting classifier along with the respective model parameters are saved on files.
 	'''
 	# STEP A: Feature Extraction:
-	[features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep)
-
+	[features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep, computeBEAT = computeBEAT)
 
 	if len(features)==0:
 		print "trainSVM_feature ERROR: No data found in any input folder!"
@@ -184,6 +183,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	    	fo.close()
 	elif classifierType == "knn":
 		[X, Y] = listOfFeatures2Matrix(featuresNew)
@@ -199,6 +199,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	    	fo.close()
 
 def loadKNNModel(kNNModelName):
@@ -218,6 +219,7 @@ def loadKNNModel(kNNModelName):
 		mtStep = cPickle.load(fo)
 		stWin = cPickle.load(fo)
 		stStep = cPickle.load(fo)
+		computeBEAT = cPickle.load(fo)
     	except:
         	fo.close()
 	fo.close()	
@@ -229,7 +231,7 @@ def loadKNNModel(kNNModelName):
 
 	Classifier = kNN(X, Y, K) # Note: a direct call to the kNN constructor is used here, since the 
 
-	return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep);
+	return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);
 
 def loadSVModel(SVMmodelName):
 	try:
@@ -245,6 +247,7 @@ def loadSVModel(SVMmodelName):
 		mtStep = cPickle.load(fo)
 		stWin = cPickle.load(fo)
 		stStep = cPickle.load(fo)
+		computeBEAT = cPickle.load(fo)
     	except:
         	fo.close()
 	fo.close()	
@@ -255,7 +258,7 @@ def loadSVModel(SVMmodelName):
 	COEFF = []
 	SVM = mlpy.LibSvm.load_model(SVMmodelName)
 
-	return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep);				
+	return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);				
 
 def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode):
 	'''
@@ -487,16 +490,21 @@ def fileClassification(inputFile, modelName, modelType):
 
 
 	if modelType=='svm':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = loadSVModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
 	elif modelType=='knn':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = loadKNNModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
 			
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# read audio file and convert to mono
 	x = audioBasicIO.stereo2mono(x);
 	# feature extraction:
 	[MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
 	MidTermFeatures = MidTermFeatures.mean(axis=1)		# long term averaging of mid-term statistics
+	if computeBEAT:
+		[beat, beatConf] = aF.beatExtraction(s, stStep)
+		MidTermFeatures = numpy.append(MidTermFeatures, beat);
+		MidTermFeatures = numpy.append(MidTermFeatures, beatConf);
 	curFV = (MidTermFeatures - MEAN) / STD;			# normalization
+	print curFV.shape
 	[Result, P] = classifierWrapper(Classifier, modelType, curFV)	# classification
 	return Result, P, classNames
 
