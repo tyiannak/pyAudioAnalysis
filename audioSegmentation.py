@@ -432,15 +432,15 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 	B = numpy.eye(M,M)
 	S = scipy.signal.convolve2d(S, B, 'valid')
 
-#	plt.imshow(S)
-#	plt.show()
 
 	# post-processing (remove main diagonal elements)
 	MIN = numpy.min(S)
 	for i in range(S.shape[0]):
 		for j in range(S.shape[1]):
-			if abs(i-j) < 2.0 / shortTermStep:
+			if abs(i-j) < 5.0 / shortTermStep:
 				S[i,j] = MIN;
+#	plt.imshow(S)
+#	plt.show()
 
 	# find max position:
 	maxVal = numpy.max(S)
@@ -450,6 +450,9 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 	# expand:
 	i1 = I; i2 = I
 	j1 = J; j2 = J
+
+	print I, J, S.shape
+
 	while i2-i1<M:
 		if S[i1-1, j1-1] > S[i2+1,j2+1]:
 			i1 -= 1

@@ -106,7 +106,8 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
 	if dimReductionMethod=="pca":
-		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040)
+		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040, computeBEAT = True)
+		
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
 		namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
 
@@ -117,7 +118,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 		coeff = pca.coeff()
 		finalDims = pca.transform(F, k=2)
 	else:	
-		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040)
+		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
 		namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
 
@@ -154,7 +155,9 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 			f = reducedDims[indices, :]
 			finalDims[i, :] = f.mean(axis=0)
 		print finalDims.shape
-	 
+
+	print allMtFeatures.shape	 
+
 	for i in range(finalDims.shape[0]):			
 		plt.text(finalDims[i,0], finalDims[i,1], ntpath.basename(wavFilesList[i].replace('.wav','')), horizontalalignment='center', verticalalignment='center', fontsize=10)
 		plt.plot(finalDims[i,0], finalDims[i,1], '*r')

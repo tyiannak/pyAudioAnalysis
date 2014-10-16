@@ -80,7 +80,7 @@ def main(argv):
 					raise Exception("Input audio file not found!")
 				[Fs, x] = audioBasicIO.readAudioFile(wavFileName)
 				x = audioBasicIO.stereo2mono(x)
-				specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, Fs, round(Fs*0.020), round(Fs*0.020), True)
+				specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -fileSpectrogram <fileName>"
 
