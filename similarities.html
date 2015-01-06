@@ -34,12 +34,12 @@ display: none;
 <script src="http://d3js.org/d3.v2.min.js?2.8.1"></script>
 <script>
  
-var width = 1000,
-height = 1000,
+var width = 900,
+height = 900,
 outerRadius = Math.min(width, height) / 2 - 150, // make a bit smaller so that text doesn't crop
-innerRadius = outerRadius - 20;
+innerRadius = outerRadius - 10;
  
-var formatPercent = d3.format(".f%");
+var formatPercent = d3.format(".1f%");
  
 var arc = d3.svg.arc()
 .innerRadius(innerRadius)

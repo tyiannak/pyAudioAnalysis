@@ -171,7 +171,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 		SM[i,i] = 0.0;
 
 
-	chordialDiagram("visualization", SM, 0.75, namesToVisualize, namesCategoryToVisualize)
+	chordialDiagram("visualization", SM, 0.80, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
 	for i in range(SM.shape[0]):
