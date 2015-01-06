@@ -82,12 +82,13 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	#colors = textListToColors(namesCategories)
 	colors = textListToColorsSimple(namesCategories)
 	SM2 = SM.copy()
+	SM2 = (SM2 + SM2.T) / 2.0
 	for i in range(SM2.shape[0]):
 		M = Threshold
 #		a = np.sort(SM2[i,:])[::-1]
 #		M = np.mean(a[0:int(SM2.shape[1]/3+1)])
 		SM2[i,SM2[i,:]<M] = 0;
-	SM2 = (SM2 + SM2.T) / 2.0
+
 	dirChordial = fileStr + "_Chordial"
 	if not os.path.isdir(dirChordial):
 		os.mkdir(dirChordial)
@@ -169,13 +170,13 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
 
-	print SM
-	chordialDiagram("visualization", SM, 0.99, namesToVisualize, namesCategoryToVisualize)
+
+	chordialDiagram("visualization", SM, 0.75, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
-	chordialDiagram("visualizationInitial", SM, 0.70, namesToVisualize, namesCategoryToVisualize)
+	chordialDiagram("visualizationInitial", SM, 0.50, namesToVisualize, namesCategoryToVisualize)
 
 	# plot super-categories (i.e. artistname
 	uNamesCategoryToVisualize = sort(list(set(namesCategoryToVisualize)))
@@ -188,7 +189,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 	SMgroup = 1.0 - distance.squareform(distance.pdist(finalDimsGroup, 'cosine'))
 	for i in range(SMgroup.shape[0]):
 		SMgroup[i,i] = 0.0;
-	chordialDiagram("visualizationGroup", SMgroup, 0.90, uNamesCategoryToVisualize, uNamesCategoryToVisualize)
+	chordialDiagram("visualizationGroup", SMgroup, 0.50, uNamesCategoryToVisualize, uNamesCategoryToVisualize)
 
 
 

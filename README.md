@@ -69,6 +69,8 @@ The library code is organized in 4 Python files. In particular:
  * `audioFeatureExtraction.py`: this is where all audio feature extraction is implemented. In total, 21 short-term features are computed, while a mid-term windowing technique is also implemented, in order to extract statistics of audio features. 
  * `audioTrainTest.py`: this file implements the audio classification prodecures. It contains functions that can be used to train a Support Vector Machine or k-Nearest-Neighbour classifier. Also, wrapper functions and scripts are provided for general training, evaluating and feature normalization issues. 
  * `audioSegmentation.py`: this file implements audio segmentation functionalities, e.g. fixed-sized segment classification and segmentation, speaker diarization, etc. 
+ * `audioBasicIO.py`: this file implements some basic audio IO functionalities as well as file convertions 
+ * `audioVisualization.py`: the purpose of this set of functions is to produce user-friendly and representative content visualizations
 
 In the `data/` folder, a couple of audio sample files are provided, along with some trained SVM and kNN models for particular classification tasks (e.g. Speech vs Music, Musical Genre Classification, etc).
 
@@ -210,6 +212,14 @@ Command-line use example
 python audioAnalysisRecordAlsa.py -recordAndClassifySegments 20 out.wav knnRecNoiseActivity knn
 ```
 
+### Other Functionalities
+#### Batch-convert Mp3 to Wav
+Function `convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False)` converts all MP3 files of folder `dirName` to WAV files using the provided sampling rate (second argument) and number of channels (third argument). If the final argument (`useMp3TagsAsName`) is set to `True` then the output WAV files are named by the MP3-tags (artist and song title), otherwise the MP3 filename is used (with the .wav extension of course)
+
+Command-line use example
+```
+python audioAnalysis.py -dirMp3toWAV MusicData/ 16000 1
+```
 
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak
 [Audio thumbnailing]: https://www.google.gr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&sqi=2&ved=0CB4QFjAA&url=http%3A%2F%2Fmusic.ucsd.edu%2F~sdubnov%2FCATbox%2FReader%2FThumbnailingMM05.pdf&ei=pTX_U-i_K8S7ObiegMAP&usg=AFQjCNGT172T0VNB81IizPOyIYi3f58HJg&sig2=WAKASz6pvddafIMQlajXiA&bvm=bv.74035653,d.bGQ
