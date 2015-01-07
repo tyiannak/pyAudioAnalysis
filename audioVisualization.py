@@ -118,6 +118,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 		pca.learn(F)
 		coeff = pca.coeff()
 		finalDims = pca.transform(F, k=2)
+		finalDims2 = pca.transform(F, k=30)
 	else:	
 		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
@@ -155,7 +156,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 			indices = [j for j, x in enumerate(Ys) if x == u]
 			f = reducedDims[indices, :]
 			finalDims[i, :] = f.mean(axis=0)
-		print finalDims.shape
+		finalDims2 = reducedDims
 
 	print allMtFeatures.shape	 
 
@@ -166,12 +167,12 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 	plt.ylim([1.2*finalDims[:,1].min(), 1.2*finalDims[:,1].max()])			
 	plt.show()
 
-	SM = 1.0 - distance.squareform(distance.pdist(finalDims, 'cosine'))
+	SM = 1.0 - distance.squareform(distance.pdist(finalDims2, 'cosine'))
 	for i in range(SM.shape[0]):
 		SM[i,i] = 0.0;
 
 
-	chordialDiagram("visualization", SM, 0.80, namesToVisualize, namesCategoryToVisualize)
+	chordialDiagram("visualization", SM, 0.50, namesToVisualize, namesCategoryToVisualize)
 
 	SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
 	for i in range(SM.shape[0]):
@@ -180,10 +181,10 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 
 	# plot super-categories (i.e. artistname
 	uNamesCategoryToVisualize = sort(list(set(namesCategoryToVisualize)))
-	finalDimsGroup = np.zeros( (len(uNamesCategoryToVisualize), finalDims.shape[1] ) )
+	finalDimsGroup = np.zeros( (len(uNamesCategoryToVisualize), finalDims2.shape[1] ) )
 	for i, uname in enumerate(uNamesCategoryToVisualize):
 		indices = [j for j, x in enumerate(namesCategoryToVisualize) if x == uname]
-		f = finalDims[indices, :]
+		f = finalDims2[indices, :]
 		finalDimsGroup[i, :] = f.mean(axis=0)
 
 	SMgroup = 1.0 - distance.squareform(distance.pdist(finalDimsGroup, 'cosine'))
