@@ -326,6 +326,52 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 
 	return (specgram, TimeAxis, FreqAxis)
 
+def beatExtraction(stFeatures, winSize):
+	"""
+	This function extracts an estimate of the beat rate for a musical signal.
+	ARGUMENTS:
+	 - stFeatures:		a numpy array (numOfFeatures x numOfShortTermWindows)
+	 - winSize:		window size in seconds
+	RETURNS:
+	 - BPM:			estimates of beats per minute
+	 - Ratio:		a confidence measure
+	"""
+	# features that are related to the beat tracking task:
+	toWatch = [0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+
+	maxBeatTime = int(round(2.0 / winSize));
+	HistAll = numpy.zeros((maxBeatTime,));
+	for i in toWatch:									# for each feature
+		DifThres = 3.0*(numpy.abs(stFeatures[i,0:-1] - stFeatures[i,1::])).mean()	# dif threshold	(3 x Mean of Difs)
+		[pos1, _] = utilities.peakdet(stFeatures[i,:], DifThres)			# detect local maxima
+
+		posDifs = []									# compute histograms of local maxima changes
+		for j in range(len(pos1)-1):
+			posDifs.append(pos1[j+1]-pos1[j])
+		[HistTimes, HistEdges] = numpy.histogram(posDifs, numpy.arange(0.5, maxBeatTime + 1.5))
+		HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
+		HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
+		HistAll += HistTimes
+#		plt.clf()
+#		plt.subplot(3,1,1);plt.plot(F[i,:])
+#		for k in pos1:
+#			plt.plot(k, stFeatures[i, k], '*')
+#		plt.subplot(3,1,2); plt.plot(HistCenters, HistTimes)
+#		plt.text(HistCenters[HistCenters.shape[0]/2],0, str(i))
+#		plt.subplot(3,1,3);plt.plot(HistCenters, HistAll)
+#		plt.show(block=False)
+#		plt.draw()
+
+	I = numpy.argmax(HistAll)
+	BPM = 60 / (HistCenters[I] * winSize)
+	Ratio = HistAll[I] / HistAll.sum()
+#	plt.clf()
+#	plt.plot(60/(HistCenters * winSize), HistAll);
+#	plt.show(block=True)
+
+	return BPM, Ratio
+
+
 def stSpectogram(signal, Fs, Win, Step, PLOT=False):
 	"""
 	Short-term FFT mag for spectogram estimation:
@@ -563,7 +609,6 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 			#if (i < (len(X) / 8)) and (i > (len(X)/40)):
 			#	Ex += X[i]*X[i]
 			#El += X[i]*X[i]
-
 #		stFeatures.append(Ex / El)
 #		stFeatures.append(numpy.argmax(X))
 
@@ -572,42 +617,6 @@ def stFeatureSpeed(signal, Fs, Win, Step):
 #			print curFV[numOfTimeSpectralFeatures+nceps], curFV[numOfTimeSpectralFeatures+nceps+1]
 
 	return numpy.array(stFeatures)
-
-
-def beatExtraction(stFeatures, winSize):
-	toWatch = [0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
-	#toWatch = range(34)
-	maxBeatTime = int(round(2.0 / winSize));
-	HistAll = numpy.zeros((maxBeatTime,));
-	for i in toWatch:	
-		DifThres = 3.0*(numpy.abs(stFeatures[i,0:-1] - stFeatures[i,1::])).mean()		
-		[pos1, _] = utilities.peakdet(stFeatures[i,:], DifThres)
-
-		posDifs = []
-		for j in range(len(pos1)-1):
-			posDifs.append(pos1[j+1]-pos1[j])
-		[HistTimes, HistEdges] = numpy.histogram(posDifs, numpy.arange(0.5, maxBeatTime + 1.5))
-		HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
-		HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
-		HistAll += HistTimes
-		plt.clf()
-#		plt.subplot(3,1,1);plt.plot(F[i,:])
-#		for k in pos1:
-#			plt.plot(k, stFeatures[i, k], '*')
-#		plt.subplot(3,1,2); plt.plot(HistCenters, HistTimes)
-#		plt.text(HistCenters[HistCenters.shape[0]/2],0, str(i))
-#		plt.subplot(3,1,3);plt.plot(HistCenters, HistAll)
-#		plt.show(block=False)
-#		plt.draw()
-
-	I = numpy.argmax(HistAll)
-	BPM = 60 / (HistCenters[I] * winSize)
-	Ratio = HistAll[I] / HistAll.sum()
-#	plt.clf()
-#	plt.plot(60/(HistCenters * winSize), HistAll);
-#	plt.show(block=True)
-
-	return BPM, Ratio
 
 	
 
