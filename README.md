@@ -140,20 +140,20 @@ aT.featureAndTrain(["/home/tyiannak/Desktop/5Class/Silence/","/home/tyiannak/Des
 ```
 Command-line use:
 ```
-python audioAnalysis.py -trainClassifier <method(svm or knn)> <directory 1> <directory 2> ... <directory N> <modelName>`. 
+python audioAnalysis.py -trainClassifier <method(svm or knn)> <0 or 1 for beat-extraction enable> <directory 1> <directory 2> ... <directory N> <modelName>`. 
 ```
 Examples:
 ```
-python audioAnalysis.py -trainClassifier svm /home/tyiannak/Desktop/SpeechMusic/music /home/tyiannak/Desktop/SpeechMusic/speech data/svmSM
+python audioAnalysis.py -trainClassifier svm 0 /home/tyiannak/Desktop/SpeechMusic/music /home/tyiannak/Desktop/SpeechMusic/speech data/svmSM
 ```
 ```
-python audioAnalysis.py -trainClassifier knn ./data/SpeechMusic/speech ./data/SpeechMusic/music data/knnSM
+python audioAnalysis.py -trainClassifier knn 0  ./data/SpeechMusic/speech ./data/SpeechMusic/music data/knnSM
 ```
 ```
-python audioAnalysis.py -trainClassifier knn /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/knnMusicGenre3
+python audioAnalysis.py -trainClassifier knn 1 /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/knnMusicGenre3
 ```
 ```
-python audioAnalysis.py -trainClassifier svm /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/svmMusicGenre3
+python audioAnalysis.py -trainClassifier svm 1 /home/tyiannak/Desktop/MusicGenre/Classical/ /home/tyiannak/Desktop/MusicGenre/Electronic/ /home/tyiannak/Desktop/MusicGenre/Jazz/  data/svmMusicGenre3
 ```
 
 #### Single File Classification
