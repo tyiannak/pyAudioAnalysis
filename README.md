@@ -109,15 +109,19 @@ See functions `dirWavFeatureExtraction()` and `dirsWavFeatureExtraction` for lon
 
 #### Beat extraction
 Tempo induction is a rather important task in music information retrieval. This library provides a baseline method for estimating the beats per minute (BPM) rate of a music signal.
-The beat rate estimation is implemented in function `beatExtraction()` of `audioFeatureExtraction.py` file. It accepts 2 arguments: (a) the short-term feature matrix and (b) the window step (in seconds).
+The beat rate estimation is implemented in function `beatExtraction()` of `audioFeatureExtraction.py` file. 
+It accepts 2 arguments: (a) the short-term feature matrix and (b) the window step (in seconds).
 Obviously, the `stFeatureExtraction` of the `audioFeatureExtraction.py` file is needed to extract the sequence of feature vectors before extracting the beat.
 
 Command-line example:
 ```
-python audioAnalysis.py  -beatExtraction data/beat/100\ BPM\ -\ Rhythm\ patterns\ -\ Salsa.wav
+python audioAnalysis.py  -beatExtraction data/beat/small.wav 1
 ```
 
-Note that the BPM feature is only applicable in the long-term analysis approach. Therefore, functions that perform long-term averaging on mid-term statistics (e.g. `dirWavFeatureExtraction()`) have also the choise to compute the BPM (and its confidence value) as features in the long-term feature representation. 
+The last argument should be 1 for visualizing the intermediate algorithmic stages (e.g. feature-specific local maxima detection, etc) and 0 otherwise (visualization can be very time consuming for >1 min signals). 
+
+Note that the BPM feature is only applicable in the long-term analysis approach. 
+Therefore, functions that perform long-term averaging on mid-term statistics (e.g. `dirWavFeatureExtraction()`) have also the choise to compute the BPM (and its confidence value) as features in the long-term feature representation. 
 
 #### Data visualization 
 TODO
@@ -237,7 +241,7 @@ Function `convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False)` convert
 
 Command-line use example
 ```
-python audioAnalysis.py -dirMp3toWAV MusicData/ 16000 1
+python audioAnalysis.py -dirMp3toWAV data/beat/ 16000 1
 ```
 
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak

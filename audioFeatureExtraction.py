@@ -326,7 +326,7 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 
 	return (specgram, TimeAxis, FreqAxis)
 
-def beatExtraction(stFeatures, winSize):
+def beatExtraction(stFeatures, winSize, PLOT = False):
 	"""
 	This function extracts an estimate of the beat rate for a musical signal.
 	ARGUMENTS:
@@ -341,10 +341,9 @@ def beatExtraction(stFeatures, winSize):
 
 	maxBeatTime = int(round(2.0 / winSize));
 	HistAll = numpy.zeros((maxBeatTime,));
-	for i in toWatch:									# for each feature
-		DifThres = 3.0*(numpy.abs(stFeatures[i,0:-1] - stFeatures[i,1::])).mean()	# dif threshold	(3 x Mean of Difs)
+	for ii, i in enumerate(toWatch):									# for each feature
+		DifThres = 2.0*(numpy.abs(stFeatures[i,0:-1] - stFeatures[i,1::])).mean()	# dif threshold	(3 x Mean of Difs)
 		[pos1, _] = utilities.peakdet(stFeatures[i,:], DifThres)			# detect local maxima
-
 		posDifs = []									# compute histograms of local maxima changes
 		for j in range(len(pos1)-1):
 			posDifs.append(pos1[j+1]-pos1[j])
@@ -352,22 +351,31 @@ def beatExtraction(stFeatures, winSize):
 		HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
 		HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
 		HistAll += HistTimes
-#		plt.clf()
-#		plt.subplot(3,1,1);plt.plot(F[i,:])
-#		for k in pos1:
-#			plt.plot(k, stFeatures[i, k], '*')
-#		plt.subplot(3,1,2); plt.plot(HistCenters, HistTimes)
-#		plt.text(HistCenters[HistCenters.shape[0]/2],0, str(i))
-#		plt.subplot(3,1,3);plt.plot(HistCenters, HistAll)
-#		plt.show(block=False)
-#		plt.draw()
 
+		plt.subplot(9,2,ii+1);plt.plot(stFeatures[i,:],'k')
+		for k in pos1:
+			plt.plot(k, stFeatures[i, k], 'k*')
+		f1 = plt.gca()
+		f1.axes.get_xaxis().set_ticks([])
+		f1.axes.get_yaxis().set_ticks([])
+
+	plt.show(block = False)
+	plt.figure()
+	# Get beat as the argmax of the agregated histogram:
 	I = numpy.argmax(HistAll)
-	BPM = 60 / (HistCenters[I] * winSize)
+	BPMs = 60 / (HistCenters * winSize) 
+	BPM = BPMs[I]
+	# ... and the beat ratio:
 	Ratio = HistAll[I] / HistAll.sum()
-#	plt.clf()
-#	plt.plot(60/(HistCenters * winSize), HistAll);
-#	plt.show(block=True)
+
+	# filter out >500 beats from plotting:
+	HistAll = HistAll[BPMs<500]
+	BPMs = BPMs[BPMs<500]
+
+	plt.plot(BPMs, HistAll, 'k');
+	plt.xlabel('Beats per minute')
+	plt.ylabel('Freq Count')
+	plt.show(block=True)
 
 	return BPM, Ratio
 

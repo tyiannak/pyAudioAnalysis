@@ -41,17 +41,22 @@ def main(argv):
 			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
 
 	elif argv[1] == "-beatExtraction":
-		if len(argv)==3:
+		if len(argv)==4:
 			wavFileName = argv[2]
 			if not os.path.isfile(wavFileName):
 				raise Exception("Input audio file not found!")
+			if not (uT.isNum(argv[3])):
+				raise Exception("PLOT must be either 0 or 1")
+			if not ( (int(argv[3]) == 0) or (int(argv[3]) == 1) ):
+				raise Exception("PLOT must be either 0 or 1")
+
 			[Fs, x] = audioBasicIO.readAudioFile(wavFileName);
 			F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
-			BPM, ratio = aF.beatExtraction(F, 0.050)
-			print BPM, ratio
-			
+			BPM, ratio = aF.beatExtraction(F, 0.050, int(argv[3])==1)
+			print "Beat: {0:d} bpm ".format(int(BPM))
+			print "Ratio: {0:.2f} ".format(ratio)
 		else:
-			print "Error.\nSyntax: " + argv[0] + " -featureExtractionFile <wavFileName> <mtWin> <mtStep> <stWin> <stStep>"
+			print "Error.\nSyntax: " + argv[0] + " -beatExtraction <wavFileName> <PLOT (0 or 1)>"
 
 
 	elif argv[1] == '-featureExtractionDir':	# same as -featureExtractionFile, in a batch mode (i.e. for each WAV file in the provided path)
