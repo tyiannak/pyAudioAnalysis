@@ -149,7 +149,7 @@ Finally, the last two arguments are associated to the classifier type and name. 
 In addition, an ARFF file is also created (with the same name as the model), where the whole set of feature vectors and respective class labels are stored. 
 Example:
 ```
-from audioAnalysisLibrary import audioTrainTest as aT
+from pyAudioAnalysis import audioTrainTest as aT
 aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmMusicGenre3")
 aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "knn", "knnMusicGenre3")
 aT.featureAndTrain(["/home/tyiannak/Desktop/5Class/Silence/","/home/tyiannak/Desktop/5Class/SpeechMale/","/home/tyiannak/Desktop/5Class/SpeechFemale/","/home/tyiannak/Desktop/5Class/ObjectsOther/","/home/tyiannak/Desktop/5Class/Music/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svm5Classes")
@@ -178,7 +178,7 @@ Function `fileClassification(inputFile, modelName, modelType)` from `audioTrainT
 
 Example:
 ```
-from audioAnalysisLibrary import audioTrainTest as aT
+from pyAudioAnalysis import audioTrainTest as aT
 aT.fileClassification("TrueFaith.wav", "data/svmMusicGenre3","svm")
 ```
 
@@ -207,7 +207,7 @@ TODO COMMENTS HERE. Function `mtFileClassification` from `audioSegmentation.py`.
 
 Example:
 ```
-from audioAnalysisLibrary import audioSegmentation as aS
+from pyAudioAnalysis import audioSegmentation as aS
 [segs, classes] = aS.mtFileClassification("data/speech_music_sample.wav", "data/svmSM", "svm", True)
 ```
 Command-line use:
