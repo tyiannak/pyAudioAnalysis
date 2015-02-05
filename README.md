@@ -79,13 +79,13 @@ In the `data/` folder, a couple of audio sample files are provided, along with s
 ### Audio Feature Extraction
 #### General
 There are two stages in the audio feature extraction methodology: 
- * Short-term feature extraction: this is implemented in function `stFeatureExtraction` of the `audioFeatureExtraction.py` file. It splits the input signal into short-term widnows (frames) and computes a number of features for each frame. This process leads to a sequence of short-term feature vectors for the whole signal.
- * Mid-term feature extraction: In many cases, the signal is represented by statistics on the extracted short-term feature sequences described above. Towards this end, function `mtFeatureExtraction` from the `audioFeatureExtraction.py` file extracts a number of statistcs (e.g. mean and standard deviation) over each short-term feature sequence. 
+ * Short-term feature extraction: this is implemented in function `stFeatureExtraction()` of the `audioFeatureExtraction.py` file. It splits the input signal into short-term widnows (frames) and computes a number of features for each frame. This process leads to a sequence of short-term feature vectors for the whole signal.
+ * Mid-term feature extraction: In many cases, the signal is represented by statistics on the extracted short-term feature sequences described above. Towards this end, function `mtFeatureExtraction()` from the `audioFeatureExtraction.py` file extracts a number of statistcs (e.g. mean and standard deviation) over each short-term feature sequence. 
 
 TODO AN EXAMPLE
 
 #### Single-file feature extraction - storing to file
-The function used to generate short-term and mid-term features is `mtFeatureExtraction` from the `audioFeatureExtraction.py` file. 
+The function used to generate short-term and mid-term features is `mtFeatureExtraction()` from the `audioFeatureExtraction.py` file. 
 This wrapping functionality also includes storing to CSV files and NUMPY files the short-term and mid-term feature matrices.
 The command-line way to call this functionality is presented in the following example:
 
@@ -106,6 +106,19 @@ The result of the above function is to generate feature files (2 CSVs and 2 NUMP
 
 Note: the feature extraction process described in the last two paragraphs, does not perform long-term averaging on the feature sequences, therefore a feature matrix is computed for each file (not a single feature vector).
 See functions `dirWavFeatureExtraction()` and `dirsWavFeatureExtraction` for long-term averaging after the feature extraction process.
+
+
+#### Spectrogram and Chromagram visualization
+Functions `stSpectogram()` and `stChromagram()`  from the `audioFeatureExtraction.py` file can be used to generate the spectrogram and chromagram of an audio signal respectively. 
+
+Command-line examples:
+```
+python audioAnalysis.py -fileSpectrogram data/doremi.wav
+```
+
+```
+python audioAnalysis.py -fileChromagram data/doremi.wav
+```
 
 #### Beat extraction
 Tempo induction is a rather important task in music information retrieval. This library provides a baseline method for estimating the beats per minute (BPM) rate of a music signal.
@@ -190,7 +203,7 @@ python audioAnalysis.py -classifyFolder svm data/svmSM RecSegments/Speech/ 1 (al
 ```
 ### Audio Segmentation
 #### File Segmentation & Classification
-Function		`mtFileClassification` from `audioSegmentation.py`.
+TODO COMMENTS HERE. Function `mtFileClassification` from `audioSegmentation.py`.
 
 Example:
 ```
@@ -205,6 +218,9 @@ Example:
 ```
 python audioAnalysis.py -segmentClassifyFile svm data/svmSM data/speech_music_sample.wav 
 ```
+#### Speaker Diarization
+TODO 
+
 
 #### Audio thumbnailing
 

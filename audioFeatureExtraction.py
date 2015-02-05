@@ -287,7 +287,7 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 	countFrames = 0
 	nfft = int(Win / 2)
 	nChroma, nFreqsPerChroma = stChromaFeaturesInit(nfft, Fs)
-	specgram = numpy.array([], dtype=numpy.float64)
+	chromaGram = numpy.array([], dtype=numpy.float64)
 
 	while (curPos+Win-1<N):
 		countFrames += 1
@@ -299,20 +299,23 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 		chromaNames, C = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)		
 		C = C[:,0]
 		if countFrames==1:
-			specgram = C
+			chromaGram = C
 		else:
-			specgram = numpy.vstack((specgram, C))
+			chromaGram = numpy.vstack((chromaGram, C))
 
 	FreqAxis = chromaNames
-	TimeAxis = [(t * Step) / Fs for t in range(specgram.shape[0])]
+	TimeAxis = [(t * Step) / Fs for t in range(chromaGram.shape[0])]
 
 	if (PLOT):	
 		fig, ax = plt.subplots()
-		imgplot = plt.imshow(specgram.transpose()[ ::-1,:])
+		chromaGramToPlot = chromaGram.transpose()[ ::-1,:]
+		Ratio = chromaGramToPlot.shape[1] / (3*chromaGramToPlot.shape[0])
+		chromaGramToPlot = numpy.repeat(chromaGramToPlot, Ratio, axis = 0)
+		imgplot = plt.imshow(chromaGramToPlot)
 		Fstep = int(nfft / 5.0)
 #		FreqTicks = range(0, int(nfft) + Fstep, Fstep)
 #		FreqTicksLabels = [str(Fs/2-int((f*Fs) / (2*nfft))) for f in FreqTicks]
-		ax.set_yticks(range(0,len(FreqAxis)))
+		ax.set_yticks(range(Ratio/2,len(FreqAxis)*Ratio,Ratio))
 		ax.set_yticklabels(FreqAxis[ ::-1])
 		TStep = countFrames/3
 		TimeTicks = range(0, countFrames, TStep)
@@ -324,7 +327,7 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 		plt.colorbar()
 		plt.show()
 
-	return (specgram, TimeAxis, FreqAxis)
+	return (chromaGram, TimeAxis, FreqAxis)
 
 def beatExtraction(stFeatures, winSize, PLOT = False):
 	"""
