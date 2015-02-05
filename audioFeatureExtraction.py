@@ -354,16 +354,18 @@ def beatExtraction(stFeatures, winSize, PLOT = False):
 		HistCenters = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
 		HistTimes = HistTimes.astype(float) / stFeatures.shape[1]
 		HistAll += HistTimes
-
-		plt.subplot(9,2,ii+1);plt.plot(stFeatures[i,:],'k')
+		if PLOT:
+			plt.subplot(9,2,ii+1);plt.plot(stFeatures[i,:],'k')
 		for k in pos1:
 			plt.plot(k, stFeatures[i, k], 'k*')
 		f1 = plt.gca()
 		f1.axes.get_xaxis().set_ticks([])
 		f1.axes.get_yaxis().set_ticks([])
 
-	plt.show(block = False)
-	plt.figure()
+	if PLOT:
+		plt.show(block = False)
+		plt.figure()
+
 	# Get beat as the argmax of the agregated histogram:
 	I = numpy.argmax(HistAll)
 	BPMs = 60 / (HistCenters * winSize) 
@@ -371,14 +373,15 @@ def beatExtraction(stFeatures, winSize, PLOT = False):
 	# ... and the beat ratio:
 	Ratio = HistAll[I] / HistAll.sum()
 
-	# filter out >500 beats from plotting:
-	HistAll = HistAll[BPMs<500]
-	BPMs = BPMs[BPMs<500]
+	if PLOT:
+		# filter out >500 beats from plotting:
+		HistAll = HistAll[BPMs<500]
+		BPMs = BPMs[BPMs<500]
 
-	plt.plot(BPMs, HistAll, 'k');
-	plt.xlabel('Beats per minute')
-	plt.ylabel('Freq Count')
-	plt.show(block=True)
+		plt.plot(BPMs, HistAll, 'k');
+		plt.xlabel('Beats per minute')
+		plt.ylabel('Freq Count')
+		plt.show(block=True)
 
 	return BPM, Ratio
 
