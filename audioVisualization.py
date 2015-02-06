@@ -107,7 +107,7 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
 	if dimReductionMethod=="pca":
-		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 20.0, 20.0, 0.040, 0.040, computeBEAT = True)
+		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, computeBEAT = True)
 		
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
 		namesToVisualize  	 = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
@@ -118,7 +118,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 		pca.learn(F)
 		coeff = pca.coeff()
 		finalDims = pca.transform(F, k=2)
-		finalDims2 = pca.transform(F, k=30)
+		finalDims2 = pca.transform(F, k=10)
 	else:	
 		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 

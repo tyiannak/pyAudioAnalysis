@@ -341,7 +341,7 @@ def beatExtraction(stFeatures, winSize, PLOT = False):
 	"""
 	# features that are related to the beat tracking task:
 	toWatch = [0,1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
-
+	
 	maxBeatTime = int(round(2.0 / winSize));
 	HistAll = numpy.zeros((maxBeatTime,));
 	for ii, i in enumerate(toWatch):									# for each feature
@@ -356,11 +356,11 @@ def beatExtraction(stFeatures, winSize, PLOT = False):
 		HistAll += HistTimes
 		if PLOT:
 			plt.subplot(9,2,ii+1);plt.plot(stFeatures[i,:],'k')
-		for k in pos1:
-			plt.plot(k, stFeatures[i, k], 'k*')
-		f1 = plt.gca()
-		f1.axes.get_xaxis().set_ticks([])
-		f1.axes.get_yaxis().set_ticks([])
+			for k in pos1:
+				plt.plot(k, stFeatures[i, k], 'k*')
+			f1 = plt.gca()
+			f1.axes.get_xaxis().set_ticks([])
+			f1.axes.get_yaxis().set_ticks([])
 
 	if PLOT:
 		plt.show(block = False)
