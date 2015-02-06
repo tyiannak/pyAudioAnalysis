@@ -144,14 +144,15 @@ TODO
 A segment classification functionality is provided in the library. Towards this end, the `audioTrainTest.py` file implements two types of classifiers, namely the kNN and SVM methods. 
 Below, we describe how to train a segment classifier from data (i.e. segments stored in WAV files, organized in directories that correspond to classes).
 
-The function used to train a segment classifier model is `featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName)` from `audioTrainTest.py`. The first argument is list of paths of directories. Each directory contains a signle audio class whose samples are stored in seperate WAV files. Then, the function takes the mid-term window size and step and the short-term window size and step respectively. 
-Finally, the last two arguments are associated to the classifier type and name. The latest is also used as a name of the file where the model is stored for future use (see next sections on classification and segmentation).
+The function used to train a segment classifier model is `featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT)` from `audioTrainTest.py`. The first argument is list of paths of directories. Each directory contains a signle audio class whose samples are stored in seperate WAV files. Then, the function takes the mid-term window size and step and the short-term window size and step respectively. 
+The arguments `classifierType` and `modelName` are associated to the classifier type and name. The latest is also used as a name of the file where the model is stored for future use (see next sections on classification and segmentation).
+Finally, the last argument is a boolean, set to `True` if the long-term beat-related features are to be calculated (e.g. for music classification tasks).
 In addition, an ARFF file is also created (with the same name as the model), where the whole set of feature vectors and respective class labels are stored. 
 Example:
 ```
 from pyAudioAnalysis import audioTrainTest as aT
-aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmMusicGenre3")
-aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "knn", "knnMusicGenre3")
+aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmMusicGenre3", True)
+aT.featureAndTrain(["/home/tyiannak/Desktop/MusicGenre/Classical/","/home/tyiannak/Desktop/MusicGenre/Electronic/","/home/tyiannak/Desktop/MusicGenre/Jazz/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "knn", "knnMusicGenre3", True)
 aT.featureAndTrain(["/home/tyiannak/Desktop/5Class/Silence/","/home/tyiannak/Desktop/5Class/SpeechMale/","/home/tyiannak/Desktop/5Class/SpeechFemale/","/home/tyiannak/Desktop/5Class/ObjectsOther/","/home/tyiannak/Desktop/5Class/Music/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svm5Classes")
 aT.featureAndTrain(["/home/tyiannak/Desktop/5Class/Silence/","/home/tyiannak/Desktop/5Class/SpeechMale/","/home/tyiannak/Desktop/5Class/SpeechFemale/","/home/tyiannak/Desktop/5Class/ObjectsOther/","/home/tyiannak/Desktop/5Class/Music/"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "knn", "knn5Classes")
 ```
