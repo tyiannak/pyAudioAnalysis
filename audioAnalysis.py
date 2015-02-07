@@ -74,8 +74,10 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -featureExtractionDir <path> <mtWin> <mtStep> <stWin> <stStep>"
 
-	elif argv[1] == '-featureVisualizationDir':	# TODO dirsWavFeatureExtraction + dimensionality reduction (ffmpeg????)
+	elif argv[1] == '-featureVisualizationDir':	# visualize the content relationships between recordings stored in a folder
 		if len(argv)==3:
+			if not os.path.isdir(argv[2]):
+				raise Exception("Input folder not found!")
 			aV.visualizeFeaturesFolder(argv[2], "pca", "")
 
 	elif argv[1] == '-fileSpectrogram':		# show spectogram of a sound stored in a file

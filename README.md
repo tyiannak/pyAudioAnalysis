@@ -137,7 +137,38 @@ Note that the BPM feature is only applicable in the long-term analysis approach.
 Therefore, functions that perform long-term averaging on mid-term statistics (e.g. `dirWavFeatureExtraction()`) have also the choise to compute the BPM (and its confidence value) as features in the long-term feature representation. 
 
 #### Data visualization 
-TODO
+The library provides the ability to visualize content similarities between audio recordings. 
+Towards this end a [d3js] chordial representation has been adopted.
+The core visualization functionality is provided in `audioVisualization.py` and in particular in function `visualizeFeaturesFolder()`. 
+This function uses `dirWavFeatureExtraction()` to extract the long-term features for each of the WAV files contained in the provided folder. 
+Then, a dimensionality reduction approach is performed using either the PCA or the LDA method. Since LDA is supervised, the required labels are taken from the 
+subcategories of the input files (if available). These are provided through the respective filenames, using the string `---` as a seperator. 
+For example, if folder contains the files:
+
+```
+Radiohead --- Lucky.wav
+Radiohead --- Karma Police.wav
+The Smashing Pumpkins --- Perfect.wav
+The Smashing Pumpkins --- Rhinocerous.wav
+```
+
+then the labels `0, 0, 1, 1` are given to the features of the respetive filenames. In this context, the first part of the filename (if the seperator exists) defines the group (or the general category) of the respective recording.
+Note that during the convertion of MP3 to WAV (see function `convertDirMP3ToWav()`) the MP3 tags can be used in order to generate WAV filenames with an artist tag in the first half of their filename, just like the example above. 
+
+As soon as the dimension of the feature space is reduced, a similarity matrix is computed (in the reduced space). 
+Through thresholding this similarity matrix, a graph that illustrates the content similarities between the recordings' content is extracted.
+This graph is represented using a [chordial diagram]. 
+Different colors of the edges (recordings) represent different categories (artists in our case).
+Links between edges correspond to content similarities.
+
+Command-line example:
+
+```
+python audioAnalysis.py -featureVisualizationDir MusicData/
+```
+
+The above functionality results in 3 chordial diagrams: (a) one bases the compuation of the similarity matrix on the initial feature space (b) another that is based on the reduced space (either PCA or LDA) and (c) a chordial diagram of the groups' connections.
+
 
 ### Audio Classification
 #### Train Segment Classifier From Data
@@ -263,4 +294,6 @@ python audioAnalysis.py -dirMp3toWAV data/beat/ 16000 1
 
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak
 [Audio thumbnailing]: https://www.google.gr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&sqi=2&ved=0CB4QFjAA&url=http%3A%2F%2Fmusic.ucsd.edu%2F~sdubnov%2FCATbox%2FReader%2FThumbnailingMM05.pdf&ei=pTX_U-i_K8S7ObiegMAP&usg=AFQjCNGT172T0VNB81IizPOyIYi3f58HJg&sig2=WAKASz6pvddafIMQlajXiA&bvm=bv.74035653,d.bGQ
+[d3js]: http://d3js.org/
+[chordial diagram] http://cgi.di.uoa.gr/~tyiannak/musicDemoVisualization/visualization_Chordial/similarities.html
 

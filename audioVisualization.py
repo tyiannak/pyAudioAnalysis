@@ -106,6 +106,13 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
 	shutil.copyfile("style.css", dirChordial+os.sep+"style.css")
 
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
+	'''
+	This function generates a chordial visualization for the recordings of the provided path.
+	ARGUMENTS:
+		- folder:		path of the folder that contains the WAV files to be processed
+		- dimReductionMethod:	method used to reduce the dimension of the initial feature space before computing the similarity.
+		- priorKnowledge:	if this is set equal to "artist"
+	'''
 	if dimReductionMethod=="pca":
 		allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, computeBEAT = True)
 		
