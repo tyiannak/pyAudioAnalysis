@@ -295,5 +295,5 @@ python audioAnalysis.py -dirMp3toWAV data/beat/ 16000 1
 [Theodoros Giannakopoulos]: http://www.di.uoa.gr/~tyiannak
 [Audio thumbnailing]: https://www.google.gr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&sqi=2&ved=0CB4QFjAA&url=http%3A%2F%2Fmusic.ucsd.edu%2F~sdubnov%2FCATbox%2FReader%2FThumbnailingMM05.pdf&ei=pTX_U-i_K8S7ObiegMAP&usg=AFQjCNGT172T0VNB81IizPOyIYi3f58HJg&sig2=WAKASz6pvddafIMQlajXiA&bvm=bv.74035653,d.bGQ
 [d3js]: http://d3js.org/
-[chordial diagram] http://cgi.di.uoa.gr/~tyiannak/musicDemoVisualization/visualization_Chordial/similarities.html
+[chordial diagram]: http://cgi.di.uoa.gr/~tyiannak/musicDemoVisualization/visualization_Chordial/similarities.html
 
