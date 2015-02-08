@@ -152,7 +152,9 @@ The Smashing Pumpkins --- Perfect.wav
 The Smashing Pumpkins --- Rhinocerous.wav
 ```
 
-then the labels `0, 0, 1, 1` are given to the features of the respetive filenames. In this context, the first part of the filename (if the seperator exists) defines the group (or the general category) of the respective recording.
+then the labels `0, 0, 1, 1` are given to the features of the respetive filenames. 
+In this context, the first part of the filename (if the seperator exists) defines the "group" (or the general category) of the respective recording.
+In the example above the groups are `Radiohead` for the first two and `The Smashing Pumpkins` for the last two recordings. 
 Note that during the convertion of MP3 to WAV (see function `convertDirMP3ToWav()`) the MP3 tags can be used in order to generate WAV filenames with an artist tag in the first half of their filename, just like the example above. 
 
 As soon as the dimension of the feature space is reduced, a similarity matrix is computed (in the reduced space). 
@@ -167,7 +169,11 @@ Command-line example:
 python audioAnalysis.py -featureVisualizationDir MusicData/
 ```
 
-The above functionality results in 3 chordial diagrams: (a) one bases the compuation of the similarity matrix on the initial feature space (b) another that is based on the reduced space (either PCA or LDA) and (c) a chordial diagram of the groups' connections.
+The above functionality results in 3 chordial diagrams: 
+(a) one bases the compuation of the similarity matrix on the initial feature space 
+(b) one that is based on the reduced space (either PCA or LDA) and 
+(c) a chordial diagram of the groups' connections.
+The three visualizations are respectivelly stored in three directories named `visualizationInitial_Chordial`, `visualization_Chordial`, and `visualizationGroup_Chordial`.
 
 
 ### Audio Classification
