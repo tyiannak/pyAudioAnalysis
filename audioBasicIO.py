@@ -35,6 +35,9 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
 		os.system(command)
 
 def readAudioFile(path):
+	'''
+	This function returns a numpy array that stores the audio samples of a specified WAV of AIFF file
+	'''
 	extension = os.path.splitext(path)[1]
 
 	try:
@@ -55,6 +58,9 @@ def readAudioFile(path):
 	return (Fs, x)
 
 def stereo2mono(x):
+	'''
+	This function converts the input signal (stored in a numpy array) to MONO (if it is STEREO)
+	'''
 	if x.ndim==1:
 		return x
 	else:
