@@ -205,7 +205,8 @@ def main(argv):
 	elif argv[1] == '-thumbnail':			# music thumbnailing (OK)
 			if len(argv)==4:	
 				inputFile = argv[2]
-
+				stWindow = 1.0
+				stStep = 0.5
 				if not os.path.isfile(inputFile):
 					raise Exception("Input audio file not found!")
 
@@ -217,7 +218,8 @@ def main(argv):
 				except ValueError:
 					print "Thumbnail size must be a float (in seconds)"
 					return 
-				[A1, A2, B1, B2] = aS.musicThumbnailing(x, Fs, 1.0, 0.5, thumbnailSize)	# find thumbnail endpoints
+				[A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, Fs, stWindow, stStep, thumbnailSize)	# find thumbnail endpoints			
+
 				# write thumbnails to WAV files:
 				thumbnailFileName1 = inputFile.replace(".wav","_thumb1.wav")
 				thumbnailFileName2 = inputFile.replace(".wav","_thumb2.wav")
@@ -225,6 +227,22 @@ def main(argv):
 				wavfile.write(thumbnailFileName2, Fs, x[int(Fs*B1):int(Fs*B2)])
 				print "1st thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName1, A1, A2)
 				print "2nd thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName2, B1, B2)
+
+				# Plot self-similarity matrix:
+				plt.imshow(Smatrix)
+				# Plot best-similarity diagonal:
+				Aarray = numpy.arange(A1/stStep, A2/stStep)
+				Barray = numpy.arange(B1/stStep, B2/stStep)
+				for i in range(0, Aarray.shape[0], 2):
+					plt.plot(Barray[i]-1, Aarray[i]+1, 'k.')
+					plt.plot(Barray[i]+1, Aarray[i]-1, 'k.')
+				plt.xlim([0, Smatrix.shape[0]])
+				plt.ylim([Smatrix.shape[1], 0])
+				plt.xlabel('frame no')
+				plt.ylabel('frame no')
+				plt.title('Self-similarity matrix')
+				plt.show()
+
 			else: 
 				print "Error.\nSyntax: " + argv[0] + " -thumbnail <filename> <thumbnailsize(seconds)>"
 
