@@ -437,7 +437,7 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
 	MIN = numpy.min(S)
 	for i in range(S.shape[0]):
 		for j in range(S.shape[1]):
-			if abs(i-j) < 5.0 / shortTermStep or i < j:
+			if abs(i-j) < 5.0 / shortTermStep or i > j:
 				S[i,j] = MIN;
 
 	# find max position:

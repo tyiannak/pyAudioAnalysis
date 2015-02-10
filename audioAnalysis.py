@@ -7,6 +7,7 @@ import audioVisualization as aV
 import audioBasicIO
 import utilities as uT
 import scipy.io.wavfile as wavfile
+import  matplotlib.patches
 
 
 def main(argv):
@@ -206,7 +207,7 @@ def main(argv):
 			if len(argv)==4:	
 				inputFile = argv[2]
 				stWindow = 1.0
-				stStep = 0.5
+				stStep = 1.0
 				if not os.path.isfile(inputFile):
 					raise Exception("Input audio file not found!")
 
@@ -229,18 +230,36 @@ def main(argv):
 				print "2nd thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName2, B1, B2)
 
 				# Plot self-similarity matrix:
+				fig = plt.figure()
+				ax = fig.add_subplot(111, aspect='auto')
 				plt.imshow(Smatrix)
 				# Plot best-similarity diagonal:
-				Aarray = numpy.arange(A1/stStep, A2/stStep)
-				Barray = numpy.arange(B1/stStep, B2/stStep)
-				for i in range(0, Aarray.shape[0], 2):
-					plt.plot(Barray[i]-1, Aarray[i]+1, 'k.')
-					plt.plot(Barray[i]+1, Aarray[i]-1, 'k.')
+				Xcenter = (A1/stStep + A2/stStep) / 2.0
+				Ycenter = (B1/stStep + B2/stStep) / 2.0
+
+
+				e1 = matplotlib.patches.Ellipse((Ycenter, Xcenter), thumbnailSize * 1.4, 3,
+			             angle=45, linewidth=3, fill=False)
+				ax.add_patch(e1)
+
+				plt.plot([B1, Smatrix.shape[0]], [A1, A1], color='k', linestyle='--', linewidth=2)
+				plt.plot([B2, Smatrix.shape[0]], [A2, A2], color='k', linestyle='--', linewidth=2)
+				plt.plot([B1, B1], [A1, Smatrix.shape[0]], color='k', linestyle='--', linewidth=2)
+				plt.plot([B2, B2], [A2, Smatrix.shape[0]], color='k', linestyle='--', linewidth=2)
+
 				plt.xlim([0, Smatrix.shape[0]])
 				plt.ylim([Smatrix.shape[1], 0])
+
+
+
+				ax.yaxis.set_label_position("right")
+				ax.yaxis.tick_right()
+
+
 				plt.xlabel('frame no')
 				plt.ylabel('frame no')
 				plt.title('Self-similarity matrix')
+
 				plt.show()
 
 			else: 
