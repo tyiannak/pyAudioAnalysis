@@ -1,4 +1,4 @@
-import sys, numpy, time, os, glob, mlpy, cPickle, shutil, audioop, signal
+import sys, numpy, time, os, glob, mlpy, cPickle, shutil, audioop, signal, csv, ntpath
 import audioFeatureExtraction as aF
 import audioBasicIO
 from matplotlib.mlab import find
@@ -125,6 +125,17 @@ def trainSVM(features, Cparam):
 	svm.learn(X, Y)	
 	return svm
 
+def trainSVMregression(Features, Ys, C):
+	[X, Y] = listOfFeatures2MatrixRegression(Features, Ys)
+	X = numpy.array(X)
+	Y = numpy.squeeze(numpy.asarray(numpy.array(Y))) 
+	svm = mlpy.LibSvm(svm_type='c_svc', kernel_type='linear', eps=0.0000001, C = C, probability=True)
+	svm.learn(X, Y)
+	Results = svm.pred(X)
+
+	return svm 
+
+
 def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT = False):
 	'''
 	This function is used as a wrapper to segment-based audio feature extraction and classifier training.
@@ -202,6 +213,94 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	    	fo.close()
 
+def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, modelName, computeBEAT = False):
+	'''
+	This function is used as a wrapper to segment-based audio feature extraction and classifier training.
+	ARGUMENTS:
+		dirName:		path of directory containing the WAV files and Regression CSVs
+		mtWin, mtStep:		mid-term window length and step
+		stWin, stStep:		short-term window and step
+		modelType:		"svm" or "knn"
+		modelName:		name of the model to be saved
+	RETURNS: 
+		None. Resulting regression model along with the respective model parameters are saved on files.
+	'''
+	# STEP A: Feature Extraction:
+	[features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName], mtWin, mtStep, stWin, stStep, computeBEAT = computeBEAT)
+	features = features[0]
+	fileNames = [ntpath.basename(f) for f in fileNames[0]]
+
+	# Read CSVs:
+	CSVs = glob.glob(dirName + os.sep + "*.csv")
+	regressionLabels = []
+	regressionNames = []
+	for c in CSVs:
+		curRegressionLabels = numpy.zeros((len(fileNames,)))
+		with open(c, 'rb') as csvfile:
+			CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+			for row in CSVreader:
+				if len(row)==2:
+					if row[0]+".wav" in fileNames:
+						index = fileNames.index(row[0]+".wav")
+						curRegressionLabels[index] = float(row[1])
+		regressionLabels.append(curRegressionLabels)
+		regressionNames.append(ntpath.basename(c).replace(".csv",""))
+
+	if len(features)==0:
+		print "ERROR: No data found in any input folder!"
+		return
+
+	numOfFeatures = features.shape[1]
+	# featureNames = [ "features" + str(d+1) for d in range(numOfFeatures)]
+	# TODO: ARRF WRITE????
+
+	# STEP B: Classifier Evaluation and Parameter Selection:
+	if modelType == "svm":
+		modelParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
+	elif modelType == "knn":
+		modelParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
+
+	# get optimal classifeir parameter:
+	bestParam = evaluateRegression(features, regressionLabels[0], 100, modelType, modelParams, 0)
+
+	print "Selected params: {0:.5f}".format(bestParam)
+
+	[featuresNorm, MEAN, STD] = normalizeFeatures([features])		# normalize features
+	MEAN = MEAN.tolist(); STD = STD.tolist()
+	featuresNew = featuresNorm 
+	
+	# STEP C: Save the classifier to file
+	if classifierType == "svm":
+		Classifier = trainSVM(featuresNew, bestParam)
+		Classifier.save_model(modelName)
+		fo = open(modelName + "MEANS", "wb")
+		cPickle.dump(MEAN, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(STD,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(mtWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	    	fo.close()
+	elif classifierType == "knn":
+		[X, Y] = listOfFeatures2Matrix(featuresNew)
+		X = X.tolist(); Y = Y.tolist()
+		fo = open(modelName, "wb")
+		cPickle.dump(X, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(Y,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(MEAN, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(STD,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(bestParam,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(mtWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	    	fo.close()
+
+
 def loadKNNModel(kNNModelName):
 	try:
 		fo = open(kNNModelName, "rb")
@@ -266,9 +365,9 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 		features: 	a list ([numOfClasses x 1]) whose elements containt numpy matrices of features.
 				each matrix features[i] of class i is [numOfSamples x numOfDimensions] 
 		ClassNames:	list of class names (strings)
-		Gammas:		list of possible Gamma parameters in the SVM Model
-		Nus:		list of possible Nus parameters in the SVM model
-		ClassifierName:	"svm" or "knn"
+		nExp:		number of cross-validation experiments
+		ClassifierName: svm or knn
+		Params:		list of classifier parameters (for parameter tuning during cross-validation)
 		parameterMode:	0: choose parameters that lead to maximum overall classification ACCURACY
 				1: choose parameters that lead to maximum overall F1 MEASURE
 	RETURNS:
@@ -283,8 +382,7 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 	PrecisionClassesAll = []; RecallClassesAll = []; ClassesAll = []; F1ClassesAll = []
 	CMsAll = []
 
-	for Ci, C in enumerate(Params):				# for each Nu value		
-
+	for Ci, C in enumerate(Params):				# for each param value		
 				CM = numpy.zeros((nClasses, nClasses))
 				for e in range(nExp):		# for each cross-validation iteration:
 					# split features:
@@ -349,6 +447,72 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 		print "Confusion Matrix:"
 		printConfusionMatrix(CMsAll[bestF1Ind], ClassNames)
 		return Params[bestF1Ind]
+
+
+def evaluateRegression(features, labels, nExp, MethodName, Params, parameterMode):
+	'''
+	ARGUMENTS:
+		features: 	numpy matrices of features [numOfSamples x numOfDimensions] 
+		labels:		list of sample labels
+		Gammas:		list of possible Gamma parameters in the SVM Model
+		Nus:		list of possible Nus parameters in the SVM model
+		ClassifierName:	"svm" or "knn"
+		parameterMode:	0: choose parameters that lead to maximum overall classification ACCURACY
+				1: choose parameters that lead to maximum overall F1 MEASURE
+	RETURNS:
+	 	bestParam:	the value of the input parameter that optimizes the selected performance measure		
+	'''
+
+	# feature normalization:
+	(featuresNorm, MEAN, STD) = normalizeFeatures([features])
+	featuresNorm = featuresNorm[0]
+	nSamples = labels.shape[0]
+	partTrain = 0.9
+	ErrorsAll = []
+	for Ci, C in enumerate(Params):				# for each param value
+				Errors = []
+				for e in range(nExp):		# for each cross-validation iteration:
+					# split features:
+					randperm = numpy.random.permutation(range(nSamples))
+					nTrain = int(round(partTrain * nSamples))
+					featuresTrain = [featuresNorm[randperm[i]] for i in range(nTrain)]
+					featuresTest = [featuresNorm[randperm[i+nTrain]] for i in range(nSamples - nTrain)]
+					labelsTrain = [labels[randperm[i]] for i in range(nTrain)]
+					labelsTest  = [labels[randperm[i+nTrain]] for i in range(nSamples - nTrain)]
+					# train multi-class svms:
+					if MethodName=="svm":
+						Classifier = trainSVMregression([featuresTrain], labelsTrain, C)
+# TODO KNN
+#					elif ClassifierName=="knn":
+#						Classifier = trainKNN(featuresTrain, C)
+
+					ErrorTest = []
+					for itest, fTest in enumerate(featuresTest):
+						R = Classifier.pred(fTest)
+						R = 4.7
+						ErrorTest.append((R - labelsTest[itest])*(R - labelsTest[itest]));
+					Error = numpy.array(ErrorTest).mean()
+					Errors.append(Error)
+				ErrorsAll.append(numpy.array(Errors).mean())
+
+#	print ("\t\t"),
+#	for i,c in enumerate(ClassNames): 
+#		if i==len(ClassNames)-1: print "{0:s}\t\t".format(c),  
+#		else: print "{0:s}\t\t\t".format(c), 
+#	print ("OVERALL")
+#	print ("\tC"),
+#	for c in ClassNames: print "\tPRE\tREC\tF1", 
+#	print "\t{0:s}\t{1:s}".format("ACC","F1")
+#	bestAcInd = numpy.argmax(acAll)
+	bestInd = numpy.argmin(ErrorsAll)
+	print ErrorsAll, bestInd
+	for i in range(len(ErrorsAll)):
+		print "\t{0:.3f} {1:.3f}".format(Params[i], ErrorsAll[i])
+		if i == bestInd: print "\t best", 
+ 		print
+
+	return Params[bestInd]
+
 
 def printConfusionMatrix(CM, ClassNames):
 	'''

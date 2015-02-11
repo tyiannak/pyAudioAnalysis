@@ -115,12 +115,22 @@ def main(argv):
 			if len(argv)>6: 
 				method = argv[2]
 				beatFeatures = (int(argv[3])==1)
-				print beatFeatures
 				listOfDirs = argv[4:len(argv)-1]
 				modelName = argv[-1]			
 				aT.featureAndTrain(listOfDirs, 1, 1, aT.shortTermWindow, aT.shortTermStep, method.lower(), modelName, computeBEAT = beatFeatures)
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -trainClassifier <method(svm or knn)> <beat features> <directory 1> <directory 2> ... <directory N> <modelName>"
+
+	elif argv[1] == "-trainRegression": 		# Segment regression model
+			if len(argv)==6: 
+				method = argv[2]
+				beatFeatures = (int(argv[3])==1)
+				dirName = argv[4]
+				modelName = argv[5]			
+				aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, method.lower(), modelName, computeBEAT = beatFeatures)
+			else:
+				print "Error.\nSyntax: " + argv[0] + " -trainRegression <method(svm or knn)> <beat features> <directory> <modelName>"
+
 
 	elif argv[1] == "-classifyFile":		# Single File Classification (OK)
 			if len(argv)==5: 
