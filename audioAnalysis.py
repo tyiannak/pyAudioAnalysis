@@ -104,13 +104,6 @@ def main(argv):
 				print "Error.\nSyntax: " + argv[0] + " -fileSpectrogram <fileName>"
 
 
-	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
-			inputFile = argv[2]
-			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
-			#speechLimits = aS.speechSegmentation(x, Fs, 2.0, 0.10, True)
-			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
-			#print speechLimits
-
 	elif argv[1] == "-trainClassifier": 		# Segment classifier training (OK)
 			if len(argv)>6: 
 				method = argv[2]
@@ -130,7 +123,6 @@ def main(argv):
 				aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, method.lower(), modelName, computeBEAT = beatFeatures)
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -trainRegression <method(svm or knn)> <beat features> <directory> <modelName>"
-
 
 	elif argv[1] == "-classifyFile":		# Single File Classification (OK)
 			if len(argv)==5: 
@@ -152,6 +144,26 @@ def main(argv):
 				print "Winner class: " + classNames[int(Result)]
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -classifyFile <method(svm or knn)> <modelName> <fileName>"
+
+	elif argv[1] == "-regressionFile":		# Single File Classification (OK)
+			if len(argv)==5: 
+				modelType = argv[2]
+				modelName = argv[3]
+				inputFile = argv[4]
+
+				if modelType not in ["svm", "knn"]:
+					raise Exception("ModelType has to be either svm or knn!")
+				if not os.path.isfile(inputFile):
+					raise Exception("Input audio file not found!")
+
+				R, regressionNames = aT.fileRegression(inputFile, modelName, modelType)
+				for i in range(len(R)):
+					print "{0:s}\t{1:.3f}".format(regressionNames[i], R[i])
+				
+				#print "{0:s}\t{1:.2f}".format(c,P[i])
+
+			else:
+				print "Error.\nSyntax: " + argv[0] + " -regressionFile <method(svm or knn)> <modelName> <fileName>"
 
 	elif argv[1] == "-classifyFolder": 			# Directory classification (Ok)
 			if len(argv)==6 or len(argv)==5: 
@@ -196,6 +208,44 @@ def main(argv):
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -classifyFolder <method(svm or knn)> <modelName> <folderName> <outputMode(0 or 1)"
 
+	elif argv[1] == "-regressionFolder": 			# Regression applied on the WAV files of a folder
+			if len(argv)==5: 
+				modelType = argv[2]
+				modelName = argv[3]
+				inputFolder = argv[4]
+
+				if modelType not in ["svm", "knn"]:
+					raise Exception("ModelType has to be either svm or knn!")
+				if not os.path.isdir(inputFolder):
+					raise Exception("Input folder not found!")
+
+				types = ('*.wav',)
+				wavFilesList = []
+				for files in types:
+					wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
+
+				wavFilesList = sorted(wavFilesList)	
+				Results = []
+				for wavFile in wavFilesList:	
+					R, regressionNames = aT.fileRegression(wavFile, modelName, modelType)
+					Results.append(R)
+				Results = numpy.array(Results)
+				for i, r in enumerate(regressionNames):
+					[Histogram, bins] = numpy.histogram(Results[:, i])
+					centers = (bins[0:-1] + bins[1::]) / 2.0
+					plt.subplot(len(regressionNames), 1, i);
+					plt.plot(centers, Histogram)
+					plt.title(r)
+				plt.show()
+#					for h in Histogram:
+#						print "{0:20d}".format(h),
+#				if outputMode=="1":
+#					for i,h in enumerate(Histogram):
+#						print "{0:20s}\t\t{1:d}".format(classNames[i], h)
+			else:
+				print "Error.\nSyntax: " + argv[0] + " -regressionFolder <method(svm or knn)> <modelName> <folderName>"
+
+
 	elif argv[1] == '-segmentClassifyFile':		# Segmentation-classification (OK)
 		if (len(argv)==5):
 			modelType = argv[2]
@@ -212,6 +262,13 @@ def main(argv):
 			[segs, classes] = aS.mtFileClassification(inputWavFile, modelName, modelType, True)
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
+
+	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
+			inputFile = argv[2]
+			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
+			#speechLimits = aS.speechSegmentation(x, Fs, 2.0, 0.10, True)
+			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
+			#print speechLimits
 
 	elif argv[1] == '-thumbnail':			# music thumbnailing (OK)
 			if len(argv)==4:	

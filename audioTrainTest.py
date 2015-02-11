@@ -63,6 +63,25 @@ def classifierWrapper(classifier, classifierType, testSample):
 		P = classifier.pred_probability(testSample)
 	return [R, P]
 
+def regressionWrapper(model, modelType, testSample):
+	'''
+	This function is used as a wrapper to pattern classification.
+	ARGUMENTS:
+		- model:		regression model
+		- modelType:		"svm" or "knn" (TODO)
+		- testSample:		a feature vector (numpy array)
+	RETURNS:
+		- R:			regression result (estimated value)
+
+	EXAMPLE (for some audio signal stored in array x):
+		TODO
+	'''
+	if modelType == "svm":
+		return (model.pred(testSample))
+#	elif classifierType == "knn":
+
+	return None
+
 def randSplitFeatures(features, partTrain):
 	"""
 	def randSplitFeatures(features):
@@ -125,15 +144,12 @@ def trainSVM(features, Cparam):
 	svm.learn(X, Y)	
 	return svm
 
-def trainSVMregression(Features, Ys, C):
-	[X, Y] = listOfFeatures2MatrixRegression(Features, Ys)
-	X = numpy.array(X)
-	Y = numpy.squeeze(numpy.asarray(numpy.array(Y))) 
-	svm = mlpy.LibSvm(svm_type='c_svc', kernel_type='linear', eps=0.0000001, C = C, probability=True)
-	svm.learn(X, Y)
-	Results = svm.pred(X)
-
-	return svm 
+def trainSVMregression(Features, Y, C):
+	#svm = mlpy.LibSvm(svm_type='c_svc', kernel_type='linear', eps=0.0000001, C = C, probability=True)
+	svm = mlpy.LibSvm(svm_type='epsilon_svr', kernel_type='linear', eps=0.001, C = C, probability=False)
+	svm.learn(Features, Y)
+	trainError = numpy.mean( numpy.abs( svm.pred(Features) - Y) )
+	return svm, trainError 
 
 
 def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT = False):
@@ -173,7 +189,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
 
 	# get optimal classifeir parameter:
-	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0)
+	bestParam = evaluateClassifier(features, classNames, 500, classifierType, classifierParams, 0)
 
 	print "Selected params: {0:.5f}".format(bestParam)
 
@@ -234,8 +250,8 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 	CSVs = glob.glob(dirName + os.sep + "*.csv")
 	regressionLabels = []
 	regressionNames = []
-	for c in CSVs:
-		curRegressionLabels = numpy.zeros((len(fileNames,)))
+	for c in CSVs:										# for each CSV
+		curRegressionLabels = numpy.zeros((len(fileNames,)))				# read filenames, map to "fileNames" and append respective values in the regressionLabels
 		with open(c, 'rb') as csvfile:
 			CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
 			for row in CSVreader:
@@ -243,65 +259,47 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 					if row[0]+".wav" in fileNames:
 						index = fileNames.index(row[0]+".wav")
 						curRegressionLabels[index] = float(row[1])
-		regressionLabels.append(curRegressionLabels)
-		regressionNames.append(ntpath.basename(c).replace(".csv",""))
+		regressionLabels.append(curRegressionLabels)					# curRegressionLabels is the list of values for the current regression problem
+		regressionNames.append(ntpath.basename(c).replace(".csv",""))			# regression task name
 
 	if len(features)==0:
 		print "ERROR: No data found in any input folder!"
 		return
 
 	numOfFeatures = features.shape[1]
-	# featureNames = [ "features" + str(d+1) for d in range(numOfFeatures)]
-	# TODO: ARRF WRITE????
 
+	# TODO: ARRF WRITE????
 	# STEP B: Classifier Evaluation and Parameter Selection:
 	if modelType == "svm":
-		modelParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
-	elif modelType == "knn":
-		modelParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
+		modelParams = numpy.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0, 10.0])
+#	elif modelType == "knn":
+#		modelParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
 
-	# get optimal classifeir parameter:
-	bestParam = evaluateRegression(features, regressionLabels[0], 100, modelType, modelParams, 0)
+	for iRegression, r in enumerate(regressionNames):
+		# get optimal classifeir parameter:
+		print "Regression task " + r
+		bestParam = evaluateRegression(features, regressionLabels[iRegression], 500, modelType, modelParams)
+		print "Selected params: {0:.5f}".format(bestParam)
 
-	print "Selected params: {0:.5f}".format(bestParam)
-
-	[featuresNorm, MEAN, STD] = normalizeFeatures([features])		# normalize features
-	MEAN = MEAN.tolist(); STD = STD.tolist()
-	featuresNew = featuresNorm 
+		[featuresNorm, MEAN, STD] = normalizeFeatures([features])		# normalize features
 	
-	# STEP C: Save the classifier to file
-	if classifierType == "svm":
-		Classifier = trainSVM(featuresNew, bestParam)
-		Classifier.save_model(modelName)
-		fo = open(modelName + "MEANS", "wb")
-		cPickle.dump(MEAN, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(STD,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(mtWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-	    	fo.close()
-	elif classifierType == "knn":
-		[X, Y] = listOfFeatures2Matrix(featuresNew)
-		X = X.tolist(); Y = Y.tolist()
-		fo = open(modelName, "wb")
-		cPickle.dump(X, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(Y,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(MEAN, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(STD,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(bestParam,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(mtWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-		cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
-	    	fo.close()
+		# STEP C: Save the model to file
+		if modelType == "svm":
+			Classifier, _ = trainSVMregression(featuresNorm[0], regressionLabels[iRegression], bestParam)
+			Classifier.save_model(modelName + "_" + r)
+			fo = open(modelName + "_" + r + "MEANS", "wb")
+			cPickle.dump(MEAN, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(STD,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(mtWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(mtStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(stWin, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(stStep, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(computeBEAT, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+		    	fo.close()
+	#	elif classifierType == "knn":
 
 
-def loadKNNModel(kNNModelName):
+def loadKNNModel(kNNModelName, isRegression = False):
 	try:
 		fo = open(kNNModelName, "rb")
 	except IOError:
@@ -312,7 +310,8 @@ def loadKNNModel(kNNModelName):
 		Y     = cPickle.load(fo)
 		MEAN  = cPickle.load(fo)
 		STD   = cPickle.load(fo)
-		classNames =  cPickle.load(fo)
+		if not isRegression:
+			classNames =  cPickle.load(fo)
 		K     = cPickle.load(fo)
 		mtWin = cPickle.load(fo)
 		mtStep = cPickle.load(fo)
@@ -329,10 +328,13 @@ def loadKNNModel(kNNModelName):
 	STD = numpy.array(STD)
 
 	Classifier = kNN(X, Y, K) # Note: a direct call to the kNN constructor is used here, since the 
+       
+	if isRegression:
+		return(Classifier, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT);	
+	else:
+		return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);
 
-	return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);
-
-def loadSVModel(SVMmodelName):
+def loadSVModel(SVMmodelName, isRegression = False):
 	try:
 		fo = open(SVMmodelName+"MEANS", "rb")
 	except IOError:
@@ -341,12 +343,14 @@ def loadSVModel(SVMmodelName):
     	try:
 		MEAN     = cPickle.load(fo)
 		STD      = cPickle.load(fo)
-		classNames =  cPickle.load(fo)
+		if not isRegression:
+			classNames =  cPickle.load(fo)
 		mtWin = cPickle.load(fo)
 		mtStep = cPickle.load(fo)
 		stWin = cPickle.load(fo)
 		stStep = cPickle.load(fo)
-		computeBEAT = cPickle.load(fo)
+		computeBEAT = cPickle.load(fo)		
+
     	except:
         	fo.close()
 	fo.close()	
@@ -357,7 +361,10 @@ def loadSVModel(SVMmodelName):
 	COEFF = []
 	SVM = mlpy.LibSvm.load_model(SVMmodelName)
 
-	return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);				
+	if isRegression:
+		return(SVM, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT);				
+	else:
+		return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);				
 
 def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode):
 	'''
@@ -386,7 +393,7 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 				CM = numpy.zeros((nClasses, nClasses))
 				for e in range(nExp):		# for each cross-validation iteration:
 					# split features:
-					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, 0.50)
+					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, 0.90)
 					# train multi-class svms:
 					if ClassifierName=="svm":
 						Classifier = trainSVM(featuresTrain, C)
@@ -449,16 +456,14 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 		return Params[bestF1Ind]
 
 
-def evaluateRegression(features, labels, nExp, MethodName, Params, parameterMode):
+def evaluateRegression(features, labels, nExp, MethodName, Params):
 	'''
 	ARGUMENTS:
 		features: 	numpy matrices of features [numOfSamples x numOfDimensions] 
 		labels:		list of sample labels
-		Gammas:		list of possible Gamma parameters in the SVM Model
-		Nus:		list of possible Nus parameters in the SVM model
-		ClassifierName:	"svm" or "knn"
-		parameterMode:	0: choose parameters that lead to maximum overall classification ACCURACY
-				1: choose parameters that lead to maximum overall F1 MEASURE
+		nExp:		number of cross-validation experiments
+		MethodName:	svm or knn
+		Params:		list of classifier params to be evaluated
 	RETURNS:
 	 	bestParam:	the value of the input parameter that optimizes the selected performance measure		
 	'''
@@ -469,8 +474,12 @@ def evaluateRegression(features, labels, nExp, MethodName, Params, parameterMode
 	nSamples = labels.shape[0]
 	partTrain = 0.9
 	ErrorsAll = []
+	ErrorsTrainAll = [];
+	ErrorsBaselineAll = [];
 	for Ci, C in enumerate(Params):				# for each param value
 				Errors = []
+				ErrorsTrain = []
+				ErrorsBaseline = []
 				for e in range(nExp):		# for each cross-validation iteration:
 					# split features:
 					randperm = numpy.random.permutation(range(nSamples))
@@ -479,38 +488,38 @@ def evaluateRegression(features, labels, nExp, MethodName, Params, parameterMode
 					featuresTest = [featuresNorm[randperm[i+nTrain]] for i in range(nSamples - nTrain)]
 					labelsTrain = [labels[randperm[i]] for i in range(nTrain)]
 					labelsTest  = [labels[randperm[i+nTrain]] for i in range(nSamples - nTrain)]
+
 					# train multi-class svms:
 					if MethodName=="svm":
-						Classifier = trainSVMregression([featuresTrain], labelsTrain, C)
+						featuresTrain = numpy.matrix(featuresTrain)
+						[Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)
 # TODO KNN
 #					elif ClassifierName=="knn":
 #						Classifier = trainKNN(featuresTrain, C)
 
 					ErrorTest = []
+					ErrorTestBaseline = []
 					for itest, fTest in enumerate(featuresTest):
-						R = Classifier.pred(fTest)
-						R = 4.7
+						R = regressionWrapper(Classifier, MethodName, fTest)
+						Rbaseline = numpy.mean(labelsTrain)
 						ErrorTest.append((R - labelsTest[itest])*(R - labelsTest[itest]));
+						ErrorTestBaseline.append((Rbaseline - labelsTest[itest])*(Rbaseline - labelsTest[itest]));					
 					Error = numpy.array(ErrorTest).mean()
+					ErrorBaseline = numpy.array(ErrorTestBaseline).mean()
 					Errors.append(Error)
+					ErrorsTrain.append(trainError)
+					ErrorsBaseline.append(ErrorBaseline)
 				ErrorsAll.append(numpy.array(Errors).mean())
+				ErrorsTrainAll.append(numpy.array(ErrorsTrain).mean())
+				ErrorsBaselineAll.append(numpy.array(ErrorsBaseline).mean())
 
-#	print ("\t\t"),
-#	for i,c in enumerate(ClassNames): 
-#		if i==len(ClassNames)-1: print "{0:s}\t\t".format(c),  
-#		else: print "{0:s}\t\t\t".format(c), 
-#	print ("OVERALL")
-#	print ("\tC"),
-#	for c in ClassNames: print "\tPRE\tREC\tF1", 
-#	print "\t{0:s}\t{1:s}".format("ACC","F1")
-#	bestAcInd = numpy.argmax(acAll)
 	bestInd = numpy.argmin(ErrorsAll)
-	print ErrorsAll, bestInd
-	for i in range(len(ErrorsAll)):
-		print "\t{0:.3f} {1:.3f}".format(Params[i], ErrorsAll[i])
-		if i == bestInd: print "\t best", 
- 		print
 
+	print "{0:s}\t{1:s}\t{2:s}".format("Param","MSE", "TrainMSE")
+	for i in range(len(ErrorsAll)):
+		print "{0:.4f}\t{1:.2f}\t{2:.2f}\t{3:.2f}".format(Params[i], ErrorsAll[i], ErrorsTrainAll[i], ErrorsBaselineAll[i]),
+		if i == bestInd: print "\t best", 
+		print 
 	return Params[bestInd]
 
 
@@ -598,32 +607,6 @@ def listOfFeatures2Matrix(features):
 			Y = numpy.append(Y, i * numpy.ones((len(f), 1)))
 	return (X, Y)
 
-def listOfFeatures2MatrixRegression(features, Ys):
-	'''
-	listOfFeatures2MatrixRegression(features)
-	
-	Same as MatrixRegression but used for regression (also takes real values as arguments)
-
-	ARGUMENTS:
-		- features:		a list of feature matrices
-		- Ys:			a list of respective real values
-
-	RETURNS:
-		- X:			a concatenated matrix of features
-		- Y:			a vector of class indeces	
-	'''
-
-	X = numpy.array([])
-	Y = numpy.array([])
-	for i,f in enumerate(features):
-		if i==0:
-			X = f
-			Y = Ys[i] * numpy.ones((len(f), 1))
-		else:
-			X = numpy.vstack((X, f))
-			Y = numpy.append(Y, Ys[i] * numpy.ones((len(f), 1)))
-	return (X, Y)
-	
 
 def pcaDimRed(features, nDims):
 	[X, Y] = listOfFeatures2Matrix(features)
@@ -649,7 +632,7 @@ def fileClassification(inputFile, modelName, modelType):
 		return (-1,-1, -1)
 
 	if not os.path.isfile(inputFile):
-		print "fileClassification: input modelType not found!"
+		print "fileClassification: wav file not found!"
 		return (-1,-1, -1)
 
 
@@ -671,6 +654,54 @@ def fileClassification(inputFile, modelName, modelType):
 
 	[Result, P] = classifierWrapper(Classifier, modelType, curFV)	# classification
 	return Result, P, classNames
+
+def fileRegression(inputFile, modelName, modelType):
+	# Load classifier:
+
+	if not os.path.isfile(inputFile):
+		print "fileClassification: wav file not found!"
+		return (-1,-1, -1)
+
+	regressionModels = glob.glob(modelName + "*")
+	regressionModels2 = []
+	for r in regressionModels:
+		if r[-5::] != "MEANS":
+			regressionModels2.append(r)
+	regressionModels = regressionModels2
+	regressionNames = []
+	for r in regressionModels:
+		regressionNames.append(r[r.rfind("_")+1::])
+
+	# FEATURE EXTRACTION
+	# LOAD ONLY THE FIRST MODEL (for mtWin, etc)
+	if modelType=='svm':
+		[_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
+	elif modelType=='knn':
+		[_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(regressionModels[0], True)
+
+	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# read audio file and convert to mono
+	x = audioBasicIO.stereo2mono(x);
+	# feature extraction:
+	[MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
+	MidTermFeatures = MidTermFeatures.mean(axis=1)		# long term averaging of mid-term statistics
+	if computeBEAT:
+		[beat, beatConf] = aF.beatExtraction(s, stStep)
+		MidTermFeatures = numpy.append(MidTermFeatures, beat);
+		MidTermFeatures = numpy.append(MidTermFeatures, beatConf);
+
+	# REGRESSION
+	R = []
+	for ir, r in enumerate(regressionModels):
+		if not os.path.isfile(r):
+			print "fileClassification: input modelName not found!"
+			return (-1,-1, -1)
+		if modelType=='svm':
+			[Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
+		elif modelType=='knn':
+			[Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(r, True)			
+		curFV = (MidTermFeatures - MEAN) / STD;			# normalization
+		R.append(regressionWrapper(Model, modelType, curFV))	# classification
+	return R, regressionNames
 
 
 def lda(data,labels,redDim):
