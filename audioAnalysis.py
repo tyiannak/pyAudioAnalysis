@@ -173,12 +173,12 @@ def main(argv):
 				if len(argv)==6:
 					outputMode = argv[5]
 				else:
-					outputMode = "2"
+					outputMode = "0"
 
 				if modelType not in ["svm", "knn"]:
 					raise Exception("ModelType has to be either svm or knn!")
-				if outputMode not in ["0","1","2"]:
-					raise Exception("outputMode has to be 0, 1 or 2")
+				if outputMode not in ["0","1"]:
+					raise Exception("outputMode has to be 0 or 1")
 				if not os.path.isfile(modelName):
 					raise Exception("Input modelName not found!")
 				if not os.path.isdir(inputFolder):
@@ -198,13 +198,10 @@ def main(argv):
 					if outputMode=="1":
 						print "{0:s}\t{1:s}".format(wavFile,classNames[Result])
 				Results = numpy.array(Results)
+				# print distribution of classes:
 				[Histogram, _] = numpy.histogram(Results, bins=numpy.arange(len(classNames)+1))
-				if outputMode!="1":
-					for h in Histogram:
-						print "{0:20d}".format(h),
-				if outputMode=="1":
-					for i,h in enumerate(Histogram):
-						print "{0:20s}\t\t{1:d}".format(classNames[i], h)
+				for i,h in enumerate(Histogram):
+					print "{0:20s}\t\t{1:d}".format(classNames[i], h)
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -classifyFolder <method(svm or knn)> <modelName> <folderName> <outputMode(0 or 1)"
 

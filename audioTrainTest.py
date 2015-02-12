@@ -335,6 +335,12 @@ def loadKNNModel(kNNModelName, isRegression = False):
 		return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);
 
 def loadSVModel(SVMmodelName, isRegression = False):
+	'''
+	This function loads an SVM model either for classification or training.
+	ARGMUMENTS:
+		- SVMmodelName: 	the path of the model to be loaded
+		- isRegression:		a flag indigating whereas this model is regression or not
+	'''
 	try:
 		fo = open(SVMmodelName+"MEANS", "rb")
 	except IOError:
@@ -382,8 +388,8 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 	'''
 
 	# feature normalization:
-	(featuresNorm, MEAN, STD) = normalizeFeatures(features)
-
+	#(featuresNorm, MEAN, STD) = normalizeFeatures(features)
+	featuresNorm = features;
 	nClasses = len(features)
 	CAll = []; acAll = []; F1All = []	
 	PrecisionClassesAll = []; RecallClassesAll = []; ClassesAll = []; F1ClassesAll = []
@@ -551,7 +557,7 @@ def printConfusionMatrix(CM, ClassNames):
 
 def normalizeFeatures(features):
 	'''
-	This function nromalizes a feature set to 0-mean and 1-std.
+	This function normalizes a feature set to 0-mean and 1-std.
 	Used in most classifier trainning cases.
 
 	ARGUMENTS:
