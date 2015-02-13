@@ -260,6 +260,12 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
 
+	elif argv[1] == "-silenceRemoval":
+			inputFile = argv[2]
+			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
+			segmentLimits = aS.speechSegmentation(x, Fs, 1.0, 1.0, True)
+			print segmentLimits
+
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
 			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
