@@ -263,7 +263,7 @@ def main(argv):
 	elif argv[1] == "-silenceRemoval":
 			inputFile = argv[2]
 			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
-			segmentLimits = aS.speechSegmentation(x, Fs, 1.0, 1.0, True)
+			segmentLimits = aS.onsetDetection(x, Fs, 0.04, 0.02, True)
 			print segmentLimits
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO

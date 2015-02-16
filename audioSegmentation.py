@@ -13,12 +13,13 @@ from sklearn.lda import LDA
 # # # # # # # # # # # # # # #
 
 def smoothMovingAvg(inputSignal, windowLen=11):
+	windowLen = int(windowLen)
 	if inputSignal.ndim != 1:
 		raise ValueError, ""
 	if inputSignal.size < windowLen:
 		raise ValueError, "Input vector needs to be bigger than window size."
 	if windowLen<3:
-		return x
+		return inputSignal
 	s = numpy.r_[2*inputSignal[0] - inputSignal[windowLen-1::-1], inputSignal, 2*inputSignal[-1]-inputSignal[-1:-windowLen:-1]]
 	w = numpy.ones(windowLen, 'd')
 	y = numpy.convolve(w/w.sum(), s, mode='same')
@@ -191,7 +192,7 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 		Fs:		sampling freq
 		midTermSize:	++++
 	'''
-	stWindow = 0.10
+	stWindow = 0.02
 	x = audioBasicIO.stereo2mono(x);
 	# STEP A: extract mid and short-term features:
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, midTermSize * Fs, midTermStep * Fs, round(Fs*stWindow), round(Fs*stWindow));
@@ -201,7 +202,7 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 	EnergySt = ShortTermFeatures[1, :]
 	# sort energy feature values:
 	E = numpy.sort(EnergySt)
-	L1 = int(len(E)/10)
+	L1 = int(len(E)/20)
 	# compute "lower" energy threshold ...
 	T1 = numpy.mean(E[0:L1])
 	# ... and "higher" energy threhold:
@@ -209,6 +210,7 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 	# get the whole short-term feature vectors for the respective two classes (low energy and high energy):
 	Class1 = ShortTermFeatures[:,numpy.where(EnergySt<T1)[0]]
 	Class2 = ShortTermFeatures[:,numpy.where(EnergySt>T2)[0]]
+
 	# form the binary classification task and train the respective SVM probabilistic model
 	featuresSS = [Class1.T, Class2.T];
 	[featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)
@@ -220,9 +222,13 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS
 		Pspeech.append(SVM.pred_probability(curFV)[1])
 	Pspeech = numpy.array(Pspeech)
-	Pspeech = smoothMovingAvg(smoothMovingAvg(Pspeech, 3), 5)
+	Pspeech = smoothMovingAvg(smoothMovingAvg(Pspeech, 5), 11)
+	PspeechSorted = numpy.sort(Pspeech)
+	Nt = PspeechSorted.shape[0] / 20;
+	T = (numpy.mean( 1.2*PspeechSorted[0:Nt] ) + 0.8*numpy.mean(PspeechSorted[-Nt::]) )/ 2.0
+	print T
 	# get the "valley" positions of the speech probability sequence:
-	MinIdx = numpy.where(Pspeech<0.4)[0];
+	MinIdx = numpy.where(Pspeech<T)[0];
 	i = 0;
 	timeClusters = []
 	while i<len(MinIdx):
@@ -242,18 +248,94 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 		Mins.append(numpy.mean(c))		
 
 	# transform the positions to time (seconds)
-	segmentLimits = numpy.array([0.0])
+
+	segmentLimits = numpy.array([])
 	segmentLimits = numpy.append(segmentLimits, numpy.array(Mins) * stWindow)
-	segmentLimits = numpy.append(segmentLimits, len(x)/float(Fs))
+	segmentLimits[-1] = (len(x)/float(Fs))
 
 	# print numpy.array(Mins) * stWindow
 	if plot:
-		plt.subplot(2,1,1); plt.plot(x)
+		plt.subplot(3,1,1); plt.plot(x)
 		for l in Mins:
 			plt.axvline(x=l*Fs*stWindow); 
-		plt.subplot(2,1,2); plt.plot(Pspeech);
+		plt.subplot(3,1,3); plt.plot(Pspeech);
 		for l in Mins:
 			plt.axvline(x=l); 
+		plt.show()
+
+	return segmentLimits
+
+def onsetDetection(x, Fs, stWin, stStep, plot = False):
+	'''
+	'''
+	x = audioBasicIO.stereo2mono(x);
+	# STEP A: short - term feature extraction:
+	ShortTermFeatures = aF.stFeatureExtraction(x, Fs, stWin*Fs, stStep*Fs)
+
+	# STEP B: 
+	# keep only the energy short-term sequence (2nd feature)	
+	EnergySt = ShortTermFeatures[1, :]
+
+	# sort energy feature values:
+	E = numpy.sort(EnergySt)
+	L1 = int(len(E)/10)
+	# compute "lower" energy threshold ...
+	T1 = numpy.mean(E[0:L1])
+	# ... and "higher" energy threhold:
+	T2 = numpy.mean(E[-L1:-1])
+	# get the whole short-term feature vectors for the respective two classes (low energy and high energy):
+	Class1 = ShortTermFeatures[:,numpy.where(EnergySt<T1)[0]]
+	Class2 = ShortTermFeatures[:,numpy.where(EnergySt>T2)[0]]
+
+	# form the binary classification task and train the respective SVM probabilistic model
+	featuresSS = [Class1.T, Class2.T];
+	[featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)
+	SVM = aT.trainSVM(featuresNormSS, 1.0)
+
+	ProbOnset = []
+	# compute and smooth the Onset Event probability:
+	for i in range(ShortTermFeatures.shape[1]):
+		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS
+		ProbOnset.append(SVM.pred_probability(curFV)[1])
+	ProbOnset = numpy.array(ProbOnset)
+	smoothWindow1 = 0.1 / stStep
+	smoothWindow2 = 0.15 / stStep
+	print smoothWindow1, smoothWindow2
+	ProbOnset = smoothMovingAvg(smoothMovingAvg(ProbOnset, smoothWindow1/2), smoothWindow2)
+	ProbOnsetSorted = numpy.sort(ProbOnset)
+	Nt = ProbOnsetSorted.shape[0] / 20;
+	T = (numpy.mean( 1.2*ProbOnsetSorted[0:Nt] ) + 0.8*numpy.mean(ProbOnsetSorted[-Nt::]) )/ 2.0
+
+	# Detect Onsets:
+	MaxIdx = numpy.where(ProbOnset>T)[0];
+	i = 0;
+	timeClusters = []
+	segmentLimits = []
+	while i<len(MaxIdx):
+		curCluster = [MaxIdx[i]]
+		if i==len(MaxIdx)-1:
+			break		
+		while MaxIdx[i+1] - curCluster[-1] <= 2:
+			curCluster.append(MaxIdx[i+1])
+			i += 1
+			if i==len(MaxIdx)-1:
+				break
+		i += 1
+		timeClusters.append(curCluster)
+		segmentLimits.append([curCluster[0]*stStep, curCluster[-1]*stStep])
+	print segmentLimits
+
+	if plot:
+		timeX = numpy.arange(0, x.shape[0] / float(Fs) , 1.0/Fs)
+
+		plt.subplot(2,1,1); plt.plot(timeX, x)
+		for s in segmentLimits:
+			plt.axvline(x=s[0]); 
+			plt.axvline(x=s[1]); 
+		plt.subplot(2,1,2); plt.plot(numpy.arange(0, ProbOnset.shape[0] * stStep, stStep), ProbOnset);
+		for s in segmentLimits:
+			plt.axvline(x=s[0]); 
+			plt.axvline(x=s[1]); 
 		plt.show()
 
 	return segmentLimits
