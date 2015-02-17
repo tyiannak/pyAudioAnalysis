@@ -388,8 +388,8 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 	'''
 
 	# feature normalization:
-	#(featuresNorm, MEAN, STD) = normalizeFeatures(features)
-	featuresNorm = features;
+	(featuresNorm, MEAN, STD) = normalizeFeatures(features)
+	#featuresNorm = features;
 	nClasses = len(features)
 	CAll = []; acAll = []; F1All = []	
 	PrecisionClassesAll = []; RecallClassesAll = []; ClassesAll = []; F1ClassesAll = []

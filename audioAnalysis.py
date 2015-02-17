@@ -261,18 +261,25 @@ def main(argv):
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
 
 	elif argv[1] == "-onsetDetection":
+		if len(argv)==5:
 			inputFile = argv[2]
-			[Fs, x] = audioBasicIO.readAudioFile(inputFile)				# read audio signal
-			segmentLimits = aS.onsetDetection(x, Fs, 0.04, 0.02, True)		# get onsets
+			if not os.path.isfile(inputFile):
+				raise Exception("Input audio file not found!")
+
+
+			smoothingWindow = float(argv[3])
+			weight = float(argv[4])
+			[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read audio signal
+			segmentLimits = aS.onsetDetection(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)	# get onsets
 			for i, s in enumerate(segmentLimits):
 				strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
 				wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
-		
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -onsetDetection <inputFile> <smoothinWindow(secs)> <Threshold Weight>"
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
 			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
-			#speechLimits = aS.speechSegmentation(x, Fs, 2.0, 0.10, True)
 			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
 			#print speechLimits
 

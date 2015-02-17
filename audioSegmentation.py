@@ -177,106 +177,27 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 		ax3.bar(numpy.array(range(len(classNames)))+0.5, AvDurations)
 		fig.tight_layout()
 		plt.show()
-
 	return (segs, classes)
 
-
-def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
-	'''
-	NOTE: UNUSED! EMBED IN SPEAKER DIARIZATION OR REMOVE
-	speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False)
-	
-	This function is used to segment a speech signal. 
-	ARGUMENTS:
-		x:		the speech signal samples
-		Fs:		sampling freq
-		midTermSize:	++++
-	'''
-	stWindow = 0.02
-	x = audioBasicIO.stereo2mono(x);
-	# STEP A: extract mid and short-term features:
-	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, midTermSize * Fs, midTermStep * Fs, round(Fs*stWindow), round(Fs*stWindow));
-
-	# STEP B: 
-	# keep only the energy short-term sequence (2nd feature)	
-	EnergySt = ShortTermFeatures[1, :]
-	# sort energy feature values:
-	E = numpy.sort(EnergySt)
-	L1 = int(len(E)/20)
-	# compute "lower" energy threshold ...
-	T1 = numpy.mean(E[0:L1])
-	# ... and "higher" energy threhold:
-	T2 = numpy.mean(E[-L1:-1])
-	# get the whole short-term feature vectors for the respective two classes (low energy and high energy):
-	Class1 = ShortTermFeatures[:,numpy.where(EnergySt<T1)[0]]
-	Class2 = ShortTermFeatures[:,numpy.where(EnergySt>T2)[0]]
-
-	# form the binary classification task and train the respective SVM probabilistic model
-	featuresSS = [Class1.T, Class2.T];
-	[featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)
-	SVM = aT.trainSVM(featuresNormSS, 1.0)
-
-	Pspeech = []
-	# compute and smooth the Speech probability:
-	for i in range(ShortTermFeatures.shape[1]):
-		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS
-		Pspeech.append(SVM.pred_probability(curFV)[1])
-	Pspeech = numpy.array(Pspeech)
-	Pspeech = smoothMovingAvg(smoothMovingAvg(Pspeech, 5), 11)
-	PspeechSorted = numpy.sort(Pspeech)
-	Nt = PspeechSorted.shape[0] / 20;
-	T = (numpy.mean( 1.2*PspeechSorted[0:Nt] ) + 0.8*numpy.mean(PspeechSorted[-Nt::]) )/ 2.0
-	print T
-	# get the "valley" positions of the speech probability sequence:
-	MinIdx = numpy.where(Pspeech<T)[0];
-	i = 0;
-	timeClusters = []
-	while i<len(MinIdx):
-		curCluster = [MinIdx[i]]
-		if i==len(MinIdx)-1:
-			break		
-		while MinIdx[i+1] - curCluster[-1] <= 2:
-			curCluster.append(MinIdx[i+1])
-			i += 1
-			if i==len(MinIdx)-1:
-				break
-		i += 1
-		timeClusters.append(curCluster)
-
-	Mins = []
-	for c in timeClusters:
-		Mins.append(numpy.mean(c))		
-
-	# transform the positions to time (seconds)
-
-	segmentLimits = numpy.array([])
-	segmentLimits = numpy.append(segmentLimits, numpy.array(Mins) * stWindow)
-	segmentLimits[-1] = (len(x)/float(Fs))
-
-	# print numpy.array(Mins) * stWindow
-	if plot:
-		plt.subplot(3,1,1); plt.plot(x)
-		for l in Mins:
-			plt.axvline(x=l*Fs*stWindow); 
-		plt.subplot(3,1,3); plt.plot(Pspeech);
-		for l in Mins:
-			plt.axvline(x=l); 
-		plt.show()
-
-	return segmentLimits
-
-def onsetDetection(x, Fs, stWin, stStep, plot = False):
+def onsetDetection(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot = False):
 	'''
 	This function detects onsets in an audio recording. In can be used as a "silence removal" procedure.
 	ARGUMENTS:
 		 - x:			the input audio signal
 		 - Fs:			sampling freq
 		 - stWin, stStep:	window size and step in seconds
+		 - smoothWindow:	(optinal) smooth window (in seconds)
+		 - Weight:		(optinal) weight factor (0 < Weight < 1) the higher, the more strict
 		 - plot:		(optinal) True if results are to be plotted
 	RETURNS:
 		 - segmentLimits:	list of segment limits in seconds (e.g [[0.1, 0.9], [1.4, 3.0]] means that 
 					the resulting segments are (0.1 - 0.9) seconds and (1.4, 3.0) seconds 
 	'''
+
+	if Weight>=1:
+		Weight = 0.99;
+	if Weight<=0:
+		Weight = 0.01;
 
 	# Step 1: feature extraction
 	x = audioBasicIO.stereo2mono(x);						# convert to mono
@@ -300,14 +221,14 @@ def onsetDetection(x, Fs, stWin, stStep, plot = False):
 		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS			# normalize feature vector
 		ProbOnset.append(SVM.pred_probability(curFV)[1])			# get SVM probability (that it belongs to the ONSET class)
 	ProbOnset = numpy.array(ProbOnset)
-	smoothWindow1 = 0.1 / stStep							# define 0.1 and 0.2 seconds smoothing steps
-	smoothWindow2 = 0.5 / stStep
-	ProbOnset = smoothMovingAvg(smoothMovingAvg(ProbOnset, smoothWindow1/2), smoothWindow2)	# smooth probability
+	ProbOnset = smoothMovingAvg(ProbOnset, smoothWindow / stStep)			# smooth probability
 
 	# Step 4A: detect onset frame indices:
 	ProbOnsetSorted = numpy.sort(ProbOnset)						# find probability Threshold as a weighted average of top 10% and lower 10% of the values
 	Nt = ProbOnsetSorted.shape[0] / 10;
-	T = (numpy.mean( 1.2*ProbOnsetSorted[0:Nt] ) + 0.8*numpy.mean(ProbOnsetSorted[-Nt::]) )/ 2.0
+	print Weight
+	T = (numpy.mean( (1-Weight)*ProbOnsetSorted[0:Nt] ) + Weight*numpy.mean(ProbOnsetSorted[-Nt::]) )
+	print T
 
 	MaxIdx = numpy.where(ProbOnset>T)[0];						# get the indices of the frames that satisfy the thresholding
 	i = 0;
