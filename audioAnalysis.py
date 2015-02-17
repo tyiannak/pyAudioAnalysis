@@ -260,11 +260,14 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
 
-	elif argv[1] == "-silenceRemoval":
+	elif argv[1] == "-onsetDetection":
 			inputFile = argv[2]
-			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
-			segmentLimits = aS.onsetDetection(x, Fs, 0.04, 0.02, True)
-			print segmentLimits
+			[Fs, x] = audioBasicIO.readAudioFile(inputFile)				# read audio signal
+			segmentLimits = aS.onsetDetection(x, Fs, 0.04, 0.02, True)		# get onsets
+			for i, s in enumerate(segmentLimits):
+				strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
+				wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
+		
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]

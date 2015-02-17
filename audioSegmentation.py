@@ -267,51 +267,55 @@ def speechSegmentation(x, Fs, midTermSize, midTermStep, plot = False):
 
 def onsetDetection(x, Fs, stWin, stStep, plot = False):
 	'''
+	This function detects onsets in an audio recording. In can be used as a "silence removal" procedure.
+	ARGUMENTS:
+		 - x:			the input audio signal
+		 - Fs:			sampling freq
+		 - stWin, stStep:	window size and step in seconds
+		 - plot:		(optinal) True if results are to be plotted
+	RETURNS:
+		 - segmentLimits:	list of segment limits in seconds (e.g [[0.1, 0.9], [1.4, 3.0]] means that 
+					the resulting segments are (0.1 - 0.9) seconds and (1.4, 3.0) seconds 
 	'''
-	x = audioBasicIO.stereo2mono(x);
-	# STEP A: short - term feature extraction:
-	ShortTermFeatures = aF.stFeatureExtraction(x, Fs, stWin*Fs, stStep*Fs)
 
-	# STEP B: 
-	# keep only the energy short-term sequence (2nd feature)	
-	EnergySt = ShortTermFeatures[1, :]
+	# Step 1: feature extraction
+	x = audioBasicIO.stereo2mono(x);						# convert to mono
+	ShortTermFeatures = aF.stFeatureExtraction(x, Fs, stWin*Fs, stStep*Fs)		# extract short-term features	
 
-	# sort energy feature values:
-	E = numpy.sort(EnergySt)
-	L1 = int(len(E)/10)
-	# compute "lower" energy threshold ...
-	T1 = numpy.mean(E[0:L1])
-	# ... and "higher" energy threhold:
-	T2 = numpy.mean(E[-L1:-1])
-	# get the whole short-term feature vectors for the respective two classes (low energy and high energy):
-	Class1 = ShortTermFeatures[:,numpy.where(EnergySt<T1)[0]]
-	Class2 = ShortTermFeatures[:,numpy.where(EnergySt>T2)[0]]
+	# Step 2: train binary SVM classifier of low vs high energy frames
+	EnergySt = ShortTermFeatures[1, :]						# keep only the energy short-term sequence (2nd feature)
+	E = numpy.sort(EnergySt)							# sort the energy feature values:
+	L1 = int(len(E)/10)								# number of 10% of the total short-term windows
+	T1 = numpy.mean(E[0:L1])							# compute "lower" 10% energy threshold 
+	T2 = numpy.mean(E[-L1:-1])							# compute "higher" 10% energy threshold
+	Class1 = ShortTermFeatures[:,numpy.where(EnergySt<T1)[0]]			# get all features that correspond to low energy
+	Class2 = ShortTermFeatures[:,numpy.where(EnergySt>T2)[0]]			# get all features that correspond to high energy
+	featuresSS = [Class1.T, Class2.T];						# form the binary classification task and ...
+	[featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)		# normalize and ...
+	SVM = aT.trainSVM(featuresNormSS, 1.0)						# train the respective SVM probabilistic model (ONSET vs SILENCE)
 
-	# form the binary classification task and train the respective SVM probabilistic model
-	featuresSS = [Class1.T, Class2.T];
-	[featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)
-	SVM = aT.trainSVM(featuresNormSS, 1.0)
-
+	# Step 3: compute onset probability based on the trained SVM
 	ProbOnset = []
-	# compute and smooth the Onset Event probability:
-	for i in range(ShortTermFeatures.shape[1]):
-		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS
-		ProbOnset.append(SVM.pred_probability(curFV)[1])
+	for i in range(ShortTermFeatures.shape[1]):					# for each frame
+		curFV = (ShortTermFeatures[:,i] - MEANSS) / STDSS			# normalize feature vector
+		ProbOnset.append(SVM.pred_probability(curFV)[1])			# get SVM probability (that it belongs to the ONSET class)
 	ProbOnset = numpy.array(ProbOnset)
-	smoothWindow1 = 0.1 / stStep
-	smoothWindow2 = 0.15 / stStep
-	print smoothWindow1, smoothWindow2
-	ProbOnset = smoothMovingAvg(smoothMovingAvg(ProbOnset, smoothWindow1/2), smoothWindow2)
-	ProbOnsetSorted = numpy.sort(ProbOnset)
-	Nt = ProbOnsetSorted.shape[0] / 20;
+	smoothWindow1 = 0.1 / stStep							# define 0.1 and 0.2 seconds smoothing steps
+	smoothWindow2 = 0.5 / stStep
+	ProbOnset = smoothMovingAvg(smoothMovingAvg(ProbOnset, smoothWindow1/2), smoothWindow2)	# smooth probability
+
+	# Step 4A: detect onset frame indices:
+	ProbOnsetSorted = numpy.sort(ProbOnset)						# find probability Threshold as a weighted average of top 10% and lower 10% of the values
+	Nt = ProbOnsetSorted.shape[0] / 10;
 	T = (numpy.mean( 1.2*ProbOnsetSorted[0:Nt] ) + 0.8*numpy.mean(ProbOnsetSorted[-Nt::]) )/ 2.0
 
-	# Detect Onsets:
-	MaxIdx = numpy.where(ProbOnset>T)[0];
+	MaxIdx = numpy.where(ProbOnset>T)[0];						# get the indices of the frames that satisfy the thresholding
 	i = 0;
 	timeClusters = []
 	segmentLimits = []
-	while i<len(MaxIdx):
+
+	# Step 4B: group frame indices to onset segments
+	while i<len(MaxIdx):								# for each of the detected onset indices
 		curCluster = [MaxIdx[i]]
 		if i==len(MaxIdx)-1:
 			break		
@@ -323,7 +327,14 @@ def onsetDetection(x, Fs, stWin, stStep, plot = False):
 		i += 1
 		timeClusters.append(curCluster)
 		segmentLimits.append([curCluster[0]*stStep, curCluster[-1]*stStep])
-	print segmentLimits
+
+	# Step 5: Post process: remove very small segments:
+	minDuration = 0.2;
+	segmentLimits2 = []
+	for s in segmentLimits:
+		if s[1] - s[0] > minDuration:
+			segmentLimits2.append(s)
+	segmentLimits = segmentLimits2;
 
 	if plot:
 		timeX = numpy.arange(0, x.shape[0] / float(Fs) , 1.0/Fs)
