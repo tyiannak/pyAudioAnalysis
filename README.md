@@ -1,6 +1,18 @@
 # pyAudioAnalysis: A Python Audio Analysis Library
 
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
+ The user can perform the following tasks:
+ * Extract a wide range of audio features and representations (e.g. spectrogram, chromagram)
+ * Train, parameter tune and evaluate segment-based classifiers
+ * Classify unknown samples
+ * Detect audio events and exclude silence periods from long recordings
+ * Perform supervised segmentation (i.e. apply a clasification model on fix-sized segments)
+ * Perform unsupervised segmentation (e.g. speaker diarization)
+ * Extract audio thumbnails
+ * Train and use audio regression models (example application: emotion recognition)
+ * Apply dimensionality reduction techniques to visualize audio data and content similarities
+
+*[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
 
 pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. For example, to train a classifier segments, given a set of WAV files stored in folders, each folder representing a different class,
  the following code needs to be executed:
@@ -12,9 +24,9 @@ aT.featureAndTrain(["classifierData/music","classifierData/speech"], 1.0, 1.0, a
 
 Then, the resulting classification model can be used to classify an unknown audio WAV file:
 ```
-XXXXX
+aT.fileClassification("data/doremi.wav", "svmSMtemp","svm")
 Result:
-YYYYY
+(0.0, array([ 0.90156761,  0.09843239]), ['music', 'speech'])
 ```
 
 In addition, command-line support is provided for all functionalities. E.g. the following command needs to be executed to extract the spectrogram of an audio signal stored in a WAV file:
@@ -22,7 +34,7 @@ In addition, command-line support is provided for all functionalities. E.g. the 
 python audioAnalysis.py -fileSpectrogram data/doremi.wav
 ```
 
-*[A complete Wiki documentation is provided here] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
+*[Installing instructions and a complete documentation is provided in the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
 
 *Author: [Theodoros Giannakopoulos]*
 

@@ -189,7 +189,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
 
 	# get optimal classifeir parameter:
-	bestParam = evaluateClassifier(features, classNames, 500, classifierType, classifierParams, 0)
+	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0)
 
 	print "Selected params: {0:.5f}".format(bestParam)
 
@@ -278,7 +278,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 	for iRegression, r in enumerate(regressionNames):
 		# get optimal classifeir parameter:
 		print "Regression task " + r
-		bestParam = evaluateRegression(features, regressionLabels[iRegression], 500, modelType, modelParams)
+		bestParam = evaluateRegression(features, regressionLabels[iRegression], 100, modelType, modelParams)
 		print "Selected params: {0:.5f}".format(bestParam)
 
 		[featuresNorm, MEAN, STD] = normalizeFeatures([features])		# normalize features
