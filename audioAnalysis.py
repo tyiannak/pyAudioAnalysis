@@ -181,15 +181,18 @@ def main(argv):
 					raise Exception("outputMode has to be 0 or 1")
 				if not os.path.isfile(modelName):
 					raise Exception("Input modelName not found!")
-				if not os.path.isdir(inputFolder):
-					raise Exception("Input folder not found!")
+				files = '*.wav'
+				if os.path.isdir(inputFolder):
+					strFilePattern = os.path.join(inputFolder, files)
+				else:
+					strFilePattern = inputFolder + files
 
-				types = ('*.wav',)
 				wavFilesList = []
-				for files in types:
-					wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
-
-				wavFilesList = sorted(wavFilesList)	
+				wavFilesList.extend(glob.glob(strFilePattern))
+				wavFilesList = sorted(wavFilesList)
+				if len(wavFilesList)==0:
+					print "No WAV files found!"
+					return 
 				Results = []
 				for wavFile in wavFilesList:	
 					[Result, P, classNames] = aT.fileClassification(wavFile, modelName, modelType)	
@@ -213,15 +216,19 @@ def main(argv):
 
 				if modelType not in ["svm", "knn"]:
 					raise Exception("ModelType has to be either svm or knn!")
-				if not os.path.isdir(inputFolder):
-					raise Exception("Input folder not found!")
 
-				types = ('*.wav',)
+				files = '*.wav'
+				if os.path.isdir(inputFolder):
+					strFilePattern = os.path.join(inputFolder, files)
+				else:
+					strFilePattern = inputFolder + files
+
 				wavFilesList = []
-				for files in types:
-					wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
-
+				wavFilesList.extend(glob.glob(strFilePattern))
 				wavFilesList = sorted(wavFilesList)	
+				if len(wavFilesList)==0:
+					print "No WAV files found!"
+					return 
 				Results = []
 				for wavFile in wavFilesList:	
 					R, regressionNames = aT.fileRegression(wavFile, modelName, modelType)
@@ -260,22 +267,21 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
 
-	elif argv[1] == "-onsetDetection":
+	elif argv[1] == "-silenceRemoval":
 		if len(argv)==5:
 			inputFile = argv[2]
 			if not os.path.isfile(inputFile):
 				raise Exception("Input audio file not found!")
 
-
 			smoothingWindow = float(argv[3])
 			weight = float(argv[4])
 			[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read audio signal
-			segmentLimits = aS.onsetDetection(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)	# get onsets
+			segmentLimits = aS.silenceRemoval(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)	# get onsets
 			for i, s in enumerate(segmentLimits):
 				strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
 				wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
 		else:
-			print "Error.\nSyntax: " + argv[0] + " -onsetDetection <inputFile> <smoothinWindow(secs)> <Threshold Weight>"
+			print "Error.\nSyntax: " + argv[0] + " -silenceRemoval <inputFile> <smoothinWindow(secs)> <Threshold Weight>"
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]

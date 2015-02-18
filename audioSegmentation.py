@@ -179,9 +179,9 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 		plt.show()
 	return (segs, classes)
 
-def onsetDetection(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot = False):
+def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot = False):
 	'''
-	This function detects onsets in an audio recording. In can be used as a "silence removal" procedure.
+	Event Detection (silence removal)
 	ARGUMENTS:
 		 - x:			the input audio signal
 		 - Fs:			sampling freq
@@ -265,9 +265,11 @@ def onsetDetection(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 			plt.axvline(x=s[0]); 
 			plt.axvline(x=s[1]); 
 		plt.subplot(2,1,2); plt.plot(numpy.arange(0, ProbOnset.shape[0] * stStep, stStep), ProbOnset);
+		plt.title('Signal')
 		for s in segmentLimits:
 			plt.axvline(x=s[0]); 
 			plt.axvline(x=s[1]); 
+		plt.title('SVM Probability')
 		plt.show()
 
 	return segmentLimits

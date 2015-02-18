@@ -1,11 +1,9 @@
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import audioFeatureExtraction
+from pyAudioAnalysis import audioBasicIO as aIO
+from pyAudioAnalysis import audioSegmentation as aS
 import matplotlib.pyplot as plt
-[Fs, x] = audioBasicIO.readAudioFile("sample.wav");
-F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.025*Fs);
-plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel('ZCR'); 
-plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel('Energy'); plt.show()
-print F.shape
+[Fs, x] = aIO.readAudioFile("data/recording1.wav");
+segments = aS.silenceRemoval(x, Fs, 0.020, 0.020, smoothWindow = 1.0, Weight = 0.3, plot = True)
+print segments
 
 
 
