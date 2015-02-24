@@ -521,10 +521,10 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
 
 	bestInd = numpy.argmin(ErrorsAll)
 
-	print "{0:s}\t{1:s}\t{2:s}".format("Param","MSE", "TrainMSE")
+	print "{0:s}\t\t{1:s}\t\t{2:s}\t\t{3:s}".format("Param","MSE", "T-MSE","R-MSE")
 	for i in range(len(ErrorsAll)):
-		print "{0:.4f}\t{1:.2f}\t{2:.2f}\t{3:.2f}".format(Params[i], ErrorsAll[i], ErrorsTrainAll[i], ErrorsBaselineAll[i]),
-		if i == bestInd: print "\t best", 
+		print "{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i], ErrorsAll[i], ErrorsTrainAll[i], ErrorsBaselineAll[i]),
+		if i == bestInd: print "\t\t best", 
 		print 
 	return Params[bestInd]
 
