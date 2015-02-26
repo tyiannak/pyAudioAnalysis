@@ -6,6 +6,8 @@ import audioFeatureExtraction as aF
 import audioTrainTest as aT
 import audioSegmentation as aS
 from scipy.fftpack import fft
+import matplotlib
+matplotlib.use('TkAgg')
 
 Fs = 16000
 
@@ -100,10 +102,8 @@ def recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName,
 				samplesToCopyToMidBuffer = midTermBufferSize - len(midTermBuffer)
 			else:
 				samplesToCopyToMidBuffer = len(curWindow)
-
 			midTermBuffer = midTermBuffer + curWindow[0:samplesToCopyToMidBuffer];
 			del(curWindow[0:samplesToCopyToMidBuffer])
-
 		if len(midTermBuffer) == midTermBufferSize:
 			count += 1						
 			if Classifier!=None:
@@ -112,6 +112,13 @@ def recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName,
 				[result, P] = aT.classifierWrapper(Classifier, modelType, curFV)
 				print classNames[int(result)]
 			allData = allData + midTermBuffer
+
+			plt.clf()
+			plt.plot(midTermBuffer)
+			plt.show(block = False)
+			plt.draw()
+
+
 			midTermBuffer = []
 
 	allDataArray = numpy.int16(allData)
