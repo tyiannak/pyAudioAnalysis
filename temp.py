@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import os.path
 import sklearn
 import sklearn.hmm
 import matplotlib.pyplot as plt
@@ -32,22 +33,33 @@ def segs2flags(segStart, segEnd, segLabel, winSize):
 		#print curPos - segStart
 		#print curPos - segEnd
 		curPos += winSize
-	return flags, classNames
+	return np.array(flags), classNames
 
-def trainHMM(features, labels):
-	labels = np.array(labels);
+def trainHMM_computeStatistics(features, labels):
 	uLabels = np.unique(labels)
 	nComps = len(uLabels)
 
 	nFeatures = features.shape[0]
-	#sklearn.hmm.GaussianHMM._init(features, 'stmc')
 
-#	startprob = np.zeros((nComps,1))
-#	for i,u in enumerate(uLabels):
-#		startprob[i] = np.nonzero(labels==u
-	startprob = np.array([0.5, 0.5]);
-	transmat = np.array( [ [0.5, 0.5], [0.5, 0.5] ]);
-	hmm = sklearn.hmm.GaussianHMM(nComps, "diag", startprob, transmat)
+	print features.shape
+	print labels.shape
+
+	if features.shape[1] < labels.shape[0]:
+		print "trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!"
+		labels = labels[0:features.shape[1]]
+
+	# compute prior probabilities:
+	startprob = np.zeros((nComps,))
+	for i,u in enumerate(uLabels):
+		startprob[i] = np.count_nonzero(labels==u)
+	startprob = startprob / startprob.sum()				# normalize prior probabilities
+
+	# compute transition matrix:	
+	transmat = np.zeros((nComps, nComps))
+	for i in range(labels.shape[0]-1):
+		transmat[labels[i], labels[i+1]] += 1;
+	for i in range(nComps): 					# normalize rows of transition matrix:
+		transmat[i, :] /= transmat[i, :].sum()
 
 	means = np.zeros((nComps, nFeatures))
 	for i in range(nComps):
@@ -55,35 +67,41 @@ def trainHMM(features, labels):
 
 	cov = np.zeros( (nComps, nFeatures) );
 	for i in range(nComps):
-		#cov[i,:,:] = np.cov(features[:,np.nonzero(labels==uLabels[i])[0]])
+		#cov[i,:,:] = np.cov(features[:,np.nonzero(labels==uLabels[i])[0]])		# for full cov!
 		cov[i,:] = np.std(features[:,np.nonzero(labels==uLabels[i])[0]], axis = 1)
-	print cov.shape
+
+	return startprob, transmat, means, cov
+
+def trainHMM_fromFile(wavFile, gtFile):
+	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)
+	flags, classNames = segs2flags(segStart, segEnd, segLabels, 1.0)
+
+	[Fs, x] = audioBasicIO.readAudioFile(wavFile);
+	#F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
+	[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+	startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
+
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)
 	hmm.means_ = means
 	hmm.covars_ = cov
-
 	return hmm
 
-def applyHMM(hmm, features):
-	labels = hmm.predict(features.T)
-	#labels = hmm.decode(features.T)
-	plt.plot(labels);
-	plt.show()
+def hmmSegmentation(wavFileName, hmmModel, PLOT = False, gtFileName = ""):
+	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);					# read audio data
+	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
+	[Features, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+	labels = hmmModel.predict(Features.T)							# apply model
+	if PLOT:										# plot results
+		if os.path.isfile(gtFileName):
+			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)
+			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, 1.0)
+			plt.plot(flagsGT+0.1,'r')	
+		plt.plot(labels);
+		plt.show()
+	return labels
 
-[segStart, segEnd, segLabels] = readSegmentGT("data/count.segments")
-flags, classNames = segs2flags(segStart, segEnd, segLabels, 0.05)
-flags.append(0) # TODO
-
-
-[Fs, x] = audioBasicIO.readAudioFile("data/count.wav");
-F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
-[Fs, x2] = audioBasicIO.readAudioFile("data/count2.wav");
-F2 = audioFeatureExtraction.stFeatureExtraction(x2, Fs, 0.050*Fs, 0.050*Fs);
-
-hmm = trainHMM(F, flags)
-#print hmm.means_.shape
-#print hmm.covars_.shape
-applyHMM(hmm, F2)
-#applyHMM(hmm, F)
-
-
+#hmm = trainHMM_fromFile("data/count2.wav", "data/count2.segments")
+#labels = hmmSegmentation("data/count.wav", hmm, True, "data/count.segments")
+hmm = trainHMM_fromFile("bbc3A.wav", "bbc3A.csv")
+labels = hmmSegmentation("bbc3C.wav", hmm, True, "bbc3C.csv")
 
