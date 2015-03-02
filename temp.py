@@ -5,6 +5,7 @@ import sklearn
 import sklearn.hmm
 import os
 import glob
+import cPickle
 import matplotlib.pyplot as plt
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import audioFeatureExtraction
@@ -70,7 +71,7 @@ def trainHMM_computeStatistics(features, labels):
 
 	return startprob, transmat, means, cov
 
-def trainHMM_fromFile(wavFile, gtFile):
+def trainHMM_fromFile(wavFile, gtFile, hmmModelName):
 	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)
 	flags, classNames = segs2flags(segStart, segEnd, segLabels, 1.0)
 
@@ -82,9 +83,15 @@ def trainHMM_fromFile(wavFile, gtFile):
 	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)
 	hmm.means_ = means
 	hmm.covars_ = cov
-	return hmm
 
-def trainHMM_fromDir(dirPath):
+	fo = open(hmmModelName, "wb")
+	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+    	fo.close()
+
+	return hmm, classNames
+
+def trainHMM_fromDir(dirPath, hmmModelName):
 	flagsAll = np.array([])
 	classesAll = []
 	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):
@@ -119,34 +126,49 @@ def trainHMM_fromDir(dirPath):
 	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)
 	hmm.means_ = means
 	hmm.covars_ = cov
+
+	fo = open(hmmModelName, "wb")
+	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(classesAll,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+    	fo.close()
+
 	return hmm, classesAll
 
-def hmmSegmentation(wavFileName, hmmModel, classNames, PLOT = False, gtFileName = ""):
+def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);					# read audio data
+
+	try:
+		fo = open(hmmModelName, "rb")
+	except IOError:
+       		print "didn't find file"
+        	return
+    	try:
+		hmm     	= cPickle.load(fo)
+		classesAll      = cPickle.load(fo)
+    	except:
+        	fo.close()
+	fo.close()	
+
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
 	[Features, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
-	labels = hmmModel.predict(Features.T)							# apply model
+	labels = hmm.predict(Features.T)							# apply model
 	if PLOT:										# plot results
 		if os.path.isfile(gtFileName):
-			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)
+			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
 			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, 1.0)
+			print classNamesGT
 			flagsGTNew = []
 			for j, fl in enumerate(flagsGT):
-				flagsGTNew.append( classNames.index( classNamesGT[flagsGT[j]] ) )
+				if classNamesGT[flagsGT[j]] in classesAll:
+					flagsGTNew.append( classesAll.index( classNamesGT[flagsGT[j]] ) )
+				else:
+					flagsGTNew.append( -1 )
 			flagsGT = np.array(flagsGTNew)
 			plt.plot(flagsGT+0.1,'r')	
 		plt.plot(labels);
 		plt.show()
 	return labels
 
-#hmm = trainHMM_fromFile("data/count2.wav", "data/count2.segments")
-#labels = hmmSegmentation("data/count.wav", hmm, True, "data/count.segments")
-
-#hmm = trainHMM_fromFile("bbc3A.wav", "bbc3A.csv")
-#labels = hmmSegmentation("bbc3C.wav", hmm, True, "bbc3C.csv")
-
-
-#hmm, classes = trainHMM_fromDir('radio/train')
-#labels = temp.hmmSegmentation("radio/bbc51.wav", hmm, classes, True, "radio/bbc51.segments")
-
-
+#trainHMM_fromFile("radio/train/small/Jazz_Line_up.wav", "radio/train/small/Jazz_Line_up.segments", "hmmTemp") 
+#trainHMM_fromDir("radio/train", "hmmTrain")
+hmmSegmentation("radio/test/bbc51.wav", "hmmTrain", PLOT = True, gtFileName = "radio/test/bbc51.segments")
