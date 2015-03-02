@@ -3,6 +3,8 @@ import numpy as np
 import os.path
 import sklearn
 import sklearn.hmm
+import os
+import glob
 import matplotlib.pyplot as plt
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import audioFeatureExtraction
@@ -23,7 +25,6 @@ def readSegmentGT(gtFile):
 def segs2flags(segStart, segEnd, segLabel, winSize):
 	flags = []
 	classNames = list(set(segLabel))
-	print classNames
 	curPos = winSize / 2;
 	while curPos < segEnd[-1]:
 		for i in range(len(segStart)):
@@ -41,9 +42,6 @@ def trainHMM_computeStatistics(features, labels):
 
 	nFeatures = features.shape[0]
 
-	print features.shape
-	print labels.shape
-
 	if features.shape[1] < labels.shape[0]:
 		print "trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!"
 		labels = labels[0:features.shape[1]]
@@ -57,7 +55,7 @@ def trainHMM_computeStatistics(features, labels):
 	# compute transition matrix:	
 	transmat = np.zeros((nComps, nComps))
 	for i in range(labels.shape[0]-1):
-		transmat[labels[i], labels[i+1]] += 1;
+		transmat[int(labels[i]), int(labels[i+1])] += 1;
 	for i in range(nComps): 					# normalize rows of transition matrix:
 		transmat[i, :] /= transmat[i, :].sum()
 
@@ -86,7 +84,44 @@ def trainHMM_fromFile(wavFile, gtFile):
 	hmm.covars_ = cov
 	return hmm
 
-def hmmSegmentation(wavFileName, hmmModel, PLOT = False, gtFileName = ""):
+def trainHMM_fromDir(dirPath):
+	flagsAll = np.array([])
+	classesAll = []
+	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):
+		wavFile = f;
+		gtFile = f.replace('.wav', '.segments');
+		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)
+		flags, classNames = segs2flags(segStart, segEnd, segLabels, 1.0)
+
+		for c in classNames:
+			if c not in classesAll:
+				classesAll.append(c)
+
+		[Fs, x] = audioBasicIO.readAudioFile(wavFile);
+		[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+
+		lenF = F.shape[1]; lenL = len(flags); MIN = min(lenF, lenL)
+		F = F[:, 0:MIN]	
+		flags = flags[0:MIN]
+
+		flagsNew = []
+		for j, fl in enumerate(flags):
+			flagsNew.append( classesAll.index( classNames[flags[j]] ) )
+
+		flagsAll = np.append(flagsAll, np.array(flagsNew))
+
+		if i==0:
+			Fall = F;
+		else:
+			Fall = np.concatenate((Fall, F), axis = 1)
+
+	startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)
+	hmm.means_ = means
+	hmm.covars_ = cov
+	return hmm, classesAll
+
+def hmmSegmentation(wavFileName, hmmModel, classNames, PLOT = False, gtFileName = ""):
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);					# read audio data
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
 	[Features, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
@@ -95,6 +130,10 @@ def hmmSegmentation(wavFileName, hmmModel, PLOT = False, gtFileName = ""):
 		if os.path.isfile(gtFileName):
 			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)
 			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, 1.0)
+			flagsGTNew = []
+			for j, fl in enumerate(flagsGT):
+				flagsGTNew.append( classNames.index( classNamesGT[flagsGT[j]] ) )
+			flagsGT = np.array(flagsGTNew)
 			plt.plot(flagsGT+0.1,'r')	
 		plt.plot(labels);
 		plt.show()
@@ -102,6 +141,12 @@ def hmmSegmentation(wavFileName, hmmModel, PLOT = False, gtFileName = ""):
 
 #hmm = trainHMM_fromFile("data/count2.wav", "data/count2.segments")
 #labels = hmmSegmentation("data/count.wav", hmm, True, "data/count.segments")
-hmm = trainHMM_fromFile("bbc3A.wav", "bbc3A.csv")
-labels = hmmSegmentation("bbc3C.wav", hmm, True, "bbc3C.csv")
+
+#hmm = trainHMM_fromFile("bbc3A.wav", "bbc3A.csv")
+#labels = hmmSegmentation("bbc3C.wav", hmm, True, "bbc3C.csv")
+
+
+#hmm, classes = trainHMM_fromDir('radio/train')
+#labels = temp.hmmSegmentation("radio/bbc51.wav", hmm, classes, True, "radio/bbc51.segments")
+
 
