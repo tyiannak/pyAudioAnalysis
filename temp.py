@@ -71,13 +71,13 @@ def trainHMM_computeStatistics(features, labels):
 
 	return startprob, transmat, means, cov
 
-def trainHMM_fromFile(wavFile, gtFile, hmmModelName):
+def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
 	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)
-	flags, classNames = segs2flags(segStart, segEnd, segLabels, 1.0)
+	flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)
 
 	[Fs, x] = audioBasicIO.readAudioFile(wavFile);
 	#F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
-	[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+	[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
 	startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
 
 	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)
@@ -87,25 +87,27 @@ def trainHMM_fromFile(wavFile, gtFile, hmmModelName):
 	fo = open(hmmModelName, "wb")
 	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtStep,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
     	fo.close()
 
 	return hmm, classNames
 
-def trainHMM_fromDir(dirPath, hmmModelName):
+def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 	flagsAll = np.array([])
 	classesAll = []
 	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):
 		wavFile = f;
 		gtFile = f.replace('.wav', '.segments');
 		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)
-		flags, classNames = segs2flags(segStart, segEnd, segLabels, 1.0)
+		flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)
 
 		for c in classNames:
 			if c not in classesAll:
 				classesAll.append(c)
 
 		[Fs, x] = audioBasicIO.readAudioFile(wavFile);
-		[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+		[F, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
 
 		lenF = F.shape[1]; lenL = len(flags); MIN = min(lenF, lenL)
 		F = F[:, 0:MIN]	
@@ -130,6 +132,8 @@ def trainHMM_fromDir(dirPath, hmmModelName):
 	fo = open(hmmModelName, "wb")
 	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(classesAll,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtStep,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
     	fo.close()
 
 	return hmm, classesAll
@@ -145,17 +149,19 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
     	try:
 		hmm     	= cPickle.load(fo)
 		classesAll      = cPickle.load(fo)
+		mtWin 		= cPickle.load(fo)
+		mtStep 		= cPickle.load(fo)
     	except:
         	fo.close()
 	fo.close()	
 
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
-	[Features, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, 1.0 * Fs, 1.0 * Fs, round(Fs*0.050), round(Fs*0.050));
+	[Features, _] = audioFeatureExtraction.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
 	labels = hmm.predict(Features.T)							# apply model
 	if PLOT:										# plot results
 		if os.path.isfile(gtFileName):
 			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
-			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, 1.0)
+			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
 			print classNamesGT
 			flagsGTNew = []
 			for j, fl in enumerate(flagsGT):
@@ -170,5 +176,12 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	return labels
 
 #trainHMM_fromFile("radio/train/small/Jazz_Line_up.wav", "radio/train/small/Jazz_Line_up.segments", "hmmTemp") 
-#trainHMM_fromDir("radio/train", "hmmTrain")
-hmmSegmentation("radio/test/bbc51.wav", "hmmTrain", PLOT = True, gtFileName = "radio/test/bbc51.segments")
+
+#trainHMM_fromDir("radioFinal/train", "hmmTrain1", 1.0, 1.0)
+#trainHMM_fromDir("radioFinal/train", "hmmTrain05", 1.0, 0.5)
+
+hmmSegmentation("radioFinal/test/Annie_Nightningale_0_1450.wav", "hmmTrain05", PLOT = True, gtFileName = "radioFinal/test/Annie_Nightningale_0_1450.segments")
+#hmmSegmentation("radioFinal/test/bbc2B.wav", "hmmTrain05", PLOT = True, gtFileName = "radioFinal/test/bbc2B.segments")
+#hmmSegmentation("radioFinal/test/bbc3A.wav", "hmmTrain05", PLOT = True, gtFileName = "radioFinal/test/bbc3A.segments")
+#hmmSegmentation("radioFinal/test/bbc51.wav", "hmmTrain", PLOT = True, gtFileName = "radioFinal/test/bbc51.segments")
+#hmmSegmentation("radioFinal/test/redfm2.wav", "hmmTrain", PLOT = True, gtFileName = "radioFinal/test/redfm2.segments")
