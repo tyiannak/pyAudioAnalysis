@@ -49,7 +49,7 @@ def flags2segs(Flags, window):
 	 - window:	window duration (in seconds)
 	
 	RETURNS:
-	 - segs:	a sequence of segment's endpoints: segs[i] is the endpoint of the i-th segment (in seconds)
+	 - segs:	a sequence of segment's limits: segs[i,0] is start and segs[i,1] are start and end point of segment i
 	 - classes:	a sequence of class flags: class[i] is the class ID of the i-th segment
 	'''
 
@@ -58,7 +58,7 @@ def flags2segs(Flags, window):
 	numOfSegments = 0
 
 	curVal = Flags[curFlag]
-	segs = []
+	segsList = []
 	classes = []
 	while (curFlag<len(Flags)-1):
 		stop = 0
@@ -72,8 +72,14 @@ def flags2segs(Flags, window):
 				stop = 1
 				curSegment = curVal
 				curVal = Flags[curFlag]
-				segs.append((curFlag*window))
+				segsList.append((curFlag*window))
 				classes.append(preVal)
+	segs = numpy.zeros ((len(segsList),2))
+
+	for i in range(len(segsList)):
+		if i>1:
+			segs[i, 0] = segsList[i-1]
+		segs[i, 1] = segsList[i]
 	return (segs, classes)
 
 def segs2flags(segStart, segEnd, segLabel, winSize):
@@ -120,6 +126,69 @@ def readSegmentGT(gtFile):
 			segEnd.append(float(row[1]))
 			segLabel.append((row[2]))
 	return numpy.array(segStart), numpy.array(segEnd), segLabel
+
+def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALUATE = False):
+	flags = [classNames[int(f)] for f in flagsInd]
+	(segs, classes) = flags2segs(flags, mtStep)
+	
+	minLength = min( flagsInd.shape[0], flagsIndGT.shape[0] )
+	if minLength>0:
+		accuracy = numpy.count_nonzero(flagsInd[0:minLength]==flagsIndGT[0:minLength]) / float(minLength)
+	else:
+		accuracy = -1 
+
+	if not ONLY_EVALUATE:
+		Duration = segs[-1, 1];
+		SPercentages = numpy.zeros((len(classNames), 1))
+		Percentages = numpy.zeros((len(classNames), 1))
+		AvDurations   = numpy.zeros((len(classNames), 1))
+
+		for iSeg in range(segs.shape[0]):
+			SPercentages[classNames.index(classes[iSeg])] += (segs[iSeg,1]-segs[iSeg,0])
+
+		for i in range(SPercentages.shape[0]):
+			Percentages[i] = 100.0*SPercentages[i] / Duration
+			S = sum(1 for c in classes if c==classNames[i])
+			if S>0:
+				AvDurations[i] = SPercentages[i] / S
+			else:
+				AvDurations[i] = 0.0
+
+		for i in range(Percentages.shape[0]):
+			print classNames[i], Percentages[i], AvDurations[i]
+
+		font = {'family' : 'fantasy', 'size'   : 10}
+		plt.rc('font', **font)
+
+		fig = plt.figure()	
+		ax1 = fig.add_subplot(211)
+		ax1.set_yticks(numpy.array(range(len(classNames))))
+		ax1.axis((0, Duration, -1, len(classNames)))
+		ax1.set_yticklabels(classNames)
+		ax1.plot(numpy.array(range(len(flagsInd)))*mtStep+mtStep/2.0, flagsInd)
+		if flagsIndGT.shape[0]>0:
+			ax1.plot(numpy.array(range(len(flagsIndGT)))*mtStep+mtStep/2.0, flagsIndGT+0.05, '--r')
+		plt.xlabel("time (seconds)")
+		if accuracy>=0:
+			plt.title('Accuracy = {0:.1f}%'.format(100.0*accuracy))
+
+		ax2 = fig.add_subplot(223)
+		plt.title("Classes percentage durations")
+		ax2.axis((0, len(classNames)+1, 0, 100))
+		ax2.set_xticks(numpy.array(range(len(classNames)+1)))
+		ax2.set_xticklabels([" "] + classNames)
+		ax2.bar(numpy.array(range(len(classNames)))+0.5, Percentages)
+
+		ax3 = fig.add_subplot(224)
+		plt.title("Segment average duration per class")
+		ax3.axis((0, len(classNames)+1, 0, AvDurations.max()))
+		ax3.set_xticks(numpy.array(range(len(classNames)+1)))
+		ax3.set_xticklabels([" "] + classNames)
+		ax3.bar(numpy.array(range(len(classNames)))+0.5, AvDurations)
+		fig.tight_layout()
+		plt.show()
+
+	return accuracy			
 
 def trainHMM_computeStatistics(features, labels):
 	'''
@@ -281,24 +350,28 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	fo.close()	
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
 	[Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
-	labels = hmm.predict(Features.T)							# apply model
-	if PLOT:										# plot results
-		if os.path.isfile(gtFileName):
-			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
-			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
-			flagsGTNew = []
-			for j, fl in enumerate(flagsGT):
-				if classNamesGT[flagsGT[j]] in classesAll:
-					flagsGTNew.append( classesAll.index( classNamesGT[flagsGT[j]] ) )
-				else:
-					flagsGTNew.append( -1 )
-			flagsGT = numpy.array(flagsGTNew)
-			plt.plot(flagsGT+0.1,'r')	
-		plt.plot(labels);
-		plt.show()
-	return labels
+	flagsInd = hmm.predict(Features.T)							# apply model	
 
-def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
+									# plot results
+	if os.path.isfile(gtFileName):
+		[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
+		flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
+		flagsGTNew = []
+		for j, fl in enumerate(flagsGT):					# "align" labels with GT
+			if classNamesGT[flagsGT[j]] in classesAll:
+				flagsGTNew.append( classesAll.index( classNamesGT[flagsGT[j]] ) )
+			else:
+				flagsGTNew.append( -1 )
+		flagsIndGT = numpy.array(flagsGTNew)
+	else:
+		flagsIndGT = numpy.array([]);
+	acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
+	if acc>=0:
+		print "Overall Accuracy: {0:.2f}".format(acc)
+
+	return flagsInd, classesAll, acc
+
+def mtFileClassification(inputFile, modelName, modelType, plotResults = False, gtFile = ""):
 	'''
 	This function performs mid-term classification of an audio stream.
 	Towards this end, supervised knowledge is used, i.e. a pre-trained classifier.
@@ -339,68 +412,47 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 		flagsInd.append(Result)
 		flags.append(classNames[int(Result)])		# update class label matrix
 		Ps.append(numpy.max(P))				# update probability matrix
-
+	flagsInd = numpy.array(flagsInd)
 	(segs, classes) = flags2segs(flags, mtStep)		# convert fix-sized flags to segments and classes
 	segs[-1] = len(x) / float(Fs)
 
-	if plotResults:
-		for i in range(len(classes)):
-			if i==0:
-				print "{0:3.1f} -- {1:3.1f} : {2:20s}".format(0.0, segs[i], classes[i])
+
+	# Load grount-truth:
+	if os.path.isfile(gtFile):
+		[segStartGT, segEndGT, segLabelsGT] = readSegmentGT(gtFile)		
+		flagsGT, classNamesGT = segs2flags(segStartGT, segEndGT, segLabelsGT, mtStep)
+		flagsIndGT = []
+		for j, fl in enumerate(flagsGT):					# "align" labels with GT
+			if classNamesGT[flagsGT[j]] in classNames:
+				flagsIndGT.append( classNames.index( classNamesGT[flagsGT[j]] ) )
 			else:
-				print "{0:3.1f} -- {1:3.1f} : {2:20s}".format(segs[i-1], segs[i], classes[i])
+				flagsIndGT.append( -1 )
+		flagsIndGT = numpy.array(flagsIndGT)
+	else:
+		flagsIndGT = numpy.array([])
+	acc = plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, not plotResults)
 
-		# # # # # # # # # # # # 
-		# Generate Statistics #
-		# # # # # # # # # # # # 
-		SPercentages = numpy.zeros((len(classNames), 1))
-		Percentages = numpy.zeros((len(classNames), 1))
-		AvDurations   = numpy.zeros((len(classNames), 1))
+	if acc>=0:
+		print "Overall Accuracy: {0:.3f}".format(acc)
 
-		for iSeg in range(len(segs)):
-			if iSeg==0:
-				SPercentages[classNames.index(classes[iSeg])] += (segs[iSeg])
-			else:
-				SPercentages[classNames.index(classes[iSeg])] += (segs[iSeg]-segs[iSeg-1])
+	return (flagsInd, classNames, acc)
 
-		for i in range(SPercentages.shape[0]):
-			Percentages[i] = 100.0*SPercentages[i] / Duration
-			S = sum(1 for c in classes if c==classNames[i])
-			if S>0:
-				AvDurations[i] = SPercentages[i] / S
-			else:
-				AvDurations[i] = 0.0
+def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
+	flagsAll = numpy.array([])
+	classesAll = []
+	accuracys = []
+	for i,f in enumerate(glob.glob(dirName + os.sep + '*.wav')):			# for each WAV file
+		wavFile = f;
+		print wavFile
+		gtFile = f.replace('.wav', '.segments');				# open for annotated file
 
-		for i in range(Percentages.shape[0]):
-			print classNames[i], Percentages[i], AvDurations[i]
-
-		font = {'family' : 'fantasy', 'size'   : 10}
-		plt.rc('font', **font)
-
-		fig = plt.figure()	
-		ax1 = fig.add_subplot(211)
-		ax1.set_yticks(numpy.array(range(len(classNames))))
-		ax1.axis((0, Duration, -1, len(classNames)))
-		ax1.set_yticklabels(classNames)
-		ax1.plot(numpy.array(range(len(flags)))*mtStep+mtStep/2.0, flagsInd)
-		plt.xlabel("time (seconds)")
-
-		ax2 = fig.add_subplot(223)
-		plt.title("Classes percentage durations")
-		ax2.axis((0, len(classNames)+1, 0, 100))
-		ax2.set_xticks(numpy.array(range(len(classNames)+1)))
-		ax2.set_xticklabels([" "] + classNames)
-		ax2.bar(numpy.array(range(len(classNames)))+0.5, Percentages)
-
-		ax3 = fig.add_subplot(224)
-		plt.title("Segment average duration per class")
-		ax3.axis((0, len(classNames)+1, 0, AvDurations.max()))
-		ax3.set_xticks(numpy.array(range(len(classNames)+1)))
-		ax3.set_xticklabels([" "] + classNames)
-		ax3.bar(numpy.array(range(len(classNames)))+0.5, AvDurations)
-		fig.tight_layout()
-		plt.show()
-	return (segs, classes)
+		if methodName.lower() in ["svm", "knn"]:
+			flagsInd, classNames, acc = mtFileClassification(wavFile, modelName, methodName, False, gtFile)
+		else:
+			flagsInd, classNames, acc = hmmSegmentation(wavFile, modelName, False, gtFile)
+		if acc>-1:
+			accuracys.append(acc)
+	print accuracys, numpy.array(accuracys).mean()
 
 def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot = False):
 	'''

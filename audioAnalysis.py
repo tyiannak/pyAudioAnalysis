@@ -301,10 +301,16 @@ def main(argv):
 				raise Exception("Input modelName not found!")
 			if not os.path.isfile(inputWavFile):
 				raise Exception("Input audio file not found!")
-
-			[segs, classes] = aS.mtFileClassification(inputWavFile, modelName, modelType, True)
+			gtFile = inputWavFile.replace('.wav', '.segments');
+			aS.mtFileClassification(inputWavFile, modelName, modelType, True, gtFile)
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
+
+	elif argv[1] == "-segmentEvaluation":
+			dirName = argv[2]
+			modelName = argv[3]
+			methodName = argv[4]
+			aS.evaluateSegmentationClassificationDir(dirName, modelName, methodName)
 
 	elif argv[1] == "-silenceRemoval":
 		if len(argv)==5:
