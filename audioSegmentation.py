@@ -7,6 +7,7 @@ from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from sklearn.lda import LDA
+import csv, os.path, sklearn, sklearn.hmm, cPickle, glob
 
 # # # # # # # # # # # # # # #
 # General utility functions #
@@ -74,6 +75,228 @@ def flags2segs(Flags, window):
 				segs.append((curFlag*window))
 				classes.append(preVal)
 	return (segs, classes)
+
+def segs2flags(segStart, segEnd, segLabel, winSize):
+	'''
+	This function converts segment endpoints and respective segment labels to fix-sized class labels.
+	ARGUMENTS:
+	 - segStart:	segment start points (in seconds)
+	 - segEnd:	segment endpoints (in seconds)
+	 - segLabel:	segment labels
+ 	 - winSize:	fix-sized window (in seconds)
+	RETURNS:
+	 - flags:	numpy array of class indices
+	 - classNames:	list of classnames (strings)
+	'''
+	flags = []
+	classNames = list(set(segLabel))
+	curPos = winSize / 2;
+	while curPos < segEnd[-1]:
+		for i in range(len(segStart)):
+			if curPos > segStart[i] and curPos <=segEnd[i]:
+				break;
+		flags.append(classNames.index(segLabel[i]))
+		curPos += winSize
+	return numpy.array(flags), classNames
+
+def readSegmentGT(gtFile):
+	'''
+	This function reads a segmentation ground truth file, following a simple CSV format with the following columns:
+	<segment start>,<segment end>,<class label>
+
+	ARGUMENTS:
+	 - gtFile:	the path of the CSV segment file
+	RETURNS:
+	 - segStart: 	a numpy array of segments' start positions
+	 - segEnd:	a numpy array of segments' ending positions
+	 - segLabel:	a list of respective class labels (strings)
+	'''
+	f  = open(gtFile, "rb")
+	reader = csv.reader(f, delimiter=',')
+	segStart = []; segEnd = []; segLabel = []
+	for row in reader:	
+		if len(row)==3:
+			segStart.append(float(row[0]))
+			segEnd.append(float(row[1]))
+			segLabel.append((row[2]))
+	return numpy.array(segStart), numpy.array(segEnd), segLabel
+
+def trainHMM_computeStatistics(features, labels):
+	'''
+	This function computes the statistics used to train an HMM joint segmentation-classification model 
+	using a sequence of sequential features and respective labels
+
+	ARGUMENTS:
+	 - features:	a numpy matrix of feature vectors (numOfDimensions x numOfWindows)
+	 - labels:	a numpy array of class indices (numOfWindows x 1)
+	RETURNS:
+	 - startprob:	matrix of prior class probabilities (numOfClasses x 1)
+	 - transmat:	transition matrix (numOfClasses x numOfClasses)
+	 - means:	means matrix (numOfDimensions x 1)
+	 - cov:		deviation matrix (numOfDimensions x 1)
+	'''
+	uLabels = numpy.unique(labels)
+	nComps = len(uLabels)
+
+	nFeatures = features.shape[0]
+
+	if features.shape[1] < labels.shape[0]:
+		print "trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!"
+		labels = labels[0:features.shape[1]]
+
+	# compute prior probabilities:
+	startprob = numpy.zeros((nComps,))
+	for i,u in enumerate(uLabels):
+		startprob[i] = numpy.count_nonzero(labels==u)
+	startprob = startprob / startprob.sum()				# normalize prior probabilities
+
+	# compute transition matrix:	
+	transmat = numpy.zeros((nComps, nComps))
+	for i in range(labels.shape[0]-1):
+		transmat[int(labels[i]), int(labels[i+1])] += 1;
+	for i in range(nComps): 					# normalize rows of transition matrix:
+		transmat[i, :] /= transmat[i, :].sum()
+
+	means = numpy.zeros((nComps, nFeatures))
+	for i in range(nComps):
+		means[i,:] = numpy.matrix(features[:,numpy.nonzero(labels==uLabels[i])[0]].mean(axis=1))
+
+	cov = numpy.zeros( (nComps, nFeatures) );
+	for i in range(nComps):
+		#cov[i,:,:] = numpy.cov(features[:,numpy.nonzero(labels==uLabels[i])[0]])		# use this lines if HMM using full gaussian distributions are to be used!
+		cov[i,:] = numpy.std(features[:,numpy.nonzero(labels==uLabels[i])[0]], axis = 1)
+
+	return startprob, transmat, means, cov
+
+def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
+	'''
+	This function trains a HMM model for segmentation-classification using a single annotated audio file
+	ARGUMENTS:
+	 - wavFile:		the path of the audio filename
+	 - gtFile:		the path of the ground truth filename (a csv file of the form <segment start in seconds>,<segment end in seconds>,<segment label> in each row
+	 - hmmModelName:	the name of the HMM model to be stored
+	 - mtWin:		mid-term window size
+	 - mtStep:		mid-term window step
+	RETURNS:
+	 - hmm:			an object to the resulting HMM
+	 - classNames:		a list of classNames	
+
+	After training, hmm, classNames, along with the mtWin and mtStep values are stored in the hmmModelName file
+	'''
+
+	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)				# read ground truth data
+	flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)		# convert to fix-sized sequence of flags
+
+	[Fs, x] = audioBasicIO.readAudioFile(wavFile);					# read audio data
+	#F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
+	[F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));	# feature extraction
+	startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)		# compute HMM statistics (priors, transition matrix, etc)
+
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)	# hmm training
+	hmm.means_ = means
+	hmm.covars_ = cov
+
+	fo = open(hmmModelName, "wb")							# output to file
+	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtStep,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+    	fo.close()
+
+	return hmm, classNames
+
+def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
+	'''
+	This function trains a HMM model for segmentation-classification using a where WAV files and .segment (ground-truth files) are stored
+	ARGUMENTS:
+	 - dirPath:		the path of the data diretory
+	 - hmmModelName:	the name of the HMM model to be stored
+	 - mtWin:		mid-term window size
+	 - mtStep:		mid-term window step
+	RETURNS:
+	 - hmm:			an object to the resulting HMM
+	 - classNames:		a list of classNames
+
+	After training, hmm, classNames, along with the mtWin and mtStep values are stored in the hmmModelName file
+	'''
+
+	flagsAll = numpy.array([])
+	classesAll = []
+	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):			# for each WAV file
+		wavFile = f;
+		gtFile = f.replace('.wav', '.segments');				# open for annotated file
+		if not os.path.isfile(gtFile):						# if current WAV file does not have annotation -> skip
+			continue;
+		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)			# read GT data
+		flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)	# convert to flags
+		for c in classNames:							# update classnames:
+			if c not in classesAll:
+				classesAll.append(c)
+		[Fs, x] = audioBasicIO.readAudioFile(wavFile);				# read audio data 
+		[F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050)); 	# feature extraction
+
+		lenF = F.shape[1]; lenL = len(flags); MIN = min(lenF, lenL)
+		F = F[:, 0:MIN]	
+		flags = flags[0:MIN]
+
+		flagsNew = []
+		for j, fl in enumerate(flags):						# append features and labels
+			flagsNew.append( classesAll.index( classNames[flags[j]] ) )
+
+		flagsAll = numpy.append(flagsAll, numpy.array(flagsNew))
+
+		if i==0:
+			Fall = F;
+		else:
+			Fall = numpy.concatenate((Fall, F), axis = 1)
+
+	startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)	# compute HMM statistics
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)	# train HMM
+	hmm.means_ = means
+	hmm.covars_ = cov
+
+	fo = open(hmmModelName, "wb")							# save HMM model
+	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(classesAll,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+	cPickle.dump(mtStep,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+    	fo.close()
+
+	return hmm, classesAll
+
+def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
+	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);					# read audio data
+	try:
+		fo = open(hmmModelName, "rb")
+	except IOError:
+       		print "didn't find file"
+        	return
+    	try:
+		hmm     	= cPickle.load(fo)
+		classesAll      = cPickle.load(fo)
+		mtWin 		= cPickle.load(fo)
+		mtStep 		= cPickle.load(fo)
+    	except:
+        	fo.close()
+	fo.close()	
+	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
+	[Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
+	labels = hmm.predict(Features.T)							# apply model
+	if PLOT:										# plot results
+		if os.path.isfile(gtFileName):
+			[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
+			flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
+			flagsGTNew = []
+			for j, fl in enumerate(flagsGT):
+				if classNamesGT[flagsGT[j]] in classesAll:
+					flagsGTNew.append( classesAll.index( classNamesGT[flagsGT[j]] ) )
+				else:
+					flagsGTNew.append( -1 )
+			flagsGT = numpy.array(flagsGTNew)
+			plt.plot(flagsGT+0.1,'r')	
+		plt.plot(labels);
+		plt.show()
+	return labels
 
 def mtFileClassification(inputFile, modelName, modelType, plotResults = False):
 	'''
@@ -273,7 +496,6 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 		plt.show()
 
 	return segmentLimits
-
 
 def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	x = audioBasicIO.stereo2mono(x);

@@ -249,6 +249,45 @@ def main(argv):
 			else:
 				print "Error.\nSyntax: " + argv[0] + " -regressionFolder <method(svm or knn)> <modelName> <folderName>"
 
+	elif argv[1] == '-trainHMMsegmenter_fromfile':
+		if len(argv)==7:
+			wavFile = argv[2]
+			gtFile = argv[3]
+			hmmModelName = argv[4]
+			if not uT.isNum(argv[5]):
+				print "Error: mid-term window size must be float!"; return
+			if not uT.isNum(argv[6]):
+				print "Error: mid-term window step must be float!"; return
+			mtWin = float(argv[5])
+			mtStep = float(argv[6])
+			if not os.path.isfile(wavFile):
+				print "Error: wavfile does not exist!"; return
+			if not os.path.isfile(gtFile):
+				print "Error: groundtruth does not exist!"; return
+			aS.trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep)
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -trainHMMsegmenter_fromfile <wavFilePath> <gtSegmentFilePath> <hmmModelFileName> <mtWin> <mtStep>"
+
+	elif argv[1] == '-trainHMMsegmenter_fromdir':
+		if len(argv)==6:
+			dirPath = argv[2]
+			hmmModelName = argv[3]
+			if not uT.isNum(argv[4]):
+				print "Error: mid-term window size must be float!"
+			if not uT.isNum(argv[5]):
+				print "Error: mid-term window step must be float!"
+			mtWin = float(argv[4])
+			mtStep = float(argv[5])
+			aS.trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep)
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -trainHMMsegmenter_fromdir <dirPath> <hmmModelFileName> <mtWin> <mtStep>"
+
+	elif argv[1] == "-segmentClassifyHMM":
+		if len(argv)==5:
+			wavFile = argv[2]
+			hmmModelName = argv[3]
+			gtFileName = argv[4]
+			aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFileName)
 
 	elif argv[1] == '-segmentClassifyFile':		# Segmentation-classification (OK)
 		if (len(argv)==5):
