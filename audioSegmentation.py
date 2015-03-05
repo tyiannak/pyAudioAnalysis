@@ -160,7 +160,7 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
 		font = {'family' : 'fantasy', 'size'   : 10}
 		plt.rc('font', **font)
 
-		fig = plt.figure()	
+		fig = plt.figure()
 		ax1 = fig.add_subplot(211)
 		ax1.set_yticks(numpy.array(range(len(classNames))))
 		ax1.axis((0, Duration, -1, len(classNames)))
@@ -452,7 +452,11 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
 			flagsInd, classNames, acc = hmmSegmentation(wavFile, modelName, False, gtFile)
 		if acc>-1:
 			accuracys.append(acc)
-	print accuracys, numpy.array(accuracys).mean()
+	print " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+	print "Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean())
+	print "Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys)))
+	print "Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min())
+	print "Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max())
 
 def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot = False):
 	'''
