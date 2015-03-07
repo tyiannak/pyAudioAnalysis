@@ -282,7 +282,7 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -trainHMMsegmenter_fromdir <dirPath> <hmmModelFileName> <mtWin> <mtStep>"
 
-	elif argv[1] == "-segmentClassifyHMM":
+	elif argv[1] == "-segmentClassifyFileHMM":	# HMM-based segmentation-classification
 		if len(argv)==4:
 			hmmModelName = argv[2]
 			wavFile = argv[3]
@@ -291,7 +291,7 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyHMM <hmmModelName> <fileName>"
 
-	elif argv[1] == '-segmentClassifyFile':		# Segmentation-classification (OK)
+	elif argv[1] == '-segmentClassifyFile':		# Segmentation-classification (fix-sized segment using knn or svm)
 		if (len(argv)==5):
 			modelType = argv[2]
 			modelName = argv[3]
@@ -308,11 +308,14 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyFile <method(svm or knn)> <modelName> <fileName>"
 
-	elif argv[1] == "-segmentEvaluation":
-			dirName = argv[2]
+	elif argv[1] == "-segmentationEvaluation":
+		if len(argv)==5:
+			methodName = argv[2]
 			modelName = argv[3]
-			methodName = argv[4]
+			dirName = argv[4]
 			aS.evaluateSegmentationClassificationDir(dirName, modelName, methodName)
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -segmentationEvaluation <method(svm or knn)> <modelName> <directoryName"
 
 	elif argv[1] == "-silenceRemoval":
 		if len(argv)==5:
