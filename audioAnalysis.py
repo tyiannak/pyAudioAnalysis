@@ -283,11 +283,13 @@ def main(argv):
 			print "Error.\nSyntax: " + argv[0] + " -trainHMMsegmenter_fromdir <dirPath> <hmmModelFileName> <mtWin> <mtStep>"
 
 	elif argv[1] == "-segmentClassifyHMM":
-		if len(argv)==5:
-			wavFile = argv[2]
-			hmmModelName = argv[3]
-			gtFileName = argv[4]
-			aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFileName)
+		if len(argv)==4:
+			hmmModelName = argv[2]
+			wavFile = argv[3]
+			gtFile = wavFile.replace('.wav', '.segments');
+			aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyHMM <hmmModelName> <fileName>"
 
 	elif argv[1] == '-segmentClassifyFile':		# Segmentation-classification (OK)
 		if (len(argv)==5):
