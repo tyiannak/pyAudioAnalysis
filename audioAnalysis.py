@@ -315,7 +315,7 @@ def main(argv):
 			dirName = argv[4]
 			aS.evaluateSegmentationClassificationDir(dirName, modelName, methodName)
 		else:
-			print "Error.\nSyntax: " + argv[0] + " -segmentationEvaluation <method(svm or knn)> <modelName> <directoryName"
+			print "Error.\nSyntax: " + argv[0] + " -segmentationEvaluation <method(svm or knn)> <modelName> <directoryName>"
 
 	elif argv[1] == "-silenceRemoval":
 		if len(argv)==5:
