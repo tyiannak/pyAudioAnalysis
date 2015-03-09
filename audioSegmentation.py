@@ -351,7 +351,9 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
 	[Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
 	flagsInd = hmm.predict(Features.T)							# apply model	
-
+	for i in range(len(flagsInd)):
+		if classesAll[flagsInd[i]]=="silence":
+			flagsInd[i]=classesAll.index("speech")
 									# plot results
 	if os.path.isfile(gtFileName):
 		[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
