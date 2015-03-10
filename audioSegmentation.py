@@ -657,10 +657,16 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	clsAll = []
 	silAll = []
 
-#	MidTermFeaturesNorm = numpy.dot(numpy.random.rand(2, MidTermFeaturesNorm.shape[0]),  MidTermFeaturesNorm)
-#	print MidTermFeaturesNorm
 	for iSpeakers in sRange:
 		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
+
+		#YDist =   distance.pdist(MidTermFeaturesNorm.T, metric='euclidean')
+		#print distance.squareform(YDist).shape
+		#hc = mlpy.HCluster()
+		#hc.linkage(YDist)
+		#cls = hc.cut(14.5)
+		#print cls
+
 		# Y = distance.squareform(distance.pdist(MidTermFeaturesNorm.T))
 		clsAll.append(cls)
 		silA = []; silB = []
