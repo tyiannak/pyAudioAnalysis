@@ -124,10 +124,18 @@ def readSegmentGT(gtFile):
 		if len(row)==3:
 			segStart.append(float(row[0]))
 			segEnd.append(float(row[1]))
+			#if row[2]!="other":
+			#	segLabel.append((row[2]))
+			#else:
+			#	segLabel.append("silence")
 			segLabel.append((row[2]))
 	return numpy.array(segStart), numpy.array(segEnd), segLabel
 
 def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALUATE = False):
+	'''
+	This function plots statistics on the classification-segmentation results produced either by the fix-sized supervised method or the HMM method.
+	It also computes the overall accuracy achieved by the respective method if ground-truth is available.
+	'''
 	flags = [classNames[int(f)] for f in flagsInd]
 	(segs, classes) = flags2segs(flags, mtStep)
 	
@@ -187,8 +195,40 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
 		ax3.bar(numpy.array(range(len(classNames)))+0.5, AvDurations)
 		fig.tight_layout()
 		plt.show()
-
 	return accuracy			
+
+def evaluateSpeakerDiarization(flags, flagsGT):
+
+	minLength = min( flags.shape[0], flagsGT.shape[0] )
+	flags = flags[0:minLength]
+	flagsGT = flagsGT[0:minLength]
+
+	uFlags = numpy.unique(flags)
+	uFlagsGT = numpy.unique(flagsGT)
+
+	# compute contigency table:
+	cMatrix = numpy.zeros(( uFlags.shape[0], uFlagsGT.shape[0] ))
+	for i in range(minLength):
+		cMatrix[ int(flags[i]), int(flagsGT[i]) ] += 1.0
+
+	Nc, Ns = cMatrix.shape;
+	N_s = numpy.sum(cMatrix,axis=0);
+	N_c = numpy.sum(cMatrix,axis=1);
+	N   = numpy.sum(cMatrix);
+
+	purityCluster = numpy.zeros( (Nc,) )
+	puritySpeaker = numpy.zeros( (Ns,) )
+	# compute cluster purity:
+	for i in range(Nc):
+		purityCluster[i] = numpy.max( (cMatrix[i,:]) )/ (N_c[i]);
+
+	for j in range(Ns):
+		puritySpeaker[j] = numpy.max( (cMatrix[:,j]) )/ (N_s[j]);
+
+	purityClusterMean = numpy.sum(purityCluster*N_c) / N;
+	puritySpeakerMean = numpy.sum(puritySpeaker*N_s) / N;
+	
+	return purityClusterMean, puritySpeakerMean
 
 def trainHMM_computeStatistics(features, labels):
 	'''
@@ -253,19 +293,19 @@ def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
 	After training, hmm, classNames, along with the mtWin and mtStep values are stored in the hmmModelName file
 	'''
 
-	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)				# read ground truth data
-	flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)		# convert to fix-sized sequence of flags
+	[segStart, segEnd, segLabels] = readSegmentGT(gtFile)						# read ground truth data
+	flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)				# convert to fix-sized sequence of flags
 
-	[Fs, x] = audioBasicIO.readAudioFile(wavFile);					# read audio data
+	[Fs, x] = audioBasicIO.readAudioFile(wavFile);							# read audio data
 	#F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
 	[F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));	# feature extraction
-	startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)		# compute HMM statistics (priors, transition matrix, etc)
+	startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)				# compute HMM statistics (priors, transition matrix, etc)
 
-	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)	# hmm training
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training
 	hmm.means_ = means
 	hmm.covars_ = cov
 
-	fo = open(hmmModelName, "wb")							# output to file
+	fo = open(hmmModelName, "wb")									# output to file
 	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(classNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
@@ -291,17 +331,17 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 
 	flagsAll = numpy.array([])
 	classesAll = []
-	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):			# for each WAV file
+	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):				# for each WAV file
 		wavFile = f;
-		gtFile = f.replace('.wav', '.segments');				# open for annotated file
-		if not os.path.isfile(gtFile):						# if current WAV file does not have annotation -> skip
+		gtFile = f.replace('.wav', '.segments');					# open for annotated file
+		if not os.path.isfile(gtFile):							# if current WAV file does not have annotation -> skip
 			continue;
-		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)			# read GT data
-		flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)	# convert to flags
-		for c in classNames:							# update classnames:
+		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)				# read GT data
+		flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)		# convert to flags
+		for c in classNames:								# update classnames:
 			if c not in classesAll:
 				classesAll.append(c)
-		[Fs, x] = audioBasicIO.readAudioFile(wavFile);				# read audio data 
+		[Fs, x] = audioBasicIO.readAudioFile(wavFile);					# read audio data 
 		[F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050)); 	# feature extraction
 
 		lenF = F.shape[1]; lenL = len(flags); MIN = min(lenF, lenL)
@@ -309,7 +349,7 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 		flags = flags[0:MIN]
 
 		flagsNew = []
-		for j, fl in enumerate(flags):						# append features and labels
+		for j, fl in enumerate(flags):							# append features and labels
 			flagsNew.append( classesAll.index( classNames[flags[j]] ) )
 
 		flagsAll = numpy.append(flagsAll, numpy.array(flagsNew))
@@ -317,14 +357,13 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 		if i==0:
 			Fall = F;
 		else:
-			Fall = numpy.concatenate((Fall, F), axis = 1)
-
-	startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)	# compute HMM statistics
-	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)	# train HMM
+			Fall = numpy.concatenate((Fall, F), axis = 1)	
+	startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)		# compute HMM statistics
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)		# train HMM
 	hmm.means_ = means
 	hmm.covars_ = cov
 
-	fo = open(hmmModelName, "wb")							# save HMM model
+	fo = open(hmmModelName, "wb")								# save HMM model
 	cPickle.dump(hmm, fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(classesAll,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
 	cPickle.dump(mtWin,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
@@ -335,6 +374,7 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 
 def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);					# read audio data
+
 	try:
 		fo = open(hmmModelName, "rb")
 	except IOError:
@@ -351,15 +391,15 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT = False, gtFileName = ""):
 	#Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);	# feature extraction
 	[Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*0.050), round(Fs*0.050));
 	flagsInd = hmm.predict(Features.T)							# apply model	
-	for i in range(len(flagsInd)):
-		if classesAll[flagsInd[i]]=="silence":
-			flagsInd[i]=classesAll.index("speech")
-									# plot results
+	#for i in range(len(flagsInd)):
+	#	if classesAll[flagsInd[i]]=="silence":
+	#		flagsInd[i]=classesAll.index("speech")
+												# plot results
 	if os.path.isfile(gtFileName):
 		[segStart, segEnd, segLabels] = readSegmentGT(gtFileName)		
 		flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
 		flagsGTNew = []
-		for j, fl in enumerate(flagsGT):					# "align" labels with GT
+		for j, fl in enumerate(flagsGT):						# "align" labels with GT
 			if classNamesGT[flagsGT[j]] in classesAll:
 				flagsGTNew.append( classesAll.index( classNamesGT[flagsGT[j]] ) )
 			else:
@@ -391,7 +431,6 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False, g
 	if not os.path.isfile(modelName):
 		print "mtFileClassificationError: input modelType not found!"
 		return (-1,-1)
-
 	# Load classifier:
 	if modelType=='svm':
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
@@ -400,24 +439,28 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False, g
 	if computeBEAT:
 		print "Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation"	
 		return (-1,-1)
-	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# load input file
-	if Fs == -1:						# could not read file
+	[Fs, x] = audioBasicIO.readAudioFile(inputFile)					# load input file
+	if Fs == -1:									# could not read file
 		return  (-1,-1)
-	x = audioBasicIO.stereo2mono(x);					# convert stereo (if) to mono
+	x = audioBasicIO.stereo2mono(x);						# convert stereo (if) to mono
 	Duration = len(x) / Fs					
-								# mid-term feature extraction:
+											# mid-term feature extraction:
 	[MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
 	flags = []; Ps = []; flagsInd = []
-	for i in range(MidTermFeatures.shape[1]): 		# for each feature vector (i.e. for each fix-sized segment):
-		curFV = (MidTermFeatures[:, i] - MEAN) / STD;	# normalize current feature vector					
+	for i in range(MidTermFeatures.shape[1]): 					# for each feature vector (i.e. for each fix-sized segment):
+		curFV = (MidTermFeatures[:, i] - MEAN) / STD;				# normalize current feature vector					
 		[Result, P] = aT.classifierWrapper(Classifier, modelType, curFV)	# classify vector
 		flagsInd.append(Result)
-		flags.append(classNames[int(Result)])		# update class label matrix
-		Ps.append(numpy.max(P))				# update probability matrix
+		flags.append(classNames[int(Result)])					# update class label matrix
+		Ps.append(numpy.max(P))							# update probability matrix
 	flagsInd = numpy.array(flagsInd)
-	(segs, classes) = flags2segs(flags, mtStep)		# convert fix-sized flags to segments and classes
-	segs[-1] = len(x) / float(Fs)
 
+	# 1-window smoothing
+	for i in range(1, len(flagsInd)-1):
+		if flagsInd[i-1]==flagsInd[i+1]:
+			flagsInd[i] = flagsInd[i+1]
+	(segs, classes) = flags2segs(flags, mtStep)					# convert fix-sized flags to segments and classes
+	segs[-1] = len(x) / float(Fs)
 
 	# Load grount-truth:
 	if os.path.isfile(gtFile):
@@ -433,10 +476,8 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults = False, g
 	else:
 		flagsIndGT = numpy.array([])
 	acc = plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, not plotResults)
-
 	if acc>=0:
 		print "Overall Accuracy: {0:.3f}".format(acc)
-
 	return (flagsInd, classNames, acc)
 
 def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
@@ -506,10 +547,8 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	# Step 4A: detect onset frame indices:
 	ProbOnsetSorted = numpy.sort(ProbOnset)						# find probability Threshold as a weighted average of top 10% and lower 10% of the values
-	Nt = ProbOnsetSorted.shape[0] / 10;
-	print Weight
+	Nt = ProbOnsetSorted.shape[0] / 10;	
 	T = (numpy.mean( (1-Weight)*ProbOnsetSorted[0:Nt] ) + Weight*numpy.mean(ProbOnsetSorted[-Nt::]) )
-	print T
 
 	MaxIdx = numpy.where(ProbOnset>T)[0];						# get the indices of the frames that satisfy the thresholding
 	i = 0;
@@ -555,10 +594,12 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	return segmentLimits
 
-def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
+def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
+	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
-	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.040), round(Fs*0.020));
+	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.020), round(Fs*0.02));
+
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
@@ -567,7 +608,7 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	# remove outliers:
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
 	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
+	iNonOutLiers = numpy.nonzero(DistancesAll < 1.5*MDistancesAll)[0]
 	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
 	print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
@@ -608,9 +649,6 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	_, w = aT.lda(mtFeaturesToReduce.T,Labels.T, 20)
 	MidTermFeaturesNorm = numpy.dot(w.T, MidTermFeaturesNorm)
 	"""
-	##
-
-
 
 	if numOfSpeakers<=0:
 		sRange = range(2,10)
@@ -628,22 +666,22 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 		silA = []; silB = []
 		for c in range(iSpeakers):								# for each speaker (i.e. for each extracted cluster)
 			clusterPerCent = numpy.nonzero(cls==c)[0].shape[0] / float(len(cls))
-			if clusterPerCent < 0.010:
+			if clusterPerCent < 0.020:
 				silA.append(0.0)
 				silB.append(0.0)
 			else:
-				MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]				# get subset of feature vectors
-				Yt = distance.pdist(MidTermFeaturesNormTemp.T)					# compute average distance between samples that belong to the cluster (a values)
+				MidTermFeaturesNormTemp = MidTermFeaturesNorm[:,cls==c]			# get subset of feature vectors
+				Yt = distance.pdist(MidTermFeaturesNormTemp.T)				# compute average distance between samples that belong to the cluster (a values)
 				silA.append(numpy.mean(Yt)*clusterPerCent)
 				silBs = []
-				for c2 in range(iSpeakers):							# compute distances from samples of other clusters
+				for c2 in range(iSpeakers):						# compute distances from samples of other clusters
 					if c2!=c:
 						clusterPerCent2 = numpy.nonzero(cls==c2)[0].shape[0] / float(len(cls))
 						MidTermFeaturesNormTemp2 = MidTermFeaturesNorm[:,cls==c2]
 						Yt = distance.cdist(MidTermFeaturesNormTemp.T, MidTermFeaturesNormTemp2.T)
 						silBs.append(numpy.mean(Yt)*(clusterPerCent+clusterPerCent2)/2.0)
 				silBs = numpy.array(silBs)							
-				silB.append(min(silBs))								# ... and keep the minimum value (i.e. the distance from the "nearest" cluster)
+				silB.append(min(silBs))							# ... and keep the minimum value (i.e. the distance from the "nearest" cluster)
 		silA = numpy.array(silA); 
 		silB = numpy.array(silB); 
 		sil = []
@@ -657,12 +695,19 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 
 	# generate the final set of cluster labels
 	# (important: need to retrieve the outlier windows: this is achieved by giving them the value of their nearest non-outlier window)
-	cls = numpy.zeros((numOfWindows,1))
+	cls = numpy.zeros((numOfWindows,))
 	for i in range(numOfWindows):
 		j = numpy.argmin(numpy.abs(i-iNonOutLiers))
 		cls[i] = clsAll[imax][j]
 	sil = silAll[imax]										# final sillouette
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
+
+	# load ground-truth if available
+	gtFile = fileName.replace('.wav', '.segments');							# open for annotated file
+	if os.path.isfile(gtFile):									# if groundturh exists
+		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)					# read GT data
+		flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)			# convert to flags
+
 	fig = plt.figure()	
 	if numOfSpeakers>0:
 		ax1 = fig.add_subplot(111)
@@ -672,8 +717,12 @@ def speakerDiarization(x, Fs, mtSize, mtStep, numOfSpeakers):
 	ax1.axis((0, Duration, -1, len(classNames)))
 	ax1.set_yticklabels(classNames)
 	ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
+	if os.path.isfile(gtFile):
+		ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
+		purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
+		plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
 	plt.xlabel("time (seconds)")
-	print sRange, silAll	
+	#print sRange, silAll	
 	if numOfSpeakers<=0:
 		plt.subplot(212)
 		plt.plot(sRange, silAll)

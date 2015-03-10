@@ -1,4 +1,4 @@
-import os, glob, eyeD3, ntpath
+import os, glob, eyeD3, ntpath, shutil
 import scipy.io.wavfile as wavfile
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
@@ -31,6 +31,32 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
 		else:
 			wavFileName = f.replace(".mp3",".wav")		
 		command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + wavFileName + "\"";
+		print command
+		os.system(command)
+
+def convertFsDirWavToWav(dirName, Fs, nC):
+	'''
+	This function converts the WAV files stored in a folder to WAV using a different sampling freq and number of channels.
+	ARGUMENTS:
+	 - dirName:		the path of the folder where the WAVs are stored
+	 - Fs:			the sampling rate of the generated WAV files
+	 - nC:			the number of channesl of the generated WAV files
+	'''
+
+	types = (dirName+os.sep+'*.wav',) # the tuple of file types
+	filesToProcess = []
+
+	for files in types:
+		filesToProcess.extend(glob.glob(files))		
+
+	newDir = dirName + os.sep + "Fs" + str(Fs) + "_" + "NC"+str(nC)
+	if os.path.exists(newDir) and newDir!=".":
+		shutil.rmtree(newDir)	
+	os.makedirs(newDir)	
+
+	for f in filesToProcess:	
+		_, wavFileName = ntpath.split(f)	
+		command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + newDir + os.sep + wavFileName + "\"";
 		print command
 		os.system(command)
 

@@ -25,6 +25,19 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -dirMp3toWAV <dirName> <sampling Freq> <numOfChannels>"
 
+	if argv[1] == "-dirWAVChangeFs":				# convert mp3 to wav (batch)
+		if len(argv)==5:			
+			path = argv[2]
+			if argv[3] not in ["8000", "16000", "32000", "44100"]:
+				print "Error. Unsupported sampling rate (must be: 8000, 16000, 32000 or 44100)."; return
+			if argv[4] not in ["1","2"]:
+				print "Error. Number of output channels must be 1 or 2"; return
+			if not os.path.isdir(path):
+				raise Exception("Input path not found!")
+			audioBasicIO.convertFsDirWavToWav(path, int(argv[3]), int(argv[4]))
+		else:
+			print "Error.\nSyntax: " + argv[0] + " -dirMp3toWAV <dirName> <sampling Freq> <numOfChannels>"
+
 	elif argv[1] == "-featureExtractionFile":		# short-term and mid-term feature extraction to files (csv and numpy)
 		if len(argv)==7:
 			wavFileName = argv[2]
@@ -286,7 +299,7 @@ def main(argv):
 		if len(argv)==4:
 			hmmModelName = argv[2]
 			wavFile = argv[3]
-			gtFile = wavFile.replace('.wav', '.segments');
+			gtFile = wavFile.replace('.wav', '.segments');			
 			aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -segmentClassifyHMM <hmmModelName> <fileName>"
@@ -335,8 +348,7 @@ def main(argv):
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
-			[Fs, x] = audioBasicIO.readAudioFile(inputFile)
-			aS.speakerDiarization(x, Fs, 2.0, 0.1, int(argv[3]));
+			aS.speakerDiarization(inputFile, 2.0, 0.1, int(argv[3]));
 			#print speechLimits
 
 	elif argv[1] == '-thumbnail':			# music thumbnailing (OK)
