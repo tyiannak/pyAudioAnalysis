@@ -234,19 +234,20 @@ def stChromaFeatures(X, fs, nChroma, nFreqsPerChroma):
 	#TODO: 1 complexity
 	#TODO: 2 bug with large windows
 
-	t1 = time.clock()
 	chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
-		
 	spec = X**2
-#	print nChroma
 	C = numpy.zeros((nChroma.shape[0],))
 	C[nChroma] = spec
 	C /= nFreqsPerChroma[nChroma]
-	
 	finalC = numpy.zeros((12,1))
-	for i in range(12):
-		finalC[i] = numpy.sum(C[i:C.shape[0]:12])
-	finalC /= sum(spec)
+	newD = int( numpy.ceil(C.shape[0] / 12.0) * 12 )
+	C2 = numpy.zeros( (newD, ) )
+	C2[0:C.shape[0]] = C;
+	C2 = C2.reshape(C2.shape[0]/12, 12)
+	#for i in range(12):
+	#	finalC[i] = numpy.sum(C[i:C.shape[0]:12])
+	finalC = numpy.matrix(numpy.sum(C2, axis=0)).T
+	finalC /= spec.sum()
 
 #	ax = plt.gca()
 #	plt.hold(False)
