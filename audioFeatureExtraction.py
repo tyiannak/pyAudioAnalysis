@@ -104,7 +104,10 @@ def stSpectralRollOff(X, c, fs):
 	# find the spectral rolloff as the frequency position where the respective spectral energy is equal to c*totalEnergy
 	CumSum = numpy.cumsum(X**2)+eps
 	[a,] = numpy.nonzero(CumSum>Thres)
-	mC = numpy.float64(a[0])/(float(fftLength));
+	if len(a)>0:
+		mC = numpy.float64(a[0])/(float(fftLength));
+	else:
+		mC = 0.0;
 	return (mC)
 
 def stHarmonic(frame, fs):
