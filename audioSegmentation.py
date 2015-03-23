@@ -608,7 +608,14 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	# remove outliers:
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
 	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers = numpy.nonzero(DistancesAll < 1.5*MDistancesAll)[0]
+	iNonOutLiers = numpy.nonzero(DistancesAll < 1.4*MDistancesAll)[0]
+	# TODO: Combine energy threshold for outlier removal:
+	#EnergyMin = numpy.min(MidTermFeatures[1,:])
+	#EnergyMean = numpy.mean(MidTermFeatures[1,:])
+	#Thres = (1.5*EnergyMin + 0.5*EnergyMean) / 2.0
+	#iNonOutLiers = numpy.nonzero(MidTermFeatures[1,:] > Thres)[0]
+	#print iNonOutLiers
+
 	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
 	print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
