@@ -152,7 +152,7 @@ def trainSVMregression(Features, Y, C):
 	return svm, trainError 
 
 
-def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT = False):
+def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT = False, perTrain = 0.90):
 	'''
 	This function is used as a wrapper to segment-based audio feature extraction and classifier training.
 	ARGUMENTS:
@@ -189,7 +189,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
 
 	# get optimal classifeir parameter:
-	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0)
+	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
 
 	print "Selected params: {0:.5f}".format(bestParam)
 
@@ -372,7 +372,7 @@ def loadSVModel(SVMmodelName, isRegression = False):
 	else:
 		return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT);				
 
-def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode):
+def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode, perTrain = 0.90):
 	'''
 	ARGUMENTS:
 		features: 	a list ([numOfClasses x 1]) whose elements containt numpy matrices of features.
@@ -399,7 +399,7 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 				CM = numpy.zeros((nClasses, nClasses))
 				for e in range(nExp):		# for each cross-validation iteration:
 					# split features:
-					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, 0.90)
+					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, perTrain)
 					# train multi-class svms:
 					if ClassifierName=="svm":
 						Classifier = trainSVM(featuresTrain, C)
