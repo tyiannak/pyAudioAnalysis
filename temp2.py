@@ -13,19 +13,15 @@ import audioTrainTest as aT
 #aS.hmmSegmentation('data/scottish.wav', 'hmmTemp2', True, 'data/scottish.segments')				# test 2
 
 
-dirName = "/home/tyiannak/Desktop/DIARIZATION_ALL/train"
-dirName2 = "/home/tyiannak/Desktop/DIARIZATION_ALL/test"
-listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
-listOfDirs2 = [ os.path.join(dirName2, name) for name in os.listdir(dirName2) if os.path.isdir(os.path.join(dirName2, name)) ]
+mtWin = 2.0;  mtStep = 2.0; stWin = 0.050; stStep = 0.050;
+# TRAIN:
+#dirName = "DIARIZATION_ALL/train"
+#listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
+#aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeaker", computeBEAT = False, perTrain = 0.50)
 
-
-mtWin = 2.0; 
-mtStep = 2.0;
-stWin = 0.050;
-stStep = 0.050;
-
-aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeaker", computeBEAT = False, perTrain = 0.50)
 [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeaker")
+dirName2 = "./DIARIZATION_ALL/test"
+listOfDirs2 = [ os.path.join(dirName2, name) for name in os.listdir(dirName2) if os.path.isdir(os.path.join(dirName2, name)) ]
 [features, classNames, _]   = aF.dirsWavFeatureExtraction(listOfDirs2, mtWin, mtStep, stWin, stStep, computeBEAT = False)
 [X, Y] = aT.listOfFeatures2Matrix(features)
 featuresP = [];
@@ -36,34 +32,9 @@ for i in range(X.shape[0]):
 	featuresP.append(P)
 featuresP = numpy.matrix(featuresP)
 print featuresP.shape
-cls, means, steps = mlpy.kmeans(featuresP, k=6, plus=True)
+cls, means, steps = mlpy.kmeans(featuresP, k=8, plus=True)
 plt.plot(cls)
 plt.plot(Y,'r')
 plt.show()
-
-#(feature2, MEAN, STD) = aT.normalizeFeatures(features)
-#classifierParams = numpy.array([1, 3])
-#bestParam = aT.evaluateClassifier(features, classNames, 100, "knn", classifierParams, 0, 0.50)
-
-#[features2, classNames2, _] = aF.dirsWavFeatureExtraction(listOfDirs2, mtWin, mtStep, stWin, stStep, computeBEAT = False)
-
-#[X, Y] = aT.listOfFeatures2Matrix(features)
-#(X, MEAN, STD) = aT.normalizeFeatures([X])
-#X = X[0]
-#print MEAN.shape
-#clf = LDA(n_components=6)
-#clf.fit(X, Y)
-#[X2, Y2] = aT.listOfFeatures2Matrix(features2)
-#for i in range(X2.shape[0]):
-#	X2[i,:] = (X2[i,:] - MEAN) / STD
-#X2new =  clf.transform(X2)
-#cls, means, steps = mlpy.kmeans(X2new, k=6, plus=True)
-#print Y2.shape, X2new.shape
-#print Y2
-#plt.plot(cls)
-#plt.plot(Y2,'--c')
-#plt.show()
-#plt.plot(Y2)
-#plt.show()
-
-
+purityClusterMean, puritySpeakerMean = aS.evaluateSpeakerDiarization(cls, Y)
+print purityClusterMean, puritySpeakerMean
