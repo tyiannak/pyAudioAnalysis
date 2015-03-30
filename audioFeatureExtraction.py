@@ -303,10 +303,9 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
 		chromaNames, C = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)		
 		C = C[:,0]
 		if countFrames==1:
-			chromaGram = C
+			chromaGram = C.T
 		else:
-			chromaGram = numpy.vstack((chromaGram, C))
-
+			chromaGram = numpy.vstack((chromaGram, C.T))
 	FreqAxis = chromaNames
 	TimeAxis = [(t * Step) / Fs for t in range(chromaGram.shape[0])]
 
