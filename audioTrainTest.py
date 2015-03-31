@@ -187,7 +187,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 		classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
 	elif classifierType == "knn":
 		#classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
-		classifierParams = numpy.array([21]); 
+		classifierParams = numpy.array([31, 41]); 
 
 	# get optimal classifeir parameter:
 	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)

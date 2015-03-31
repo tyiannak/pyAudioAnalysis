@@ -13,13 +13,13 @@ import audioTrainTest as aT
 #aS.hmmSegmentation('data/scottish.wav', 'hmmTemp2', True, 'data/scottish.segments')				# test 2
 
 
-mtWin = 2.0;  mtStep = 2.0; stWin = 0.050; stStep = 0.050;
+mtWin = 2.0;  mtStep = 2.0; stWin = 0.020; stStep = 0.020;
 # TRAIN:
-#dirName = "DIARIZATION_ALL/train"
-#listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
-#aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeaker", computeBEAT = False, perTrain = 0.50)
+dirName = "DIARIZATION_ALL/all"
+listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
+aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerAll", computeBEAT = False, perTrain = 0.90)
 
-[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeaker")
+[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
 dirName2 = "./DIARIZATION_ALL/test"
 listOfDirs2 = [ os.path.join(dirName2, name) for name in os.listdir(dirName2) if os.path.isdir(os.path.join(dirName2, name)) ]
 [features, classNames, _]   = aF.dirsWavFeatureExtraction(listOfDirs2, mtWin, mtStep, stWin, stStep, computeBEAT = False)

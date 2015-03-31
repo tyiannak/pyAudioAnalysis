@@ -204,12 +204,12 @@ def evaluateSpeakerDiarization(flags, flagsGT):
 	flagsGT = flagsGT[0:minLength]
 
 	uFlags = numpy.unique(flags)
-	uFlagsGT = numpy.unique(flagsGT)
+	uFlagsGT = numpy.unique(flagsGT)	
 
 	# compute contigency table:
 	cMatrix = numpy.zeros(( uFlags.shape[0], uFlagsGT.shape[0] ))
 	for i in range(minLength):
-		cMatrix[ int(flags[i]), int(flagsGT[i]) ] += 1.0
+		cMatrix[ int(numpy.nonzero(uFlags==flags[i])[0]), int(numpy.nonzero(uFlagsGT==flagsGT[i])[0]) ] += 1.0
 
 	Nc, Ns = cMatrix.shape;
 	N_s = numpy.sum(cMatrix,axis=0);
@@ -598,8 +598,20 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
+
+	[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
+
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.020), round(Fs*0.02));
 
+	MidTermFeatures2 = numpy.zeros( (MidTermFeatures.shape[0] + len(classNames), MidTermFeatures.shape[1] ) )
+	print MidTermFeatures.shape, MidTermFeatures2.shape
+	for i in range(MidTermFeatures.shape[1]):
+		curF = (MidTermFeatures[:,i] - MEAN)  / STD
+		[Result, P] = aT.classifierWrapper(Classifier, "knn", curF)
+		MidTermFeatures2[0:MidTermFeatures.shape[0], i] = MidTermFeatures[:, i]
+		MidTermFeatures2[MidTermFeatures.shape[0]::, i] = P + 0.0001;
+
+	#MidTermFeatures = MidTermFeatures2	# TODO
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
@@ -607,6 +619,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 
 	# remove outliers:
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
+
 	MDistancesAll = numpy.mean(DistancesAll)
 	iNonOutLiers = numpy.nonzero(DistancesAll < 1.4*MDistancesAll)[0]
 	# TODO: Combine energy threshold for outlier removal:
@@ -730,6 +743,8 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	ax1.axis((0, Duration, -1, len(classNames)))
 	ax1.set_yticklabels(classNames)
 	ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
+	print cls
+	print flagsGT
 	if os.path.isfile(gtFile):
 		ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
 		purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
