@@ -599,12 +599,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
 
-	[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
+	[Classifier, MEAN, STD, classNames, mtWin_knn, mtStep_knn, stWin_knn, stStep_knn, computeBEAT_knn] = aT.loadKNNModel("knnSpeakerAll")
 
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.020), round(Fs*0.02));
 
 	MidTermFeatures2 = numpy.zeros( (MidTermFeatures.shape[0] + len(classNames), MidTermFeatures.shape[1] ) )
-	print MidTermFeatures.shape, MidTermFeatures2.shape
 	for i in range(MidTermFeatures.shape[1]):
 		curF = (MidTermFeatures[:,i] - MEAN)  / STD
 		[Result, P] = aT.classifierWrapper(Classifier, "knn", curF)
@@ -716,6 +715,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 
 		silAll.append(numpy.mean(sil))								# keep the AVERAGE SILLOUETTE
 
+	#silAll = silAll * (1.0/(numpy.power(numpy.array(sRange),0.5)))
 	imax = numpy.argmax(silAll)									# position of the maximum sillouette value
 	nSpeakersFinal = sRange[imax]									# optimal number of clusters
 
@@ -743,8 +743,6 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	ax1.axis((0, Duration, -1, len(classNames)))
 	ax1.set_yticklabels(classNames)
 	ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
-	print cls
-	print flagsGT
 	if os.path.isfile(gtFile):
 		ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
 		purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
