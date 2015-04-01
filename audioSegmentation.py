@@ -599,18 +599,24 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
 
-	[Classifier, MEAN, STD, classNames, mtWin_knn, mtStep_knn, stWin_knn, stStep_knn, computeBEAT_knn] = aT.loadKNNModel("knnSpeakerAll")
+	[Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel("knnSpeakerAll")
+	[Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel("knnSpeakerFemaleMale")
 
 	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.020), round(Fs*0.02));
 
-	MidTermFeatures2 = numpy.zeros( (MidTermFeatures.shape[0] + len(classNames), MidTermFeatures.shape[1] ) )
-	for i in range(MidTermFeatures.shape[1]):
-		curF = (MidTermFeatures[:,i] - MEAN)  / STD
-		[Result, P] = aT.classifierWrapper(Classifier, "knn", curF)
-		MidTermFeatures2[0:MidTermFeatures.shape[0], i] = MidTermFeatures[:, i]
-		MidTermFeatures2[MidTermFeatures.shape[0]::, i] = P + 0.0001;
+	MidTermFeatures2 = numpy.zeros( (MidTermFeatures.shape[0] + len(classNames1) + len(classNames2), MidTermFeatures.shape[1] ) )
 
-	#MidTermFeatures = MidTermFeatures2	# TODO
+	for i in range(MidTermFeatures.shape[1]):
+		curF1 = (MidTermFeatures[:,i] - MEAN1)  / STD1
+		curF2 = (MidTermFeatures[:,i] - MEAN2)  / STD2
+		[Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
+		[Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
+		MidTermFeatures2[0:MidTermFeatures.shape[0], i] = MidTermFeatures[:, i]
+		MidTermFeatures2[MidTermFeatures.shape[0]:MidTermFeatures.shape[0]+len(classNames1), i] = P1 + 0.0001;
+		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
+
+	MidTermFeatures = MidTermFeatures2	# TODO
+#	MidTermFeatures = MidTermFeatures[[99,100],:]
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 

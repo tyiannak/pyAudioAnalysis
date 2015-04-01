@@ -17,24 +17,29 @@ mtWin = 2.0;  mtStep = 2.0; stWin = 0.020; stStep = 0.020;
 # TRAIN:
 dirName = "DIARIZATION_ALL/all"
 listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
-aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerAll", computeBEAT = False, perTrain = 0.90)
+aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerAll", computeBEAT = False, perTrain = 0.50)
 
-[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
-dirName2 = "./DIARIZATION_ALL/test"
-listOfDirs2 = [ os.path.join(dirName2, name) for name in os.listdir(dirName2) if os.path.isdir(os.path.join(dirName2, name)) ]
-[features, classNames, _]   = aF.dirsWavFeatureExtraction(listOfDirs2, mtWin, mtStep, stWin, stStep, computeBEAT = False)
-[X, Y] = aT.listOfFeatures2Matrix(features)
-featuresP = [];
-for i in range(X.shape[0]):
-	X[i,:] = (X[i,:] - MEAN) / STD
-	[Result, P] = aT.classifierWrapper(Classifier, "knn", X[i,:])	
-	print i, P
-	featuresP.append(P)
-featuresP = numpy.matrix(featuresP)
-print featuresP.shape
-cls, means, steps = mlpy.kmeans(featuresP, k=8, plus=True)
-plt.plot(cls)
-plt.plot(Y,'r')
-plt.show()
-purityClusterMean, puritySpeakerMean = aS.evaluateSpeakerDiarization(cls, Y)
-print purityClusterMean, puritySpeakerMean
+dirName = "DIARIZATION_ALL/female_male"
+listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
+aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerFemaleMale", computeBEAT = False, perTrain = 0.50)
+
+
+#[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
+#dirName2 = "./DIARIZATION_ALL/test"
+#listOfDirs2 = [ os.path.join(dirName2, name) for name in os.listdir(dirName2) if os.path.isdir(os.path.join(dirName2, name)) ]
+#[features, classNames, _]   = aF.dirsWavFeatureExtraction(listOfDirs2, mtWin, mtStep, stWin, stStep, computeBEAT = False)
+#[X, Y] = aT.listOfFeatures2Matrix(features)
+#featuresP = [];
+#for i in range(X.shape[0]):
+#	X[i,:] = (X[i,:] - MEAN) / STD
+#	[Result, P] = aT.classifierWrapper(Classifier, "knn", X[i,:])	
+#	print i, P
+#	featuresP.append(P)
+#featuresP = numpy.matrix(featuresP)
+#print featuresP.shape
+#cls, means, steps = mlpy.kmeans(featuresP, k=8, plus=True)
+#plt.plot(cls)
+#plt.plot(Y,'r')
+#plt.show()
+#purityClusterMean, puritySpeakerMean = aS.evaluateSpeakerDiarization(cls, Y)
+#print purityClusterMean, puritySpeakerMean
