@@ -186,8 +186,8 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 	if classifierType == "svm":
 		classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
 	elif classifierType == "knn":
-		#classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
-		classifierParams = numpy.array([51]); 
+		classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]); 
+		#classifierParams = numpy.array([51]); 
 
 	# get optimal classifeir parameter:
 	bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
@@ -770,6 +770,23 @@ def writeTrainDataToARFF(modelName, features, classNames, featureNames):
 			f.write(classNames[c]+"\n")
 	f.close()
 
+
+def trainSpeakerModelsScript():
+	'''
+	This script is used to train the speaker-related models (NOTE: data paths are hard-coded and NOT included in the library, the models are, however included)
+ 		import audioTrainTest as aT
+		aT.trainSpeakerModelsScript()
+
+	'''
+	mtWin = 2.0;  mtStep = 2.0; stWin = 0.020; stStep = 0.020;
+
+	dirName = "DIARIZATION_ALL/all"
+	listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
+	featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "data/knnSpeakerAll", computeBEAT = False, perTrain = 0.50)
+
+	dirName = "DIARIZATION_ALL/female_male"
+	listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
+	featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "data/knnSpeakerFemaleMale", computeBEAT = False, perTrain = 0.50)
 
 
 def main(argv):

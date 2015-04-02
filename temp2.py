@@ -17,11 +17,11 @@ mtWin = 2.0;  mtStep = 2.0; stWin = 0.020; stStep = 0.020;
 # TRAIN:
 dirName = "DIARIZATION_ALL/all"
 listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
-aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerAll", computeBEAT = False, perTrain = 0.50)
+aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "data/knnSpeakerAll", computeBEAT = False, perTrain = 0.50)
 
 dirName = "DIARIZATION_ALL/female_male"
 listOfDirs  = [ os.path.join(dirName, name) for name in os.listdir(dirName) if os.path.isdir(os.path.join(dirName, name)) ]
-aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "knnSpeakerFemaleMale", computeBEAT = False, perTrain = 0.50)
+aT.featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, "knn", "data/knnSpeakerFemaleMale", computeBEAT = False, perTrain = 0.50)
 
 
 #[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel("knnSpeakerAll")
