@@ -616,7 +616,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
 
 	MidTermFeatures = MidTermFeatures2	# TODO
-#	MidTermFeatures = MidTermFeatures[[99,100],:]
+	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
