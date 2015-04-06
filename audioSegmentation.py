@@ -594,7 +594,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	return segmentLimits
 
-def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
+def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
@@ -615,8 +615,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 		MidTermFeatures2[MidTermFeatures.shape[0]:MidTermFeatures.shape[0]+len(classNames1), i] = P1 + 0.0001;
 		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
 
-	MidTermFeatures = MidTermFeatures2	# TODO
-	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
+	#MidTermFeatures = MidTermFeatures2	# TODO
+	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
+	#print MidTermFeatures.shape
+	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
+	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53],:]
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
@@ -635,7 +638,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 	#print iNonOutLiers
 
 	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
-	print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
+	#print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
 
 	# TODO: dimensionality reduction here
@@ -740,27 +743,33 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers):
 		[segStart, segEnd, segLabels] = readSegmentGT(gtFile)					# read GT data
 		flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)			# convert to flags
 
-	fig = plt.figure()	
-	if numOfSpeakers>0:
-		ax1 = fig.add_subplot(111)
-	else:
-		ax1 = fig.add_subplot(211)
-	ax1.set_yticks(numpy.array(range(len(classNames))))
-	ax1.axis((0, Duration, -1, len(classNames)))
-	ax1.set_yticklabels(classNames)
-	ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
+	if PLOT:
+		fig = plt.figure()	
+		if numOfSpeakers>0:
+			ax1 = fig.add_subplot(111)
+		else:
+			ax1 = fig.add_subplot(211)
+		ax1.set_yticks(numpy.array(range(len(classNames))))
+		ax1.axis((0, Duration, -1, len(classNames)))
+		ax1.set_yticklabels(classNames)
+		ax1.plot(numpy.array(range(len(cls)))*mtStep+mtStep/2.0, cls)
+
 	if os.path.isfile(gtFile):
-		ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
+		if PLOT:
+			ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
 		purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
-		plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
-	plt.xlabel("time (seconds)")
-	#print sRange, silAll	
-	if numOfSpeakers<=0:
-		plt.subplot(212)
-		plt.plot(sRange, silAll)
-		plt.xlabel("number of clusters");
-		plt.ylabel("average clustering's sillouette");
-	plt.show()
+		print "{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean)
+		if PLOT:
+			plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
+	if PLOT:
+		plt.xlabel("time (seconds)")
+		#print sRange, silAll	
+		if numOfSpeakers<=0:
+			plt.subplot(212)
+			plt.plot(sRange, silAll)
+			plt.xlabel("number of clusters");
+			plt.ylabel("average clustering's sillouette");
+		plt.show()
 
 
 def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0):
