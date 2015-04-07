@@ -349,7 +349,8 @@ def main(argv):
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			inputFile = argv[2]
 			PLOT = (int(argv[4])==1)
-			aS.speakerDiarization(inputFile, 2.0, 0.1, int(argv[3]), PLOT);
+			stWin = float(argv[5])
+			aS.speakerDiarization(inputFile, 2.0, 0.2, int(argv[3]), stWin, PLOT);
 			#print speechLimits
 
 	elif argv[1] == '-thumbnail':			# music thumbnailing (OK)

@@ -594,7 +594,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	return segmentLimits
 
-def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
+def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
@@ -602,7 +602,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
 	[Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel("data/knnSpeakerAll")
 	[Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel("data/knnSpeakerFemaleMale")
 
-	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*0.020), round(Fs*0.02));
+	[MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stWin*0.5));
 
 	MidTermFeatures2 = numpy.zeros( (MidTermFeatures.shape[0] + len(classNames1) + len(classNames2), MidTermFeatures.shape[1] ) )
 
@@ -615,11 +615,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
 		MidTermFeatures2[MidTermFeatures.shape[0]:MidTermFeatures.shape[0]+len(classNames1), i] = P1 + 0.0001;
 		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
 
-	#MidTermFeatures = MidTermFeatures2	# TODO
+	MidTermFeatures = MidTermFeatures2	# TODO
 	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
 	#print MidTermFeatures.shape
 	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
-	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53],:]
+	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
 
@@ -629,7 +629,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
 
 	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers = numpy.nonzero(DistancesAll < 1.4*MDistancesAll)[0]
+	iNonOutLiers = numpy.nonzero(DistancesAll < 1.2*MDistancesAll)[0]
 	# TODO: Combine energy threshold for outlier removal:
 	#EnergyMin = numpy.min(MidTermFeatures[1,:])
 	#EnergyMean = numpy.mean(MidTermFeatures[1,:])
@@ -736,6 +736,8 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, PLOT):
 		cls[i] = clsAll[imax][j]
 	sil = silAll[imax]										# final sillouette
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
+
+	cls = scipy.signal.medfilt(cls, 13)
 
 	# load ground-truth if available
 	gtFile = fileName.replace('.wav', '.segments');							# open for annotated file
