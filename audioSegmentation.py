@@ -639,6 +639,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 
 	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
 	#print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
+	MidTermFeaturesNormOr = MidTermFeaturesNorm
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
 
 	# TODO: dimensionality reduction here
@@ -684,10 +685,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 		sRange = [numOfSpeakers]
 	clsAll = []
 	silAll = []
+	centersAll = []
 
 	for iSpeakers in sRange:
 		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
-
+		
 		#YDist =   distance.pdist(MidTermFeaturesNorm.T, metric='euclidean')
 		#print distance.squareform(YDist).shape
 		#hc = mlpy.HCluster()
@@ -697,6 +699,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 
 		# Y = distance.squareform(distance.pdist(MidTermFeaturesNorm.T))
 		clsAll.append(cls)
+		centersAll.append(means)
 		silA = []; silB = []
 		for c in range(iSpeakers):								# for each speaker (i.e. for each extracted cluster)
 			clusterPerCent = numpy.nonzero(cls==c)[0].shape[0] / float(len(cls))
@@ -732,12 +735,24 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 	# (important: need to retrieve the outlier windows: this is achieved by giving them the value of their nearest non-outlier window)
 	cls = numpy.zeros((numOfWindows,))
 	for i in range(numOfWindows):
-		j = numpy.argmin(numpy.abs(i-iNonOutLiers))
+		j = numpy.argmin(numpy.abs(i-iNonOutLiers))		
 		cls[i] = clsAll[imax][j]
+		
+	# Post-process method 1: hmm smoothing
+	cls = scipy.signal.medfilt(cls, 13)
+	cls = scipy.signal.medfilt(cls, 11)
+	startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
+	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training
+	hmm.means_ = means; hmm.covars_ = cov
+	cls = hmm.predict(MidTermFeaturesNormOr.T)					
+	
+	# Post-process method 2: median filtering:
+	#cls = scipy.signal.medfilt(cls, 13)
+	#cls = scipy.signal.medfilt(cls, 11)
+
 	sil = silAll[imax]										# final sillouette
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
 
-	cls = scipy.signal.medfilt(cls, 13)
 
 	# load ground-truth if available
 	gtFile = fileName.replace('.wav', '.segments');							# open for annotated file
