@@ -618,11 +618,10 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 	MidTermFeatures = MidTermFeatures2	# TODO
 	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
 	#print MidTermFeatures.shape
-	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
+	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]		
 	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
-	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T
-
+	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T	
 	numOfWindows = MidTermFeatures.shape[1]
 
 	# remove outliers:
@@ -644,21 +643,32 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 
 	# TODO: dimensionality reduction here
 
-	"""
-	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));
-	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])
+	
+	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
+	mtFeaturesToReduce2 = numpy.zeros( (mtFeaturesToReduce.shape[0] + len(classNames1) + len(classNames2), mtFeaturesToReduce.shape[1] ) )
+	for i in range(mtFeaturesToReduce.shape[1]):
+		curF1 = (mtFeaturesToReduce[:,i] - MEAN1)  / STD1
+		curF2 = (mtFeaturesToReduce[:,i] - MEAN2)  / STD2
+		[Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
+		[Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
+		mtFeaturesToReduce2[0:mtFeaturesToReduce.shape[0], i] = mtFeaturesToReduce[:, i]
+		mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]:mtFeaturesToReduce.shape[0]+len(classNames1), i] = P1 + 0.0001;
+		mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
+	mtFeaturesToReduce = mtFeaturesToReduce2
+	mtFeaturesToReduce = mtFeaturesToReduce[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
+	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])	
 	mtFeaturesToReduce = mtFeaturesToReduce[0].T
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
 	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers2 = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
+	iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
 	mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
 	Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
 	for i in range(Labels.shape[0]):
-		Labels[i] = int(i/50);
-	clf = LDA(n_components=5)
+		Labels[i] = int(i*stWin);
+	clf = LDA(n_components=20)
 	clf.fit(mtFeaturesToReduce.T, Labels)	
 	MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
-	"""
+	
 
 	"""
 	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));
@@ -741,10 +751,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 	# Post-process method 1: hmm smoothing
 	cls = scipy.signal.medfilt(cls, 13)
 	cls = scipy.signal.medfilt(cls, 11)
-	startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
-	hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training
-	hmm.means_ = means; hmm.covars_ = cov
-	cls = hmm.predict(MidTermFeaturesNormOr.T)					
+	for i in range(1):
+		startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
+		hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training
+		hmm.means_ = means; hmm.covars_ = cov
+		cls = hmm.predict(MidTermFeaturesNormOr.T)					
 	
 	# Post-process method 2: median filtering:
 	#cls = scipy.signal.medfilt(cls, 13)
