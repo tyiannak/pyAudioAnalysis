@@ -665,17 +665,14 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		for i in range(Labels.shape[0]):
 			Labels[i] = int(i*stWin);
 		clf = LDA(n_components=LDAdim)
-		clf.fit(mtFeaturesToReduce.T, Labels)	
+		clf.fit(mtFeaturesToReduce.T, Labels)
 		MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
-	
 
 	if numOfSpeakers<=0:
 		sRange = range(2,10)
 	else:
 		sRange = [numOfSpeakers]
-	clsAll = []
-	silAll = []
-	centersAll = []
+	clsAll = []; silAll = []; centersAll = []
 
 	for iSpeakers in sRange:
 		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
@@ -779,6 +776,29 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 			plt.ylabel("average clustering's sillouette");
 		plt.show()
 
+def speakerDiarizationEvaluateScript(folderName):
+	'''
+	'''
+	types = ('*.wav',  )
+	wavFilesList = []
+	for files in types:
+		wavFilesList.extend(glob.glob(os.path.join(folderName, files)))	
+	
+	wavFilesList = sorted(wavFilesList)
+
+	# get number of unique speakers per file (from ground-truth)
+	N = []
+	for wavFile in wavFilesList:	
+		print wavFile
+		gtFile = wavFile.replace('.wav', '.segments');
+		if os.path.isfile(gtFile):
+			[segStart, segEnd, segLabels] = readSegmentGT(gtFile)							# read GT data
+			N.append(len(list(set(segLabels))))
+		else:
+			N.append(-1)
+	
+	for i, wavFile in enumerate(wavFilesList):
+		speakerDiarization(wavFile, 2.0, 0.2, N[i], 0.05, 25, PLOT = False)
 
 def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0):
 	'''
