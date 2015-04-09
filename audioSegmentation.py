@@ -776,7 +776,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 			plt.ylabel("average clustering's sillouette");
 		plt.show()
 
-def speakerDiarizationEvaluateScript(folderName):
+def speakerDiarizationEvaluateScript(folderName, LDAs):
 	'''
 	'''
 	types = ('*.wav',  )
@@ -786,10 +786,9 @@ def speakerDiarizationEvaluateScript(folderName):
 	
 	wavFilesList = sorted(wavFilesList)
 
-	# get number of unique speakers per file (from ground-truth)
+	# get number of unique speakers per file (from ground-truth)	
 	N = []
-	for wavFile in wavFilesList:	
-		print wavFile
+	for wavFile in wavFilesList:		
 		gtFile = wavFile.replace('.wav', '.segments');
 		if os.path.isfile(gtFile):
 			[segStart, segEnd, segLabels] = readSegmentGT(gtFile)							# read GT data
@@ -797,9 +796,12 @@ def speakerDiarizationEvaluateScript(folderName):
 		else:
 			N.append(-1)
 	
-	for i, wavFile in enumerate(wavFilesList):
-		speakerDiarization(wavFile, 2.0, 0.2, N[i], 0.05, 25, PLOT = False)
-
+	for l in LDAs:
+		print "LDA = {0:d}".format(l)
+		for i, wavFile in enumerate(wavFilesList):
+			speakerDiarization(wavFile, 2.0, 0.2, N[i], 0.05, l, PLOT = False)
+		print
+		
 def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0):
 	'''
 	This function detects instances of the most representative part of a music recording, also called "music thumbnails".

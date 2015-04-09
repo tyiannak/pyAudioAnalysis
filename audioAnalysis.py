@@ -348,8 +348,7 @@ def main(argv):
 
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
 			mtWin = 2.0;
-			mtStep = 0.2;
-			
+			mtStep = 0.2;			
 			inputFile = argv[2]
 			nSpeakers = int(argv[3])			
 			stWin = float(argv[4])			
@@ -357,6 +356,11 @@ def main(argv):
 			PLOT = (int(argv[6])==1)
 			aS.speakerDiarization(inputFile, mtWin, mtStep, nSpeakers, stWin, ldaDim, PLOT);
 			#print speechLimits
+
+	elif argv[1] == "-speakerDiarizationScriptEval":
+			dir = argv[2]
+			listOfLDAs = [int(l) for l in argv[3::]]
+			aS.speakerDiarizationEvaluateScript(dir, listOfLDAs)
 
 	elif argv[1] == '-thumbnail':			# music thumbnailing (OK)
 			if len(argv)==4:	
