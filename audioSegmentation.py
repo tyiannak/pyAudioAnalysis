@@ -594,7 +594,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	return segmentLimits
 
-def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
+def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 0, PLOT = False):
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
@@ -640,54 +640,34 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, PLOT):
 	#print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
 	MidTermFeaturesNormOr = MidTermFeaturesNorm
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
-
-	# TODO: dimensionality reduction here
-
 	
-	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
-	mtFeaturesToReduce2 = numpy.zeros( (mtFeaturesToReduce.shape[0] + len(classNames1) + len(classNames2), mtFeaturesToReduce.shape[1] ) )
-	for i in range(mtFeaturesToReduce.shape[1]):
-		curF1 = (mtFeaturesToReduce[:,i] - MEAN1)  / STD1
-		curF2 = (mtFeaturesToReduce[:,i] - MEAN2)  / STD2
-		[Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
-		[Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
-		mtFeaturesToReduce2[0:mtFeaturesToReduce.shape[0], i] = mtFeaturesToReduce[:, i]
-		mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]:mtFeaturesToReduce.shape[0]+len(classNames1), i] = P1 + 0.0001;
-		mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
-	mtFeaturesToReduce = mtFeaturesToReduce2
-	mtFeaturesToReduce = mtFeaturesToReduce[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
-	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])	
-	mtFeaturesToReduce = mtFeaturesToReduce[0].T
-	DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
-	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
-	mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
-	Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
-	for i in range(Labels.shape[0]):
-		Labels[i] = int(i*stWin);
-	clf = LDA(n_components=25)
-	clf.fit(mtFeaturesToReduce.T, Labels)	
-	MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
+	# LDA dimensionality reduction:
+	if LDAdim > 0:
+		[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
+		mtFeaturesToReduce2 = numpy.zeros( (mtFeaturesToReduce.shape[0] + len(classNames1) + len(classNames2), mtFeaturesToReduce.shape[1] ) )
+		for i in range(mtFeaturesToReduce.shape[1]):
+			curF1 = (mtFeaturesToReduce[:,i] - MEAN1)  / STD1
+			curF2 = (mtFeaturesToReduce[:,i] - MEAN2)  / STD2
+			[Result, P1] = aT.classifierWrapper(Classifier1, "knn", curF1)
+			[Result, P2] = aT.classifierWrapper(Classifier2, "knn", curF2)
+			mtFeaturesToReduce2[0:mtFeaturesToReduce.shape[0], i] = mtFeaturesToReduce[:, i]
+			mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]:mtFeaturesToReduce.shape[0]+len(classNames1), i] = P1 + 0.0001;
+			mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
+		mtFeaturesToReduce = mtFeaturesToReduce2
+		mtFeaturesToReduce = mtFeaturesToReduce[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
+		(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])	
+		mtFeaturesToReduce = mtFeaturesToReduce[0].T
+		DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
+		MDistancesAll = numpy.mean(DistancesAll)
+		iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
+		mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
+		Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
+		for i in range(Labels.shape[0]):
+			Labels[i] = int(i*stWin);
+		clf = LDA(n_components=LDAdim)
+		clf.fit(mtFeaturesToReduce.T, Labels)	
+		MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
 	
-
-	"""
-	[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, 0.020 * Fs, round(Fs*0.040), round(Fs*0.020));
-	(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])
-	mtFeaturesToReduce = mtFeaturesToReduce[0].T
-	DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
-	MDistancesAll = numpy.mean(DistancesAll)
-	iNonOutLiers2 = numpy.nonzero(DistancesAll < 2.0*MDistancesAll)[0]
-	print mtFeaturesToReduce.shape
-	mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
-	print mtFeaturesToReduce.shape
-
-	Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
-	for i in range(Labels.shape[0]):
-		Labels[i] = int(i/10);
-	
-	_, w = aT.lda(mtFeaturesToReduce.T,Labels.T, 20)
-	MidTermFeaturesNorm = numpy.dot(w.T, MidTermFeaturesNorm)
-	"""
 
 	if numOfSpeakers<=0:
 		sRange = range(2,10)
