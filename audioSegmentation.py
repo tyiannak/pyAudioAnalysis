@@ -615,11 +615,15 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		MidTermFeatures2[MidTermFeatures.shape[0]:MidTermFeatures.shape[0]+len(classNames1), i] = P1 + 0.0001;
 		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
 
-	MidTermFeatures = MidTermFeatures2	# TODO
-	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]
-	#print MidTermFeatures.shape
-	#MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100],:]		
-	MidTermFeatures = MidTermFeatures[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
+	MidTermFeatures = MidTermFeatures2	# TODO	
+	# SELECT FEATURES:
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,99,100]; # SET 0
+	iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100]; # SET 1
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53]; # SET 1B
+	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100] SET 2	
+	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100]; # SET 3	
+	MidTermFeatures = MidTermFeatures[iFeaturesSelect,:]		
+	#MidTermFeatures += numpy.random.rand(MidTermFeatures.shape[0], MidTermFeatures.shape[1]) * 0.0000010
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T	
 	numOfWindows = MidTermFeatures.shape[1]
@@ -653,8 +657,9 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 			mtFeaturesToReduce2[0:mtFeaturesToReduce.shape[0], i] = mtFeaturesToReduce[:, i]
 			mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]:mtFeaturesToReduce.shape[0]+len(classNames1), i] = P1 + 0.0001;
 			mtFeaturesToReduce2[mtFeaturesToReduce.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
-		mtFeaturesToReduce = mtFeaturesToReduce2
-		mtFeaturesToReduce = mtFeaturesToReduce[[8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100],:]
+		mtFeaturesToReduce = mtFeaturesToReduce2		
+		mtFeaturesToReduce = mtFeaturesToReduce[iFeaturesSelect,:]		
+		#mtFeaturesToReduce += numpy.random.rand(mtFeaturesToReduce.shape[0], mtFeaturesToReduce.shape[1]) * 0.0000010
 		(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])	
 		mtFeaturesToReduce = mtFeaturesToReduce[0].T
 		DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
