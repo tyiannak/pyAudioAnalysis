@@ -667,8 +667,11 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
 		mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
 		Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
+		LDAstep = 2.0
+		LDAstepRatio = LDAstep / mtStep
+		#print LDAstep, LDAstepRatio
 		for i in range(Labels.shape[0]):
-			Labels[i] = int(i*stWin);
+			Labels[i] = int(i*stWin/LDAstepRatio);
 		clf = LDA(n_components=LDAdim)
 		clf.fit(mtFeaturesToReduce.T, Labels)
 		MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
