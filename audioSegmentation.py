@@ -614,16 +614,26 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		MidTermFeatures2[0:MidTermFeatures.shape[0], i] = MidTermFeatures[:, i]
 		MidTermFeatures2[MidTermFeatures.shape[0]:MidTermFeatures.shape[0]+len(classNames1), i] = P1 + 0.0001;
 		MidTermFeatures2[MidTermFeatures.shape[0]+len(classNames1)::, i] = P2 + 0.0001;
-
+	
 	MidTermFeatures = MidTermFeatures2	# TODO	
 	# SELECT FEATURES:
-	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,99,100]; # SET 0
-	iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100]; # SET 1
-	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53]; # SET 1B
-	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100] SET 2	
-	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,99,100]; # SET 3	
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20]; 																											# SET 0A
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20, 99,100]; 																									# SET 0B
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20, 68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98, 99,100]; 	# SET 0C
+	
+	iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53]; 																	# SET 1A
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53, 99,100]; 															# SET 1B
+	#iFeaturesSelect = [8,9,10,11,12,13,14,15,16,17,18,19,20,41,42,43,44,45,46,47,48,49,50,51,52,53, 68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98, 99,100]; 	# SET 1C
+	
+	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53]; 			# SET 2A		
+	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53, 99,100]; 	# SET 2B
+	#iFeaturesSelect = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53, 68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98, 99,100]; 	# SET 2C
+	
+	#iFeaturesSelect = range(100);																									# SET 3	
+	#MidTermFeatures += numpy.random.rand(MidTermFeatures.shape[0], MidTermFeatures.shape[1]) * 0.000000010  
+	
 	MidTermFeatures = MidTermFeatures[iFeaturesSelect,:]		
-	#MidTermFeatures += numpy.random.rand(MidTermFeatures.shape[0], MidTermFeatures.shape[1]) * 0.0000010
+	
 	(MidTermFeaturesNorm, MEAN, STD) = aT.normalizeFeatures([MidTermFeatures.T])
 	MidTermFeaturesNorm = MidTermFeaturesNorm[0].T	
 	numOfWindows = MidTermFeatures.shape[1]
@@ -667,7 +677,7 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
 		mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
 		Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
-		LDAstep = 2.0
+		LDAstep = 1.0
 		LDAstepRatio = LDAstep / mtStep
 		#print LDAstep, LDAstepRatio
 		for i in range(Labels.shape[0]):
