@@ -346,15 +346,11 @@ def main(argv):
 		else:
 			print "Error.\nSyntax: " + argv[0] + " -silenceRemoval <inputFile> <smoothinWindow(secs)> <Threshold Weight>"
 
-	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO
-			mtWin = 2.0;
-			mtStep = 0.2;			
+	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO				
 			inputFile = argv[2]
-			nSpeakers = int(argv[3])			
-			stWin = float(argv[4])			
-			ldaDim = int(argv[5])
-			PLOT = (int(argv[6])==1)
-			aS.speakerDiarization(inputFile, mtWin, mtStep, nSpeakers, stWin, ldaDim, PLOT);
+			nSpeakers = int(argv[3])
+			PLOT = (int(argv[4])==1)
+			aS.speakerDiarization(inputFile, nSpeakers, mtWin, mtStep, stWin, ldaDim, PLOT);
 			#print speechLimits
 
 	elif argv[1] == "-speakerDiarizationScriptEval":

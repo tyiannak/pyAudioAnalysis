@@ -594,7 +594,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 
 	return segmentLimits
 
-def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 0, PLOT = False):
+def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=0.05, LDAdim = 35, PLOT = False):
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
@@ -681,9 +681,9 @@ def speakerDiarization(fileName, mtSize, mtStep, numOfSpeakers, stWin, LDAdim = 
 		LDAstepRatio = LDAstep / mtStep
 		#print LDAstep, LDAstepRatio
 		for i in range(Labels.shape[0]):
-			Labels[i] = int(i*stWin/LDAstepRatio);
+			Labels[i] = int(i*stWin/LDAstepRatio);		
 		clf = LDA(n_components=LDAdim)
-		clf.fit(mtFeaturesToReduce.T, Labels)
+		clf.fit(mtFeaturesToReduce.T, Labels, tol=0.000001)
 		MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
 
 	if numOfSpeakers<=0:
@@ -817,7 +817,7 @@ def speakerDiarizationEvaluateScript(folderName, LDAs):
 	for l in LDAs:
 		print "LDA = {0:d}".format(l)
 		for i, wavFile in enumerate(wavFilesList):
-			speakerDiarization(wavFile, 2.0, 0.2, N[i], 0.05, l, PLOT = False)
+			speakerDiarization(wavFile, N[i], 2.0, 0.2, 0.05, l, PLOT = False)			
 		print
 		
 def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0):
