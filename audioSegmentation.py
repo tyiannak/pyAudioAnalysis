@@ -595,6 +595,16 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow = 0.5, Weight = 0.5, plot 
 	return segmentLimits
 
 def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=0.05, LDAdim = 35, PLOT = False):
+	'''
+	ARGUMENTS:
+		- fileName:		the name of the WAV file to be analyzed
+		- numOfSpeakers	the number of speakers (clusters) in the recording (<=0 for unknown)
+		- mtSize (opt)	mid-term window size
+		- mtStep (opt)	mid-term window step
+		- stWin  (opt)	short-term window size
+		- LDAdim (opt)	LDA dimension (0 for no LDA)
+		- PLOT	 (opt)	0 for not plotting the results 1 for plottingy
+	'''
 	[Fs, x] = audioBasicIO.readAudioFile(fileName)
 	x = audioBasicIO.stereo2mono(x);
 	Duration = len(x) / Fs
@@ -821,6 +831,10 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 
 def speakerDiarizationEvaluateScript(folderName, LDAs):
 	'''
+		This function prints the cluster purity and speaker purity for each WAV file stored in a provided directory (.SEGMENT files are needed as ground-truth)
+		ARGUMENTS:
+			- folderName: 	the full path of the folder where the WAV and SEGMENT (ground-truth) files are stored
+			- LDAs:			a list of LDA dimensions (0 for no LDA)
 	'''
 	types = ('*.wav',  )
 	wavFilesList = []
