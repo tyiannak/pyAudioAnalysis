@@ -1,9 +1,0 @@
-1) Visualization: 
-	a) semi-supervised: user gives similarities and LDA is used????
-	b) finalize and documentation
-2) Finalize speakerDiarization()
-    a) use LDA (semi-supervised) for better results
-    b) number of clusters: 
-     b1) finish with silluete
-     b2) finish with arguments
-
