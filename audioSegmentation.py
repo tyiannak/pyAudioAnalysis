@@ -244,7 +244,7 @@ def trainHMM_computeStatistics(features, labels):
 	 - means:	means matrix (numOfDimensions x 1)
 	 - cov:		deviation matrix (numOfDimensions x 1)
 	'''
-	uLabels = numpy.unique(labels)
+	uLabels = numpy.unique(labels)	
 	nComps = len(uLabels)
 
 	nFeatures = features.shape[0]
@@ -657,7 +657,31 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 	
 	# LDA dimensionality reduction:
 	if LDAdim > 0:
-		[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
+		#[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));		
+		# extract mid-term features with minimum step:
+		mtWinRatio  = int(round(mtSize  / stWin));
+		mtStepRatio = int(round(stWin / stWin));
+		mtFeaturesToReduce = []			
+		numOfFeatures = len(ShortTermFeatures)
+		numOfStatistics = 2;			
+		#for i in range(numOfStatistics * numOfFeatures + 1):
+		for i in range(numOfStatistics * numOfFeatures):
+			mtFeaturesToReduce.append([])
+
+		for i in range(numOfFeatures):		# for each of the short-term features:
+			curPos = 0
+			N = len(ShortTermFeatures[i])
+			while (curPos<N):
+				N1 = curPos
+				N2 = curPos + mtWinRatio
+				if N2 > N:
+					N2 = N
+				curStFeatures = ShortTermFeatures[i][N1:N2]
+				mtFeaturesToReduce[i].append(numpy.mean(curStFeatures))
+				mtFeaturesToReduce[i+numOfFeatures].append(numpy.std(curStFeatures))				
+				curPos += mtStepRatio		
+		mtFeaturesToReduce = numpy.array(mtFeaturesToReduce)
+				
 		mtFeaturesToReduce2 = numpy.zeros( (mtFeaturesToReduce.shape[0] + len(classNames1) + len(classNames2), mtFeaturesToReduce.shape[1] ) )
 		for i in range(mtFeaturesToReduce.shape[1]):
 			curF1 = (mtFeaturesToReduce[:,i] - MEAN1)  / STD1
@@ -678,7 +702,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 		mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
 		Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
 		LDAstep = 1.0
-		LDAstepRatio = LDAstep / mtStep
+		LDAstepRatio = LDAstep / stWin
 		#print LDAstep, LDAstepRatio
 		for i in range(Labels.shape[0]):
 			Labels[i] = int(i*stWin/LDAstepRatio);		
@@ -744,8 +768,9 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 		cls[i] = clsAll[imax][j]
 		
 	# Post-process method 1: hmm smoothing
-	cls = scipy.signal.medfilt(cls, 13)
-	cls = scipy.signal.medfilt(cls, 11)
+	#cls = scipy.signal.medfilt(cls, 13)
+	#cls = scipy.signal.medfilt(cls, 11)
+	
 	for i in range(1):
 		startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
 		hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training
@@ -753,8 +778,8 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 		cls = hmm.predict(MidTermFeaturesNormOr.T)					
 	
 	# Post-process method 2: median filtering:
-	#cls = scipy.signal.medfilt(cls, 13)
-	#cls = scipy.signal.medfilt(cls, 11)
+	cls = scipy.signal.medfilt(cls, 13)
+	cls = scipy.signal.medfilt(cls, 11)
 
 	sil = silAll[imax]										# final sillouette
 	classNames = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];

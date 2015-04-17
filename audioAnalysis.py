@@ -349,8 +349,12 @@ def main(argv):
 	elif argv[1] == '-speakerDiarization':		# speaker diarization (from file): TODO				
 			inputFile = argv[2]
 			nSpeakers = int(argv[3])
-			PLOT = (int(argv[4])==1)
-			aS.speakerDiarization(inputFile, nSpeakers, mtWin, mtStep, stWin, ldaDim, PLOT);
+			useLDA = (int(argv[4])==1)
+			PLOT = (int(argv[5])==1)
+			if useLDA:
+				aS.speakerDiarization(inputFile, nSpeakers, PLOT = PLOT);
+			else:
+				aS.speakerDiarization(inputFile, nSpeakers, LDAdim = 0, PLOT = PLOT);
 			#print speechLimits
 
 	elif argv[1] == "-speakerDiarizationScriptEval":
