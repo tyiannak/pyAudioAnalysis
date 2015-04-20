@@ -103,8 +103,8 @@ def randSplitFeatures(features, partTrain):
 		[numOfSamples, numOfDims] = f.shape
 		randperm = numpy.random.permutation(range(numOfSamples))
 		nTrainSamples = int(round(partTrain * numOfSamples));
-		featuresTrain.append(f[randperm[1:nTrainSamples]])
-		featuresTest.append(f[randperm[nTrainSamples+1:-1]])
+		featuresTrain.append(f[randperm[0:nTrainSamples]])
+		featuresTest.append(f[randperm[nTrainSamples::]])
 	return (featuresTrain, featuresTest)
 
 def trainKNN(features, K):
@@ -400,7 +400,7 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 				CM = numpy.zeros((nClasses, nClasses))
 				for e in range(nExp):		# for each cross-validation iteration:
 					# split features:
-					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, perTrain)
+					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, perTrain)									
 					# train multi-class svms:
 					if ClassifierName=="svm":
 						Classifier = trainSVM(featuresTrain, C)

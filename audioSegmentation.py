@@ -650,9 +650,9 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 
 	# remove outliers:
 	DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
-
 	MDistancesAll = numpy.mean(DistancesAll)
 	iNonOutLiers = numpy.nonzero(DistancesAll < 1.2*MDistancesAll)[0]
+	
 	# TODO: Combine energy threshold for outlier removal:
 	#EnergyMin = numpy.min(MidTermFeatures[1,:])
 	#EnergyMean = numpy.mean(MidTermFeatures[1,:])
@@ -660,8 +660,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 	#iNonOutLiers = numpy.nonzero(MidTermFeatures[1,:] > Thres)[0]
 	#print iNonOutLiers
 
-	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows
-	#print "{0:3.1f}% of the initial feature vectors are outlier".format(perOutLier)
+	perOutLier = (100.0*(numOfWindows-iNonOutLiers.shape[0])) / numOfWindows	
 	MidTermFeaturesNormOr = MidTermFeaturesNorm
 	MidTermFeaturesNorm = MidTermFeaturesNorm[:, iNonOutLiers]
 	
@@ -706,10 +705,10 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 		#mtFeaturesToReduce += numpy.random.rand(mtFeaturesToReduce.shape[0], mtFeaturesToReduce.shape[1]) * 0.0000010
 		(mtFeaturesToReduce, MEAN, STD) = aT.normalizeFeatures([mtFeaturesToReduce.T])	
 		mtFeaturesToReduce = mtFeaturesToReduce[0].T
-		DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
-		MDistancesAll = numpy.mean(DistancesAll)
-		iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
-		mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
+		#DistancesAll = numpy.sum(distance.squareform(distance.pdist(mtFeaturesToReduce.T)), axis=0)
+		#MDistancesAll = numpy.mean(DistancesAll)
+		#iNonOutLiers2 = numpy.nonzero(DistancesAll < 3.0*MDistancesAll)[0]
+		#mtFeaturesToReduce = mtFeaturesToReduce[:, iNonOutLiers2]
 		Labels = numpy.zeros((mtFeaturesToReduce.shape[1],));
 		LDAstep = 1.0
 		LDAstepRatio = LDAstep / stWin
