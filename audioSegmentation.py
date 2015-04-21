@@ -724,7 +724,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 	else:
 		sRange = [numOfSpeakers]
 	clsAll = []; silAll = []; centersAll = []
-
+	
 	for iSpeakers in sRange:
 		cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)		# perform k-means clustering
 		
@@ -777,9 +777,6 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize = 2.0, mtStep=0.2, stWin=
 		cls[i] = clsAll[imax][j]
 		
 	# Post-process method 1: hmm smoothing
-	#cls = scipy.signal.medfilt(cls, 13)
-	#cls = scipy.signal.medfilt(cls, 11)
-	
 	for i in range(1):
 		startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
 		hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)			# hmm training

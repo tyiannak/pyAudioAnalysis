@@ -396,9 +396,21 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
 	PrecisionClassesAll = []; RecallClassesAll = []; ClassesAll = []; F1ClassesAll = []
 	CMsAll = []
 
+	# compute total number of samples:
+	nSamplesTotal = 0
+	for f in features:
+		nSamplesTotal += f.shape[0]
+	if nSamplesTotal > 1000 and nExp > 50:
+		nExp = 50
+		print "Number of training experiments changed to 50 due to high number of samples"
+	if nSamplesTotal > 2000 and nExp > 10:
+		nExp = 10
+		print "Number of training experiments changed to 10 due to high number of samples"
+
 	for Ci, C in enumerate(Params):				# for each param value		
 				CM = numpy.zeros((nClasses, nClasses))
 				for e in range(nExp):		# for each cross-validation iteration:
+					print "Param = {0:.5f} - Classifier Evaluation Experiment {1:d} of {2:d}".format(C, e+1, nExp)
 					# split features:
 					featuresTrain, featuresTest = randSplitFeatures(featuresNorm, perTrain)									
 					# train multi-class svms:
@@ -647,7 +659,7 @@ def fileClassification(inputFile, modelName, modelType):
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
 	elif modelType=='knn':
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
-			
+	
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)		# read audio file and convert to mono
 	x = audioBasicIO.stereo2mono(x);
 	# feature extraction:
