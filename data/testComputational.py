@@ -60,18 +60,18 @@ def main(argv):
 			perTime1 =  duration1 / (t2-t1); print "Thumbnail \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-diarization-noLDA":
 		for i in range(nExp):
-			[Fs1, x1] = audioBasicIO.readAudioFile("../DiarizationDataStreams/07-02-28_manual.wav")
+			[Fs1, x1] = audioBasicIO.readAudioFile("diarizationExample.wav")
 			duration1 = x1.shape[0] / float(Fs1)		
 			t1 = time.clock()		
-			aS.speakerDiarization("../DiarizationDataStreams/07-02-28_manual.wav", 4, LDAdim = 0, PLOT = False)
+			aS.speakerDiarization("diarizationExample.wav", 4, LDAdim = 0, PLOT = False)
 			t2 = time.clock()
 			perTime1 =  duration1 / (t2-t1); print "Diarization \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-diarization-LDA":
 		for i in range(nExp):
-			[Fs1, x1] = audioBasicIO.readAudioFile("../DiarizationDataStreams/07-02-28_manual.wav")
+			[Fs1, x1] = audioBasicIO.readAudioFile("diarizationExample.wav")
 			duration1 = x1.shape[0] / float(Fs1)		
 			t1 = time.clock()		
-			aS.speakerDiarization("../DiarizationDataStreams/07-02-28_manual.wav", 4, PLOT = False)
+			aS.speakerDiarization("diarizationExample.wav", 4, PLOT = False)
 			t2 = time.clock()
 			perTime1 =  duration1 / (t2-t1); print "Diarization \t {0:.1f} x realtime".format(perTime1)
 		
