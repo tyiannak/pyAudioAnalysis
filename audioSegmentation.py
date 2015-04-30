@@ -96,7 +96,7 @@ def segs2flags(segStart, segEnd, segLabel, winSize):
 	'''
 	flags = []
 	classNames = list(set(segLabel))
-	curPos = winSize / 2;
+	curPos = winSize / 2.0;
 	while curPos < segEnd[-1]:
 		for i in range(len(segStart)):
 			if curPos > segStart[i] and curPos <=segEnd[i]:
