@@ -124,8 +124,17 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 		pca = mlpy.PCA(method='cov') # pca (eigenvalue decomposition)
 		pca.learn(F)
 		coeff = pca.coeff()
-		finalDims = pca.transform(F, k=2)
-		finalDims2 = pca.transform(F, k=10)
+		
+		# check that the new PCA dimension is at most equal to the number of samples
+		K1 = 2
+		K2 = 10
+		if K1 > F.shape[0]:
+			K1 = F.shape[0]
+		if K2 > F.shape[0]:
+			K2 = F.shape[0]
+
+		finalDims = pca.transform(F, k=K1)
+		finalDims2 = pca.transform(F, k=K2)
 	else:	
 		allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
 		namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 

@@ -13,7 +13,7 @@ import scipy.io.wavfile as wavfile
 import matplotlib.patches
 
 
-def dirMp3toWav(directory, samplerate, channels):
+def dirMp3toWavWrapper(directory, samplerate, channels):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
         
@@ -26,13 +26,13 @@ def dirWAVChangeFs(directory, samplerate, channels):
         
     audioBasicIO.convertFsDirWavToWav(directory, samplerate, channels)
     
-def featureExtractionFile(wavFileName, outFile, mtWin, mtStep, stWin, stStep):
+def featureExtractionFileWrapper(wavFileName, outFile, mtWin, mtStep, stWin, stStep):
     if not os.path.isfile(wavFileName):
         raise Exception("Input audio file not found!")
     
     aF.mtFeatureExtractionToFile(wavFileName, mtWin, mtStep, stWin, stStep, outFile, True, True, True)
     
-def beatExtraction(wavFileName, plot):
+def beatExtractionWrapper(wavFileName, plot):
     if not os.path.isfile(wavFileName):
         raise Exception("Input audio file not found!")
     
@@ -42,19 +42,19 @@ def beatExtraction(wavFileName, plot):
     print "Beat: {0:d} bpm ".format(int(BPM))
     print "Ratio: {0:.2f} ".format(ratio)
         
-def featureExtractionDir(directory, mtWin, mtStep, stWin, stStep):
+def featureExtractionDirWrapper(directory, mtWin, mtStep, stWin, stStep):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
     
     aF.mtFeatureExtractionToFileDir(directory, mtWin, mtStep, stWin, stStep, True, True, True)
 
-def featureVisualizationDir(directory):
+def featureVisualizationDirWrapper(directory):
     if not os.path.isdir(directory):
         raise Exception("Input folder not found!")
     
     aV.visualizeFeaturesFolder(directory, "pca", "")
 
-def fileSpectrogram(wavFileName):
+def fileSpectrogramWrapper(wavFileName):
     if not os.path.isfile(wavFileName):
         raise Exception("Input audio file not found!")
     
@@ -62,7 +62,7 @@ def fileSpectrogram(wavFileName):
     x = audioBasicIO.stereo2mono(x)
     specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
 
-def fileChromagram(wavFileName):
+def fileChromagramWrapper(wavFileName):
     if not os.path.isfile(wavFileName):
         raise Exception("Input audio file not found!")
     
@@ -70,21 +70,21 @@ def fileChromagram(wavFileName):
     x = audioBasicIO.stereo2mono(x)
     specgram, TimeAxis, FreqAxis = aF.stChromagram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
 
-def trainClassifier(method, beatFeatures, directories, modelName):
+def trainClassifierWrapper(method, beatFeatures, directories, modelName):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
     
     aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
         method.lower(), modelName, computeBEAT = beatFeatures)
     
-def trainRegression(method, beatFeatures, directories, modelName):
+def trainRegressionWrapper(method, beatFeatures, directories, modelName):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
     
-    aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
+    aT.featureAndtrainRegressionWrapper(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
         method.lower(), modelName, computeBEAT = beatFeatures)
         
-def classifyFile(inputFile, modelType, modelName):
+def classifyFileWrapper(inputFile, modelType, modelName):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
     if not os.path.isfile(inputFile):
@@ -96,7 +96,7 @@ def classifyFile(inputFile, modelType, modelName):
         print "{0:s}\t{1:.2f}".format(c,P[i])
     print "Winner class: " + classNames[int(Result)]
     
-def regressionFile(inputFile, modelType, modelName):
+def regressionFileWrapper(inputFile, modelType, modelName):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
     if not os.path.isfile(inputFile):
@@ -106,7 +106,7 @@ def regressionFile(inputFile, modelType, modelName):
     for i in range(len(R)):
         print "{0:s}\t{1:.3f}".format(regressionNames[i], R[i])
 
-def classifyFolder(inputFolder, modelType, modelName, outputMode=False):
+def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
         
@@ -137,7 +137,7 @@ def classifyFolder(inputFolder, modelType, modelName, outputMode=False):
     for i,h in enumerate(Histogram):
         print "{0:20s}\t\t{1:d}".format(classNames[i], h)
     
-def regressionFolder(inputFolder, modelType, modelName):
+def regressionFolderWrapper(inputFolder, modelType, modelName):
     files = "*.wav"
     if os.path.isdir(inputFolder):
         strFilePattern = os.path.join(inputFolder, files)
@@ -178,11 +178,11 @@ def trainHMMsegmenter_fromdir(directory, hmmModelName, mtWin, mtStep):
         
     aS.trainHMM_fromDir(directory, hmmModelName, mtWin, mtStep)
     
-def segmentClassifyFileHMM(wavFile, hmmModelName):
+def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
     gtFile = wavFile.replace(".wav", ".segments");            
     aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)
     
-def segmentClassifyFile(inputWavFile, modelName, modelType):
+def segmentclassifyFileWrapper(inputWavFile, modelName, modelType):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
     if not os.path.isfile(inputWavFile):
@@ -194,20 +194,20 @@ def segmentClassifyFile(inputWavFile, modelName, modelType):
 def segmentationEvaluation(dirName, modelName, methodName):
     aS.evaluateSegmentationClassificationDir(dirName, modelName, methodName)
 
-def silenceRemoval(inputFile, smoothingWindow, weight):
+def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
     
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)                        # read audio signal
-    segmentLimits = aS.silenceRemoval(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)    # get onsets
+    segmentLimits = aS.silenceRemovalWrapper(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)    # get onsets
     for i, s in enumerate(segmentLimits):
         strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
         wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
         
-def speakerDiarization(inputFile, numSpeakers):
-    aS.speakerDiarization(inputFile, 2.0, 0.1, numSpeakers)
+def speakerDiarizationWrapper(inputFile, numSpeakers):
+    aS.speakerDiarizationWrapper(inputFile, 2.0, 0.1, numSpeakers)
 
-def thumbnail(inputFile, thumbnailSize):
+def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     stWindow = 1.0
     stStep = 1.0
     if not os.path.isfile(inputFile):
@@ -217,15 +217,15 @@ def thumbnail(inputFile, thumbnailSize):
     if Fs == -1:    # could not read file
         return
 
-    [A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, Fs, stWindow, stStep, thumbnailSize)    # find thumbnail endpoints            
+    [A1, A2, B1, B2, Smatrix] = aS.musicthumbnailWrappering(x, Fs, stWindow, stStep, thumbnailWrapperSize)    # find thumbnailWrapper endpoints            
 
-    # write thumbnails to WAV files:
-    thumbnailFileName1 = inputFile.replace(".wav","_thumb1.wav")
-    thumbnailFileName2 = inputFile.replace(".wav","_thumb2.wav")
-    wavfile.write(thumbnailFileName1, Fs, x[int(Fs*A1):int(Fs*A2)])
-    wavfile.write(thumbnailFileName2, Fs, x[int(Fs*B1):int(Fs*B2)])
-    print "1st thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName1, A1, A2)
-    print "2nd thumbnail (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailFileName2, B1, B2)
+    # write thumbnailWrappers to WAV files:
+    thumbnailWrapperFileName1 = inputFile.replace(".wav","_thumb1.wav")
+    thumbnailWrapperFileName2 = inputFile.replace(".wav","_thumb2.wav")
+    wavfile.write(thumbnailWrapperFileName1, Fs, x[int(Fs*A1):int(Fs*A2)])
+    wavfile.write(thumbnailWrapperFileName2, Fs, x[int(Fs*B1):int(Fs*B2)])
+    print "1st thumbnailWrapper (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailWrapperFileName1, A1, A2)
+    print "2nd thumbnailWrapper (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailWrapperFileName2, B1, B2)
 
     # Plot self-similarity matrix:
     fig = plt.figure()
@@ -235,7 +235,7 @@ def thumbnail(inputFile, thumbnailSize):
     Xcenter = (A1/stStep + A2/stStep) / 2.0
     Ycenter = (B1/stStep + B2/stStep) / 2.0
 
-    e1 = matplotlib.patches.Ellipse((Ycenter, Xcenter), thumbnailSize * 1.4, 3,
+    e1 = matplotlib.patches.Ellipse((Ycenter, Xcenter), thumbnailWrapperSize * 1.4, 3,
              angle=45, linewidth=3, fill=False)
     ax.add_patch(e1)
 
@@ -275,13 +275,13 @@ def parse_arguments():
     dirWavRes.add_argument("-c", "--channels", type=int, choices=[1, 2], 
             required=True, help="Audio channels of generated WAV files")
     
-    featExt = tasks.add_parser("featureExtraction", help="Extract audio features from file")
+    featExt = tasks.add_parser("featureExtractionFile", help="Extract audio features from file")
     featExt.add_argument("-i", "--input",               required=True, help="Input audio file")
     featExt.add_argument("-o", "--output",              required=True, help="Output file")
     featExt.add_argument("-mw", "--mtwin",  type=float, required=True, help="Mid-term window size")
     featExt.add_argument("-ms", "--mtstep", type=float, required=True, help="Mid-term window step")
-    featExt.add_argument("-sw", "--stwin",  type=float, required=True, help="Short-term window size")
-    featExt.add_argument("-ss", "-ststep",  type=float, required=True, help="Short-term window step")
+    featExt.add_argument("-sw", "--stwin",  type=float, default = 0.050, help="Short-term window size")
+    featExt.add_argument("-ss", "--ststep",  type=float, default = 0.050, help="Short-term window step")
 
     beat = tasks.add_parser("beatExtraction", help="Compute beat features of an audio file")
     beat.add_argument("-i", "--input", required=True, help="Input audio file")
@@ -291,16 +291,16 @@ def parse_arguments():
     featExtDir.add_argument("-i", "--input",               required=True, help="Input directory")
     featExtDir.add_argument("-mw", "--mtwin",  type=float, required=True, help="Mid-term window size")
     featExtDir.add_argument("-ms", "--mtstep", type=float, required=True, help="Mid-term window step")
-    featExtDir.add_argument("-sw", "--stwin",  type=float, required=True, help="Short-term window size")
-    featExtDir.add_argument("-ss", "-ststep",  type=float, required=True, help="Short-term window step")
+    featExtDir.add_argument("-sw", "--stwin",  type=float,  default = 0.050,  help="Short-term window size")
+    featExtDir.add_argument("-ss", "--ststep",  type=float, default = 0.050,  help="Short-term window step")
 
     featVis = tasks.add_parser("featureVisualization")
     featVis.add_argument("-i", "--input", required=True, help="Input directory")
     
-    spectro = tasks.add_parser("spectrogram")
+    spectro = tasks.add_parser("fileSpectrogram")
     spectro.add_argument("-i", "--input", required=True, help="Input audio file")
     
-    chroma = tasks.add_parser("chromagram")
+    chroma = tasks.add_parser("fileChromagram")
     chroma.add_argument("-i", "--input", required=True, help="Input audio file")
     
     trainClass = tasks.add_parser("trainClassifier", help="Train an SVM or KNN classifier")
@@ -344,9 +344,9 @@ def parse_arguments():
     spkrDir.add_argument("-i", "--input",         required=True, help="Input audio file")
     spkrDir.add_argument("-n", "--num", type=int, required=True, help="Number of speakers")
     
-    thumb = tasks.add_parser("thumbnail", help="Generate a thumbnail for an audio file")
+    thumb = tasks.add_parser("thumbnail", help="Generate a thumbnailWrapper for an audio file")
     thumb.add_argument("-i", "--input", required=True, help="input audio file")
-    thumb.add_argument("-s", "--size",  default=10.0,  help="thumbnail size in seconds.")
+    thumb.add_argument("-s", "--size",  default=10.0,  help="thumbnailWrapper size in seconds.")
     
     return parser.parse_args()
         
@@ -354,38 +354,38 @@ def parse_arguments():
 if __name__ == "__main__":
     args = parse_arguments()
 
-    if args.task == "dirMp3ToWav":
-        dirMp3toWav(args.input, args.rate, args.channels)
-    elif args.task == "dirWavResample":
+    if args.task == "dirMp3toWav":															# Convert mp3 to wav (batch - folder)
+        dirMp3toWavWrapper(args.input, args.rate, args.channels)
+    elif args.task == "dirWavResample":														# Convert Fs for a list of wavs stored in a folder
         dirWAVChangeFs(args.input, args.rate, args.channels)
-    elif args.task == "featureExtraction":
-        featureExtractionFile(args.input, args.output, 
+    elif args.task == "featureExtractionFile":												# Feature extraction for WAV file
+        featureExtractionFileWrapper(args.input, args.output, 
                 args.mtwin, args.mtstep, args.stwin, args.ststep)
-    elif args.task == "beatExtraction":
-        beatExtraction(args.input, args.plot)
-    elif args.task == "featureExtractionDir":
-        featureExtractionDir(args.input, args.mtwin, args.mtstep, args.stwin, args.ststep)
-    elif args.task == "featureVisualization":
-        featureVisualizationDir(args.input)
-    elif args.task == "spectrogram":
-        fileSpectrogram(args.input)
-    elif args.task == "chromagram":
-        fileChromagram(args.input)
-    elif args.task == "trainClassifier":
-        trainClassifier(args.method, args.beat, args.input, args.output)
+    elif args.task == "featureExtractionDir":												# Feature extraction for all WAV files stored in a folder
+        featureExtractionDirWrapper(args.input, args.mtwin, args.mtstep, args.stwin, args.ststep)
+    elif args.task == "fileSpectrogram":													# Extract spectrogram from a WAV file
+        fileSpectrogramWrapper(args.input)
+    elif args.task == "fileChromagram":														# Extract chromagram from a WAV file
+        fileChromagramWrapper(args.input)        
+    elif args.task == "featureVisualization":												# Visualize the content of a list of WAV files stored in a folder
+        featureVisualizationDirWrapper(args.input)
+    elif args.task == "beatExtraction":														# Extract bpm from file
+        beatExtractionWrapper(args.input, args.plot)                
+    elif args.task == "trainClassifier":													# Train classifier from data (organized in folders)
+        trainClassifierWrapper(args.method, args.beat, args.input, args.output)
     elif args.task == "trainRegression":
-        trainRegression(args.method, args.beat, args.input, args.output)
+        trainRegressionWrapper(args.method, args.beat, args.input, args.output)
     elif args.task == "classifyFile":
-        classifyFile(args.input, args.model, args.classifier)
+        classifyFileWrapper(args.input, args.model, args.classifier)
     elif args.task == "regressionFile":
-        regressionFile(args.input, args.model, args.regression)
+        regressionFileWrapper(args.input, args.model, args.regression)
     elif args.task == "classifyFolder":
-        classifyFolder(args.input, args.model, args.classifier)
+        classifyFolderWrapper(args.input, args.model, args.classifier)
     elif args.task == "regressionFolder":
-        regressionFolder(args.input, args.model, args.regression)
+        regressionFolderWrapper(args.input, args.model, args.regression)
     elif args.task == "silenceRemoval":
-        silenceRemoval(args.input, args.smoothing, args.weight)
+        silenceRemovalWrapper(args.input, args.smoothing, args.weight)
     elif args.task == "speakerDiarization":
-        speakerDiarization(args.input, args.num)
+        speakerDiarizationWrapper(args.input, args.num)
     elif args.task == "thumbnail":
-        thumbnail(args.input, args.size)
+        thumbnailWrapper(args.input, args.size)
