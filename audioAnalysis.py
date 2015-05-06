@@ -35,7 +35,6 @@ def featureExtractionFileWrapper(wavFileName, outFile, mtWin, mtStep, stWin, stS
 def beatExtractionWrapper(wavFileName, plot):
 	if not os.path.isfile(wavFileName):
 		raise Exception("Input audio file not found!")
-	
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName);
 	F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
 	BPM, ratio = aF.beatExtraction(F, 0.050, plot)
@@ -44,44 +43,36 @@ def beatExtractionWrapper(wavFileName, plot):
 		
 def featureExtractionDirWrapper(directory, mtWin, mtStep, stWin, stStep):
 	if not os.path.isdir(directory):
-		raise Exception("Input path not found!")
-	
+		raise Exception("Input path not found!")	
 	aF.mtFeatureExtractionToFileDir(directory, mtWin, mtStep, stWin, stStep, True, True, True)
 
 def featureVisualizationDirWrapper(directory):
 	if not os.path.isdir(directory):
-		raise Exception("Input folder not found!")
-	
+		raise Exception("Input folder not found!")	
 	aV.visualizeFeaturesFolder(directory, "pca", "")
 
 def fileSpectrogramWrapper(wavFileName):
 	if not os.path.isfile(wavFileName):
-		raise Exception("Input audio file not found!")
-	
+		raise Exception("Input audio file not found!")	
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName)
 	x = audioBasicIO.stereo2mono(x)
 	specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
 
 def fileChromagramWrapper(wavFileName):
 	if not os.path.isfile(wavFileName):
-		raise Exception("Input audio file not found!")
-	
+		raise Exception("Input audio file not found!")	
 	[Fs, x] = audioBasicIO.readAudioFile(wavFileName)
 	x = audioBasicIO.stereo2mono(x)
 	specgram, TimeAxis, FreqAxis = aF.stChromagram(x, Fs, round(Fs*0.040), round(Fs*0.040), True)
 
 def trainClassifierWrapper(method, beatFeatures, directories, modelName):
 	if len(directories) < 2:
-		raise Exception("At least 2 directories are needed")
-	
+		raise Exception("At least 2 directories are needed")	
 	aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
 		method.lower(), modelName, computeBEAT = beatFeatures)
 	
-def trainRegressionWrapper(method, beatFeatures, directories, modelName):
-	if len(directories) < 2:
-		raise Exception("At least 2 directories are needed")
-	
-	aT.featureAndtrainRegressionWrapper(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
+def trainRegressionWrapper(method, beatFeatures, dirName, modelName):		
+	aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow, aT.shortTermStep, 
 		method.lower(), modelName, computeBEAT = beatFeatures)
 		
 def classifyFileWrapper(inputFile, modelType, modelName):
@@ -96,9 +87,7 @@ def classifyFileWrapper(inputFile, modelType, modelName):
 		print "{0:s}\t{1:.2f}".format(c,P[i])
 	print "Winner class: " + classNames[int(Result)]
 	
-def regressionFileWrapper(inputFile, modelType, modelName):
-	if not os.path.isfile(modelName):
-		raise Exception("Input modelName not found!")
+def regressionFileWrapper(inputFile, modelType, modelName):	
 	if not os.path.isfile(inputFile):
 		raise Exception("Input audio file not found!")
 		
@@ -199,13 +188,16 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
 		raise Exception("Input audio file not found!")
 	
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read audio signal
-	segmentLimits = aS.silenceRemovalWrapper(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)	# get onsets
+	segmentLimits = aS.silenceRemoval(x, Fs, 0.05, 0.05, smoothingWindow, weight, True)	# get onsets
 	for i, s in enumerate(segmentLimits):
 		strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
 		wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
 		
-def speakerDiarizationWrapper(inputFile, numSpeakers):
-	aS.speakerDiarizationWrapper(inputFile, 2.0, 0.1, numSpeakers)
+def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
+	if useLDA:
+		aS.speakerDiarization(inputFile, numSpeakers, PLOT = True);
+	else:
+		aS.speakerDiarization(inputFile, numSpeakers, LDAdim = 0, PLOT = True);
 
 def thumbnailWrapper(inputFile, thumbnailWrapperSize):
 	stWindow = 1.0
@@ -216,8 +208,8 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)						# read file
 	if Fs == -1:	# could not read file
 		return
-
-	[A1, A2, B1, B2, Smatrix] = aS.musicthumbnailWrappering(x, Fs, stWindow, stStep, thumbnailWrapperSize)	# find thumbnailWrapper endpoints			
+	
+	[A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, Fs, stWindow, stStep, thumbnailWrapperSize)	# find thumbnailWrapper endpoints			
 
 	# write thumbnailWrappers to WAV files:
 	thumbnailWrapperFileName1 = inputFile.replace(".wav","_thumb1.wav")
@@ -310,7 +302,7 @@ def parse_arguments():
 	trainClass.add_argument("-o", "--output", required=True, help="Generated classifier filename")
 	
 	trainReg = tasks.add_parser("trainRegression")
-	trainReg.add_argument("-i", "--input", required=True, nargs="+", help="Input directories")
+	trainReg.add_argument("-i", "--input", required=True,  help="Input directory")
 	trainReg.add_argument("--method", choices=["svm", "knn"], required=True, help="Classifier type")
 	trainReg.add_argument("--beat", action="store_true",   help="Compute beat features")
 	trainReg.add_argument("-o", "--output", required=True, help="Generated classifier filename")
@@ -342,7 +334,6 @@ def parse_arguments():
 	segmentationEvaluation.add_argument("--model", choices=["svm", "knn", "hmm"],					required=True, help="Model type")
 	segmentationEvaluation.add_argument("--modelName",					required=True, help="Model path")
 
-
 	regFile = tasks.add_parser("regressionFile")
 	regFile.add_argument("-i", "--input",				   required=True, help="Input audio file")
 	regFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Regression type")
@@ -351,7 +342,8 @@ def parse_arguments():
 	classFolder = tasks.add_parser("classifyFolder")
 	classFolder.add_argument("-i", "--input",				   required=True, help="Input folder")
 	classFolder.add_argument("--model", choices=["svm", "knn"], required=True, help="Classifier type")
-	classFolder.add_argument("--classifier",					required=True, help="Classifier to use")
+	classFolder.add_argument("--classifier",					required=True, help="Classifier to use (filename)")
+	classFolder.add_argument("--details", action="store_true", help="Plot details (otherwise only counts per class are shown)")
 	
 	regFolder = tasks.add_parser("regressionFolder")
 	regFolder.add_argument("-i", "--input",				   required=True, help="Input folder")
@@ -360,16 +352,21 @@ def parse_arguments():
 
 	silrem = tasks.add_parser("silenceRemoval", help="Remove silence segments from a recording")
 	silrem.add_argument("-i", "--input", required=True,			   help="input audio file")
-	silrem.add_argument("-s", "--smoothing", type=float, default=0.5, help="smoothing window size in seconds.")
+	silrem.add_argument("-s", "--smoothing", type=float, default=1.0, help="smoothing window size in seconds.")
 	silrem.add_argument("-w", "--weight",	type=float, default=0.5, help="weight factor in (0, 1)")
 	
 	spkrDir = tasks.add_parser("speakerDiarization")
 	spkrDir.add_argument("-i", "--input",		 required=True, help="Input audio file")
 	spkrDir.add_argument("-n", "--num", type=int, required=True, help="Number of speakers")
+	spkrDir.add_argument("--flsd", action="store_true",  help="Enable FLsD method")
+
+	speakerDiarizationScriptEval = tasks.add_parser("speakerDiarizationScriptEval", help="Train an SVM or KNN classifier")
+	speakerDiarizationScriptEval.add_argument("-i", "--input", required=True, help="Input directory")
+	speakerDiarizationScriptEval.add_argument("--LDAs", type = int, nargs="+", required=True, help="List FLsD params")
 	
 	thumb = tasks.add_parser("thumbnail", help="Generate a thumbnailWrapper for an audio file")
 	thumb.add_argument("-i", "--input", required=True, help="input audio file")
-	thumb.add_argument("-s", "--size",  default=10.0,  help="thumbnailWrapper size in seconds.")
+	thumb.add_argument("-s", "--size",  default=10.0,  type=float, help="thumbnailWrapper size in seconds.")
 	
 	return parser.parse_args()		
 	
@@ -395,8 +392,7 @@ if __name__ == "__main__":
 	elif args.task == "dirWavResample":														# Convert Fs for a list of wavs stored in a folder
 		dirWAVChangeFs(args.input, args.rate, args.channels)
 	elif args.task == "featureExtractionFile":												# Feature extraction for WAV file
-		featureExtractionFileWrapper(args.input, args.output, 
-				args.mtwin, args.mtstep, args.stwin, args.ststep)
+		featureExtractionFileWrapper(args.input, args.output, args.mtwin, args.mtstep, args.stwin, args.ststep)
 	elif args.task == "featureExtractionDir":												# Feature extraction for all WAV files stored in a folder
 		featureExtractionDirWrapper(args.input, args.mtwin, args.mtstep, args.stwin, args.ststep)
 	elif args.task == "fileSpectrogram":													# Extract spectrogram from a WAV file
@@ -409,7 +405,7 @@ if __name__ == "__main__":
 		beatExtractionWrapper(args.input, args.plot)				
 	elif args.task == "trainClassifier":													# Train classifier from data (organized in folders)
 		trainClassifierWrapper(args.method, args.beat, args.input, args.output)
-	elif args.task == "trainRegression":
+	elif args.task == "trainRegression":													# Train a regression model from data (organized in a single folder, while ground-truth is provided in a CSV)
 		trainRegressionWrapper(args.method, args.beat, args.input, args.output)
 	elif args.task == "classifyFile":														# Apply audio classifier on audio file
 		classifyFileWrapper(args.input, args.model, args.classifier)
@@ -422,15 +418,17 @@ if __name__ == "__main__":
 		segmentclassifyFileWrapperHMM(args.input, args.hmm)
 	elif args.task == "segmentationEvaluation":												# Evaluate segmentation-classification for a list of WAV files (and ground truth CSVs) stored in a folder		
 		segmentationEvaluation(args.input, args.modelName, args.model)			
-	elif args.task == "regressionFile":
+	elif args.task == "regressionFile":														# Apply a regression model to an audio signal stored in a WAV file
 		regressionFileWrapper(args.input, args.model, args.regression)
-	elif args.task == "classifyFolder":
-		classifyFolderWrapper(args.input, args.model, args.classifier)
-	elif args.task == "regressionFolder":
+	elif args.task == "classifyFolder":														# Classify every WAV file in a given path
+		classifyFolderWrapper(args.input, args.model, args.classifier, args.details)
+	elif args.task == "regressionFolder":													# Apply a regression model on every WAV file in a given path
 		regressionFolderWrapper(args.input, args.model, args.regression)
-	elif args.task == "silenceRemoval":
+	elif args.task == "silenceRemoval":														# Detect non-silent segments in a WAV file and output to seperate WAV files
 		silenceRemovalWrapper(args.input, args.smoothing, args.weight)
-	elif args.task == "speakerDiarization":
-		speakerDiarizationWrapper(args.input, args.num)
-	elif args.task == "thumbnail":
+	elif args.task == "speakerDiarization":													# Perform speaker diarization on a WAV file
+		speakerDiarizationWrapper(args.input, args.num, args.flsd)
+	elif args.task == "speakerDiarizationScriptEval":
+		aS.speakerDiarizationEvaluateScript(args.input, args.LDAs)		
+	elif args.task == "thumbnail":															# Audio thumbnailing
 		thumbnailWrapper(args.input, args.size)

@@ -681,7 +681,7 @@ def fileRegression(inputFile, modelName, modelType):
 		print "fileClassification: wav file not found!"
 		return (-1,-1, -1)
 
-	regressionModels = glob.glob(modelName + "*")
+	regressionModels = glob.glob(modelName + "_*")
 	regressionModels2 = []
 	for r in regressionModels:
 		if r[-5::] != "MEANS":
