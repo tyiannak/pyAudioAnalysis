@@ -1,4 +1,4 @@
-@RELATION data/svmSM
+@RELATION data/knnSM
 @ATTRIBUTE features1 NUMERIC
 @ATTRIBUTE features2 NUMERIC
 @ATTRIBUTE features3 NUMERIC
