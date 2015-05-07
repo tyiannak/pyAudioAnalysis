@@ -163,23 +163,21 @@ def trainHMMsegmenter_fromfile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
 	
 def trainHMMsegmenter_fromdir(directory, hmmModelName, mtWin, mtStep):
 	if not os.path.isdir(directory):
-		raise Exception("Input folder not found!")
-		
+		raise Exception("Input folder not found!")	
 	aS.trainHMM_fromDir(directory, hmmModelName, mtWin, mtStep)
-	
-def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
-	gtFile = wavFile.replace(".wav", ".segments");			
-	aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)
 	
 def segmentclassifyFileWrapper(inputWavFile, modelName, modelType):
 	if not os.path.isfile(modelName):
 		raise Exception("Input modelName not found!")
 	if not os.path.isfile(inputWavFile):
-		raise Exception("Input audio file not found!")
-	
+		raise Exception("Input audio file not found!")	
 	gtFile = inputWavFile.replace(".wav", ".segments")
 	aS.mtFileClassification(inputWavFile, modelName, modelType, True, gtFile)
-
+		
+def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
+	gtFile = wavFile.replace(".wav", ".segments");			
+	aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)
+	
 def segmentationEvaluation(dirName, modelName, methodName):	
 	aS.evaluateSegmentationClassificationDir(dirName, modelName, methodName)
 
@@ -325,6 +323,11 @@ def parse_arguments():
 	trainHMMDir.add_argument("-mw", "--mtwin",  type=float, required=True, help="Mid-term window size")
 	trainHMMDir.add_argument("-ms", "--mtstep", type=float, required=True, help="Mid-term window step")
 	
+	segmentClassifyFile = tasks.add_parser("segmentClassifyFile", help="Segmentation - classification of a WAV file given a trained SVM or kNN")
+	segmentClassifyFile.add_argument("-i", "--input",				   required=True, help="Input audio file")		
+	segmentClassifyFile.add_argument("--model", choices=["svm", "knn"],					required=True, help="Model type")
+	segmentClassifyFile.add_argument("--modelName",		required=True, help="Model path")
+	
 	segmentClassifyFileHMM = tasks.add_parser("segmentClassifyFileHMM", help="Segmentation - classification of a WAV file given a trained HMM")
 	segmentClassifyFileHMM.add_argument("-i", "--input",				   required=True, help="Input audio file")	
 	segmentClassifyFileHMM.add_argument("--hmm",					required=True, help="HMM Model to use (path)")
@@ -380,10 +383,6 @@ def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
 	gtFile = wavFile.replace(".wav", ".segments");			
 	aS.hmmSegmentation(wavFile, hmmModelName, PLOT = True, gtFileName = gtFile)	
 	
-	
-
-		
-	
 if __name__ == "__main__":
 	args = parse_arguments()
 
@@ -411,9 +410,10 @@ if __name__ == "__main__":
 		classifyFileWrapper(args.input, args.model, args.classifier)
 	elif args.task == "trainHMMsegmenter_fromfile":											# Train an hmm segmenter-classifier from WAV file + annotation
 		trainHMMsegmenter_fromfile(args.input, args.ground, args.output, args.mtwin, args.mtstep)
-	elif args.task == "trainHMMsegmenter_fromdir":											# Train an hmm segmenter-classifier from a list of WAVs and annotations stored in a folder
-		#trainHMMsegmenter_fromfile(args.input, args.ground, args.output, args.mtwin, args.mtstep)
+	elif args.task == "trainHMMsegmenter_fromdir":											# Train an hmm segmenter-classifier from a list of WAVs and annotations stored in a folder		
 		trainHMMsegmenter_fromdir(args.input, args.output, args.mtwin, args.mtstep)
+	elif args.task == "segmentClassifyFile":												# Apply a classifier (svm or knn) for segmentation-classificaiton to a WAV file
+		segmentclassifyFileWrapper(args.input, args.modelName, args.model)		
 	elif args.task == "segmentClassifyFileHMM":												# Apply an hmm for segmentation-classificaiton to a WAV file
 		segmentclassifyFileWrapperHMM(args.input, args.hmm)
 	elif args.task == "segmentationEvaluation":												# Evaluate segmentation-classification for a list of WAV files (and ground truth CSVs) stored in a folder		
@@ -428,7 +428,7 @@ if __name__ == "__main__":
 		silenceRemovalWrapper(args.input, args.smoothing, args.weight)
 	elif args.task == "speakerDiarization":													# Perform speaker diarization on a WAV file
 		speakerDiarizationWrapper(args.input, args.num, args.flsd)
-	elif args.task == "speakerDiarizationScriptEval":
+	elif args.task == "speakerDiarizationScriptEval":										# Evaluate speaker diarization given a folder that contains 
 		aS.speakerDiarizationEvaluateScript(args.input, args.LDAs)		
 	elif args.task == "thumbnail":															# Audio thumbnailing
 		thumbnailWrapper(args.input, args.size)
