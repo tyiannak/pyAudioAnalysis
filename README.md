@@ -31,7 +31,7 @@ Result:
 
 In addition, command-line support is provided for all functionalities. E.g. the following command needs to be executed to extract the spectrogram of an audio signal stored in a WAV file:
 ```
-python audioAnalysis.py -fileSpectrogram data/doremi.wav
+python audioAnalysis.py fileSpectrogram -i data/doremi.wav
 ```
 
 *[Installing instructions and a complete documentation is provided in the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
