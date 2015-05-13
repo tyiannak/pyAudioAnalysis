@@ -77,7 +77,7 @@ def flags2segs(Flags, window):
 	segs = numpy.zeros ((len(segsList),2))
 
 	for i in range(len(segsList)):
-		if i>1:
+		if i>0:
 			segs[i, 0] = segsList[i-1]
 		segs[i, 1] = segsList[i]
 	return (segs, classes)
