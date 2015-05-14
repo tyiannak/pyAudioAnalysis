@@ -428,7 +428,7 @@ if __name__ == "__main__":
 		silenceRemovalWrapper(args.input, args.smoothing, args.weight)
 	elif args.task == "speakerDiarization":													# Perform speaker diarization on a WAV file
 		speakerDiarizationWrapper(args.input, args.num, args.flsd)
-	elif args.task == "speakerDiarizationScriptEval":										# Evaluate speaker diarization given a folder that contains 
+	elif args.task == "speakerDiarizationScriptEval":										# Evaluate speaker diarization given a folder that contains WAV files and .segment (Groundtruth files)
 		aS.speakerDiarizationEvaluateScript(args.input, args.LDAs)		
 	elif args.task == "thumbnail":															# Audio thumbnailing
 		thumbnailWrapper(args.input, args.size)
