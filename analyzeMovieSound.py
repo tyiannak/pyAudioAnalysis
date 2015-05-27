@@ -3,7 +3,7 @@ import audioBasicIO
 import audioTrainTest as aT
 import audioSegmentation as aS
 
-inputFile = "tempClock.wav"
+inputFile = "A Clockwork Orange 1971.wav"
 modelType = "svm"
 modelName = "data/svmMovies8classes"
 
