@@ -45,19 +45,22 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
 	
 	# print distribution of classes:
 	[Histogram, _] = numpy.histogram(Results, bins=numpy.arange(len(classNames)+1))
-	for i,h in enumerate(Histogram):
-		print "{0:20s}\t\t{1:d}".format(classNames[i], h)
-	print PsAll
-	print classNames
-	
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	plt.title("Classes percentage " + inputFolder.replace('Segments',''))
-	ax.axis((0, len(classNames)+1, 0, 100))
-	ax.set_xticks(numpy.array(range(len(classNames)+1)))
-	ax.set_xticklabels([" "] + classNames)
-	ax.bar(numpy.array(range(len(classNames)))+0.5, PsAll)
-	plt.show()
+	if outputMode:	
+		for i,h in enumerate(Histogram):
+			print "{0:20s}\t\t{1:d}".format(classNames[i], h)
+	PsAll = PsAll / numpy.sum(PsAll)
+
+
+	if outputMode:	
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		plt.title("Classes percentage " + inputFolder.replace('Segments',''))
+		ax.axis((0, len(classNames)+1, 0, 1))
+		ax.set_xticks(numpy.array(range(len(classNames)+1)))
+		ax.set_xticklabels([" "] + classNames)
+		ax.bar(numpy.array(range(len(classNames)))+0.5, PsAll)
+		plt.show()
+	return classNames, PsAll
 
 def getMusicSegmentsFromFile(inputFile):	
 	modelType = "svm"
@@ -84,10 +87,26 @@ def getMusicSegmentsFromFile(inputFile):
 			strOut = "{0:s}{1:.3f}-{2:.3f}.wav".format(dirOutput+os.sep, s[0], s[1])	
 			wavfile.write( strOut, Fs, x[int(Fs*s[0]):int(Fs*s[1])])
 
+def analyzeDir(dirPath):
+	for i,f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):				# for each WAV file					
+		getMusicSegmentsFromFile(f)	
+		[c, P]= classifyFolderWrapper(f[0:-4] + "_musicSegments", "svm", "data/svmMusicGenre8", False)
+		if i==0:
+			print "".ljust(100)+"\t",
+			for C in c:
+				print C.ljust(12)+"\t",
+			print
+		print f.ljust(100)+"\t",
+		for p in P:
+				print "{0:.2f}".format(p).ljust(12)+"\t",
+		print
+		
 def main(argv):	
-	getMusicSegmentsFromFile(argv[1])	
-	classifyFolderWrapper(argv[1][0:-4] + "_musicSegments", "svm", "data/svmMusicGenre6", True)		
-	
+	if argv[1]=="--file":
+		getMusicSegmentsFromFile(argv[2])	
+		classifyFolderWrapper(argv[2][0:-4] + "_musicSegments", "svm", "data/svmMusicGenre8", True)		
+	elif argv[1]=="--dir":
+		analyzeDir(argv[2])	
 	return 0
 	
 if __name__ == '__main__':
