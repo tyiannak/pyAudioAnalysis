@@ -6,6 +6,7 @@ from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import utilities
 from pyAudioAnalysis import audioFeatureExtraction
+from pyAudioAnalysis import audioSegmentation
 from scipy.spatial import distance
 
 def stFeatureExtractionFingerPrint(signal, Fs, Win, Step):
@@ -36,30 +37,22 @@ def stFeatureExtractionFingerPrint(signal, Fs, Win, Step):
 		countFrames += 1
 		x = signal[curPos:curPos+Win]					# get current window
 		curPos = curPos + Step						# update window position
-		X = abs(fft(x))							# get fft magnitude
-		X = X[0:nFFT]							# normalize fft
-		X = X / len(X)
+	#	X = abs(fft(x))							# get fft magnitude
+	#	X = X[0:nFFT]							# normalize fft
+	#	X = X / len(X)
 
-		curMFCC = audioFeatureExtraction.stMFCC(X, fbank, nceps).copy()[0]
-		#curMFCC = audioFeatureExtraction.stSpectralRollOff(X, 0.90, Fs)		
+		#curMFCC = audioFeatureExtraction.stMFCC(X, fbank, nceps).copy()[0]
+		curMFCC = audioFeatureExtraction.stEnergy(x)		
 		stFeatures.append([curMFCC])
 	stFeatures = numpy.squeeze(numpy.array(stFeatures))
 
 	fFeature = numpy.zeros(stFeatures.shape)
 	for i in range(1,stFeatures.shape[0]-1):
-		if (stFeatures[i] > stFeatures[i-1]) and (stFeatures[i] > stFeatures[i+1]):
-			fFeature[i] = 4;
-		
-		if (stFeatures[i] > stFeatures[i-1]) and (stFeatures[i] < stFeatures[i+1]):
-			fFeature[i] = 3;
-		
-		if (stFeatures[i] < stFeatures[i-1]) and (stFeatures[i] > stFeatures[i+1]):
-			fFeature[i] = 2;
-		
-		if (stFeatures[i] < stFeatures[i-1]) and (stFeatures[i] < stFeatures[i+1]):
-			fFeature[i] = 1;	
+		if (stFeatures[i] > stFeatures[i-1]):
+			fFeature[i] = 1;		
+	fFeature = fFeature.astype(int)		
 	return fFeature
-
+	#return stFeatures
 
 def generateDB(dirName):
 	fNames = []
@@ -72,7 +65,9 @@ def generateDB(dirName):
 	
 	for wavFile in wavFilesList:	
 		[Fs, x] = audioBasicIO.readAudioFile(wavFile)
-		F = stFeatureExtractionFingerPrint(x, Fs, 0.050*Fs, 0.050*Fs);	
+		F = stFeatureExtractionFingerPrint(x, Fs, 0.25*Fs, 0.25*Fs);	
+		#flagsInd, classNames, acc = audioSegmentation.mtFileClassification(wavFile, 'data/svmMovies8classes', 'svm', plotResults = False, gtFile = "")
+		#features.append(flagsInd)
 		features.append(F)
 		fNames.append(wavFile)
 	return fNames, features
@@ -85,14 +80,25 @@ fNames, features = generateDB('ads')
 
 queryFile = "demoAd.wav"
 [Fs, x] = audioBasicIO.readAudioFile(queryFile)
-F = stFeatureExtractionFingerPrint(x, Fs, 0.050*Fs, 0.050*Fs);	
-
+F = stFeatureExtractionFingerPrint(x, Fs, 0.25*Fs, 0.25*Fs);	
+#F, classNames, acc = audioSegmentation.mtFileClassification(queryFile, 'data/svmMovies8classes', 'svm', plotResults = False, gtFile = "")
 
 for i in range(len(features)):
-	L, Path = mlpy.lcs_std(F, features[i])
+	#L, Path = mlpy.lcs_std(F, features[i])
+	dist, cost, path = mlpy.dtw_std(F, features[i], dist_only=False)
+	#print F
+	#print features[i]
+	#plt.plot(path[1])
+	#plt.title(fNames[i])
+	#plt.show()
 	#dist, cost, path, = mlpy.dtw_subsequence(features[i], F)
-	print L, Path[0].shape, Path[1].shape
-
+	plt.subplot(2,1,1);
+	plt.plot(F,'g')
+	plt.plot(features[i],'r')
+	#plt.subplot(2,1,2)
+	#plt.plot(Path[0],'g')
+	#plt.plot(Path[1],'r')
+	plt.show()
 '''
 print fNames[3]
 S = similarityMatrix(F, features[3]) 
