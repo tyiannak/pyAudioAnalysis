@@ -1,4 +1,4 @@
-import os, sys, shutil, glob, numpy, csv
+import os, sys, shutil, glob, numpy, csv, cPickle
 import scipy.io.wavfile as wavfile
 import audioBasicIO
 import audioTrainTest as aT
@@ -107,12 +107,13 @@ def main(argv):
 		getMusicSegmentsFromFile(argv[2])	
 		classifyFolderWrapper(argv[2][0:-4] + "_musicSegments", "svm", "data/svmMusicGenre8", True)		
 		
-	elif argv[1]=="--dir":
-		
+	elif argv[1]=="--dir":	
 		analyzeDir(argv[2])	
 		
 	elif argv[1]=="--sim":
-		f = []		
+		csvFile = argv[2]
+		f = []
+		fileNames = []
 		with open(csvFile, 'rb') as csvfile:
 			spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
 			for j,row in enumerate(spamreader):
@@ -121,20 +122,43 @@ def main(argv):
 					for i in range(1,9):
 						ftemp.append(float(row[i]))
 					f.append(ftemp)
+					fileNames.append(row[0])
 			f = numpy.array(f)
-			print f.shape
-			
-			
+
 			Sim = numpy.zeros((f.shape[0], f.shape[0]))
 			for i in range(f.shape[0]):
-				for j in range(f.shape[0]):					
-					#print numpy.reshape(f[i,:], (f.shape[1],1))
-					#print numpy.reshape(f[j,:], (f.shape[1],1))
+				for j in range(f.shape[0]):	
 					Sim[i,j] = scipy.spatial.distance.cdist(numpy.reshape(f[i,:], (f.shape[1],1)).T, numpy.reshape(f[j,:], (f.shape[1],1)).T, 'cosine')
-			print Sim
+								
 			Sim1 = numpy.reshape(Sim, (Sim.shape[0]*Sim.shape[1], 1))
 			plt.hist(Sim1)
 			plt.show()
+
+			fo = open(csvFile + "_simMatrix", "wb")
+			cPickle.dump(fileNames,  fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			cPickle.dump(f, fo, protocol = cPickle.HIGHEST_PROTOCOL)			
+			cPickle.dump(Sim, fo, protocol = cPickle.HIGHEST_PROTOCOL)
+			fo.close()
+
+	elif argv[1]=="--loadsim":
+		try:
+			fo = open(argv[1], "rb")
+		except IOError:
+				print "didn't find file"
+				return
+		try:
+			hmm = cPickle.load(fo)
+			classesAll = cPickle.load(fo)
+			mtWin 		= cPickle.load(fo)
+			mtStep 		= cPickle.load(fo)
+		except:
+			fo.close()
+		fo.close()	
+		print fileNames
+		Sim1 = numpy.reshape(Sim, (Sim.shape[0]*Sim.shape[1], 1))
+		plt.hist(Sim1)
+		plt.show()
+		
 			
 	return 0
 	
