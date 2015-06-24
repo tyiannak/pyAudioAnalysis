@@ -1,10 +1,10 @@
-import os, sys, shutil, glob, numpy
+import os, sys, shutil, glob, numpy, csv
 import scipy.io.wavfile as wavfile
 import audioBasicIO
 import audioTrainTest as aT
 import audioSegmentation as aS
 import matplotlib.pyplot as plt
-
+import scipy.spatial.distance
 minDuration = 7;
 
 def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
@@ -102,11 +102,40 @@ def analyzeDir(dirPath):
 		print
 		
 def main(argv):	
+	
 	if argv[1]=="--file":
 		getMusicSegmentsFromFile(argv[2])	
 		classifyFolderWrapper(argv[2][0:-4] + "_musicSegments", "svm", "data/svmMusicGenre8", True)		
+		
 	elif argv[1]=="--dir":
+		
 		analyzeDir(argv[2])	
+		
+	elif argv[1]=="--sim":
+		f = []		
+		with open(csvFile, 'rb') as csvfile:
+			spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
+			for j,row in enumerate(spamreader):
+				if j>0:
+					ftemp = []
+					for i in range(1,9):
+						ftemp.append(float(row[i]))
+					f.append(ftemp)
+			f = numpy.array(f)
+			print f.shape
+			
+			
+			Sim = numpy.zeros((f.shape[0], f.shape[0]))
+			for i in range(f.shape[0]):
+				for j in range(f.shape[0]):					
+					#print numpy.reshape(f[i,:], (f.shape[1],1))
+					#print numpy.reshape(f[j,:], (f.shape[1],1))
+					Sim[i,j] = scipy.spatial.distance.cdist(numpy.reshape(f[i,:], (f.shape[1],1)).T, numpy.reshape(f[j,:], (f.shape[1],1)).T, 'cosine')
+			print Sim
+			Sim1 = numpy.reshape(Sim, (Sim.shape[0]*Sim.shape[1], 1))
+			plt.hist(Sim1)
+			plt.show()
+			
 	return 0
 	
 if __name__ == '__main__':
