@@ -122,7 +122,9 @@ def main(argv):
 					for i in range(1,9):
 						ftemp.append(float(row[i]))
 					f.append(ftemp)
-					fileNames.append(row[0])
+					R = row[0]
+					II = R.find(".wav");
+					fileNames.append(row[0][0:II])
 			f = numpy.array(f)
 
 			Sim = numpy.zeros((f.shape[0], f.shape[0]))
@@ -142,15 +144,14 @@ def main(argv):
 
 	elif argv[1]=="--loadsim":
 		try:
-			fo = open(argv[1], "rb")
+			fo = open(argv[2], "rb")
 		except IOError:
 				print "didn't find file"
 				return
-		try:
-			hmm = cPickle.load(fo)
-			classesAll = cPickle.load(fo)
-			mtWin 		= cPickle.load(fo)
-			mtStep 		= cPickle.load(fo)
+		try:			
+			fileNames 	= cPickle.load(fo)
+			f 			= cPickle.load(fo)
+			Sim 		= cPickle.load(fo)
 		except:
 			fo.close()
 		fo.close()	
