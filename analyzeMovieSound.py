@@ -159,7 +159,35 @@ def main(argv):
 		Sim1 = numpy.reshape(Sim, (Sim.shape[0]*Sim.shape[1], 1))
 		plt.hist(Sim1)
 		plt.show()
-		
+
+	elif argv[1]=="--audio-event-dir":		
+		files = "*.wav"
+		inputFolder = argv[2]
+		if os.path.isdir(inputFolder):
+			strFilePattern = os.path.join(inputFolder, files)
+		else:
+			strFilePattern = inputFolder + files
+
+		wavFilesList = []
+		wavFilesList.extend(glob.glob(strFilePattern))
+		wavFilesList = sorted(wavFilesList)		
+		for i,w in enumerate(wavFilesList):			
+			[flagsInd, classesAll, acc] = aS.mtFileClassification(w, "data/svmMovies8classes", "svm", False, '')
+			histTemp = numpy.zeros( (len(classesAll), ) )
+			for f in flagsInd:
+				histTemp[int(f)] += 1.0
+			histTemp /= histTemp.sum()
+			
+			if i==0:
+				print "".ljust(100)+"\t",
+				for C in classesAll:
+					print C.ljust(12)+"\t",
+				print
+			print w.ljust(100)+"\t",
+			for h in histTemp:				
+				print "{0:.2f}".format(h).ljust(12)+"\t",
+			print
+
 			
 	return 0
 	
