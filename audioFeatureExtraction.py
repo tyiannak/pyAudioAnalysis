@@ -6,6 +6,7 @@ import numpy
 import mlpy
 import cPickle
 import aifc
+import math
 from numpy import NaN, Inf, arange, isscalar, array
 from scipy.fftpack import rfft
 from scipy.fftpack import fft
@@ -17,6 +18,8 @@ from scipy import linalg as la
 import audioTrainTest as aT
 import audioBasicIO
 import utilities
+from scipy.signal import lfilter, hamming
+from scikits.talkbox import lpc
 
 eps = 0.00000001
 
@@ -355,6 +358,30 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
     return (chromaGram, TimeAxis, FreqAxis)
 
 
+def phormants(x, Fs):
+    N = len(x)
+    w = numpy.hamming(N)
+
+    # Apply window and high pass filter.
+    x1 = x * w   
+    x1 = lfilter([1], [1., 0.63], x1)
+    
+    # Get LPC.    
+    ncoeff = 2 + Fs / 1000
+    A, e, k = lpc(x1, ncoeff)    
+    #A, e, k = lpc(x1, 8)
+
+    # Get roots.
+    rts = numpy.roots(A)
+    rts = [r for r in rts if numpy.imag(r) >= 0]
+
+    # Get angles.
+    angz = numpy.arctan2(numpy.imag(rts), numpy.real(rts))
+
+    # Get frequencies.    
+    frqs = sorted(angz * (Fs / (2 * math.pi)))
+
+    return frqs
 def beatExtraction(stFeatures, winSize, PLOT=False):
     """
     This function extracts an estimate of the beat rate for a musical signal.
