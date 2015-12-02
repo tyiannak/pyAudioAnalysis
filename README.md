@@ -1,6 +1,7 @@
 # pyAudioAnalysis: A Python Audio Analysis Library
 
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
+*pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](https://github.com/tyiannak/pyAudioAnalysis/wiki).*
  The user can perform the following tasks:
  * Extract a wide range of audio features and representations (e.g. spectrogram, chromagram)
  * Train, parameter tune and evaluate segment-based classifiers
