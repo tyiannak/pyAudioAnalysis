@@ -12,6 +12,9 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Train and use audio regression models (example application: emotion recognition)
  * Apply dimensionality reduction techniques to visualize audio data and content similarities
 
+
+*[(NEW: PLOS One Paper regarding pyAudioAnalysis)] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610)*
+
 *[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
 
 *pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
