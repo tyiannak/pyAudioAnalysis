@@ -3,7 +3,6 @@ import time
 import os
 import glob
 import numpy
-import mlpy
 import cPickle
 import aifc
 import math
@@ -19,7 +18,7 @@ import audioTrainTest as aT
 import audioBasicIO
 import utilities
 from scipy.signal import lfilter, hamming
-from scikits.talkbox import lpc
+#from scikits.talkbox import lpc
 
 eps = 0.00000001
 
