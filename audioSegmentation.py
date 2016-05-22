@@ -18,6 +18,10 @@ import sklearn.hmm
 import cPickle
 import glob
 
+# APN:
+# hard-coded path to data exists in here, so I manually add this
+DATA_DIR = '/home/apn/sw/pyAudioAnalysis/data'
+
 """ General utility functions """
 
 
@@ -641,8 +645,8 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     x = audioBasicIO.stereo2mono(x)
     Duration = len(x) / Fs
 
-    [Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel("data/knnSpeakerAll")
-    [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel("data/knnSpeakerFemaleMale")
+    [Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel(os.path.join(DATA_DIR,"knnSpeakerAll"))
+    [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel(os.path.join(DATA_DIR,"knnSpeakerFemaleMale"))
 
     [MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs * stWin), round(Fs*stWin * 0.5))
 
@@ -858,6 +862,11 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
             plt.xlabel("number of clusters");
             plt.ylabel("average clustering's sillouette");
         plt.show()
+
+    # added for some return information
+    # returns the time step mtStep, in second
+    # cls contains an array with an ID number for the identified speaker at each timestep mtStep
+    return mtStep,cls
 
 def speakerDiarizationEvaluateScript(folderName, LDAs):
     '''
