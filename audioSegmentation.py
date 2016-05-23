@@ -18,9 +18,8 @@ import sklearn.hmm
 import cPickle
 import glob
 
-# APN:
-# hard-coded path to data exists in here, so I manually add this
-DATA_DIR = '/home/apn/sw/pyAudioAnalysis/data'
+# data dir is  a subdirectory of the directory for this file
+DATA_DIR = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)),'data'])
 
 """ General utility functions """
 
