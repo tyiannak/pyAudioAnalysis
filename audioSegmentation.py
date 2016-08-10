@@ -1,5 +1,5 @@
 import numpy
-import mlpy
+import sklearn.cluster
 import time
 import scipy
 import os
@@ -10,11 +10,12 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from sklearn.lda import LDA
+import sklearn.discriminant_analysis
 import csv
 import os.path
 import sklearn
-import sklearn.hmm
+import sklearn.cluster
+import hmmlearn.hmm
 import cPickle
 import glob
 
@@ -150,13 +151,12 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
     '''
     This function plots statistics on the classification-segmentation results produced either by the fix-sized supervised method or the HMM method.
     It also computes the overall accuracy achieved by the respective method if ground-truth is available.
-    '''
+    '''    
     flags = [classNames[int(f)] for f in flagsInd]
-    (segs, classes) = flags2segs(flags, mtStep)
-
-    minLength = min(flagsInd.shape[0], flagsIndGT.shape[0])
+    (segs, classes) = flags2segs(flags, mtStep)    
+    minLength = min(flagsInd.shape[0], flagsIndGT.shape[0])    
     if minLength > 0:
-        accuracy = numpy.count_nonzero(flagsInd[0:minLength] == flagsIndGT[0:minLength]) / float(minLength)
+        accuracy = numpy.sum(flagsInd[0:minLength] == flagsIndGT[0:minLength]) / float(minLength)
     else:
         accuracy = -1
 
@@ -180,7 +180,7 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
         for i in range(Percentages.shape[0]):
             print classNames[i], Percentages[i], AvDurations[i]
 
-        font = {'family': 'fantasy', 'size': 10}
+        font = {'size': 10}
         plt.rc('font', **font)
 
         fig = plt.figure()
@@ -320,7 +320,10 @@ def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
     [F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))    # feature extraction
     startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)                    # compute HMM statistics (priors, transition matrix, etc)
     
-    hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)            # hmm training
+    hmm = hmmlearn.hmm.GaussianHMM(startprob.shape[0], "diag")            # hmm training
+
+    hmm.startprob_ = startprob
+    hmm.transmat_ = transmat    
     hmm.means_ = means
     hmm.covars_ = cov
     
@@ -381,7 +384,9 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
         else:
             Fall = numpy.concatenate((Fall, F), axis=1)
     startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)        # compute HMM statistics
-    hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)      # train HMM
+    hmm = hmmlearn.hmm.GaussianHMM(startprob.shape[0], "diag")      # train HMM
+    hmm.startprob_ = startprob
+    hmm.transmat_ = transmat        
     hmm.means_ = means
     hmm.covars_ = cov
 
@@ -430,7 +435,7 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
                 flagsGTNew.append(-1)
         flagsIndGT = numpy.array(flagsGTNew)
     else:
-        flagsIndGT = numpy.array([])
+        flagsIndGT = numpy.array([])    
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
     if acc >= 0:
         print "Overall Accuracy: {0:.2f}".format(acc)
@@ -570,7 +575,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=Fals
     ProbOnset = []
     for i in range(ShortTermFeatures.shape[1]):                    # for each frame
         curFV = (ShortTermFeatures[:, i] - MEANSS) / STDSS         # normalize feature vector
-        ProbOnset.append(SVM.pred_probability(curFV)[1])           # get SVM probability (that it belongs to the ONSET class)
+        ProbOnset.append(SVM.predict_proba(curFV.reshape(1,-1))[0][1])           # get SVM probability (that it belongs to the ONSET class)
     ProbOnset = numpy.array(ProbOnset)
     ProbOnset = smoothMovingAvg(ProbOnset, smoothWindow / stStep)  # smooth probability
 
@@ -747,8 +752,8 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         #print LDAstep, LDAstepRatio
         for i in range(Labels.shape[0]):
             Labels[i] = int(i*stWin/LDAstepRatio);        
-        clf = LDA(n_components=LDAdim)
-        clf.fit(mtFeaturesToReduce.T, Labels, tol=0.000001)
+        clf = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(n_components=LDAdim)
+        clf.fit(mtFeaturesToReduce.T, Labels)
         MidTermFeaturesNorm = (clf.transform(MidTermFeaturesNorm.T)).T
 
     if numOfSpeakers <= 0:
@@ -759,15 +764,11 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     silAll = []
     centersAll = []
     
-    for iSpeakers in sRange:
-        cls, means, steps = mlpy.kmeans(MidTermFeaturesNorm.T, k=iSpeakers, plus=True)        # perform k-means clustering
-        
-        #YDist =   distance.pdist(MidTermFeaturesNorm.T, metric='euclidean')
-        #print distance.squareform(YDist).shape
-        #hc = mlpy.HCluster()
-        #hc.linkage(YDist)
-        #cls = hc.cut(14.5)
-        #print cls
+    for iSpeakers in sRange:        
+        k_means = sklearn.cluster.KMeans(n_clusters = iSpeakers)
+        k_means.fit(MidTermFeaturesNorm.T)
+        cls = k_means.labels_        
+        means = k_means.cluster_centers_
 
         # Y = distance.squareform(distance.pdist(MidTermFeaturesNorm.T))
         clsAll.append(cls)
@@ -813,7 +814,9 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     # Post-process method 1: hmm smoothing
     for i in range(1):
         startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
-        hmm = sklearn.hmm.GaussianHMM(startprob.shape[0], "diag", startprob, transmat)            # hmm training
+        hmm = hmmlearn.hmm.GaussianHMM(startprob.shape[0], "diag")            # hmm training        
+        hmm.startprob_ = startprob
+        hmm.transmat_ = transmat            
         hmm.means_ = means; hmm.covars_ = cov
         cls = hmm.predict(MidTermFeaturesNormOr.T)                    
     

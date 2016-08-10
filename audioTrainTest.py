@@ -3,7 +3,6 @@ import numpy
 import time
 import os
 import glob
-import mlpy
 import cPickle
 import shutil
 import audioop
@@ -17,7 +16,8 @@ import matplotlib.pyplot as plt
 import scipy.io as sIO
 from scipy import linalg as la
 from scipy.spatial import distance
-
+import sklearn.svm
+import sklearn.decomposition
 
 def signal_handler(signal, frame):
     print 'You pressed Ctrl+C! - EXIT'
@@ -51,7 +51,7 @@ def classifierWrapper(classifier, classifierType, testSample):
     '''
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
-        - classifier:        a classifier object of type mlpy.LibSvm or kNN (defined in this library)
+        - classifier:        a classifier object of type sklearn.svm.SVC or kNN (defined in this library)
         - classifierType:    "svm" or "knn"
         - testSample:        a feature vector (numpy array)
     RETURNS:
@@ -75,8 +75,8 @@ def classifierWrapper(classifier, classifierType, testSample):
     if classifierType == "knn":
         [R, P] = classifier.classify(testSample)
     elif classifierType == "svm":
-        R = classifier.pred(testSample)
-        P = classifier.pred_probability(testSample)
+        R = classifier.predict(testSample.reshape(1,-1))[0]
+        P = classifier.predict_proba(testSample.reshape(1,-1))[0]
     return [R, P]
 
 
@@ -94,7 +94,7 @@ def regressionWrapper(model, modelType, testSample):
         TODO
     '''
     if modelType == "svm":
-        return (model.pred(testSample))
+        return (model.predict(testSample.reshape(1,-1))[0])
     #    elif classifierType == "knn":
     #    TODO
 
@@ -146,7 +146,7 @@ def trainKNN(features, K):
 def trainSVM(features, Cparam):
     '''
     Train a multi-class probabilitistic SVM classifier.
-    Note:     This function is simply a wrapper to the mlpy-LibSVM functionality for SVM training
+    Note:     This function is simply a wrapper to the sklearn functionality for SVM training
               See function trainSVM_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements containt numpy matrices of features
@@ -157,23 +157,22 @@ def trainSVM(features, Cparam):
 
     NOTE:
         This function trains a linear-kernel SVM for a given C value. For a different kernel, other types of parameters should be provided.
-        For example, gamma for a polynomial, rbf or sigmoid kernel. Furthermore, Nu should be provided for a nu_SVM classifier.
-        See MLPY documentation for more details (http://mlpy.sourceforge.net/docs/3.4/svm.html)
     '''
 
     [X, Y] = listOfFeatures2Matrix(features)
-    svm = mlpy.LibSvm(svm_type='c_svc', kernel_type='linear', eps=0.0000001, C=Cparam, probability=True)
-    svm.learn(X, Y)
+    svm = sklearn.svm.SVC(C = Cparam, kernel = 'linear',  probability = True)        
+    svm.fit(X,Y)
+
     return svm
 
 
-def trainSVMregression(Features, Y, C):
-    #svm = mlpy.LibSvm(svm_type='c_svc', kernel_type='linear', eps=0.0000001, C=C, probability=True)
-    svm = mlpy.LibSvm(svm_type='epsilon_svr', kernel_type='linear', eps=0.001, C=C, probability=False)
-    svm.learn(Features, Y)
-    trainError = numpy.mean(numpy.abs(svm.pred(Features) - Y))
-    return svm, trainError
+def trainSVMregression(Features, Y, Cparam):    
+    svm = sklearn.svm.SVR(C = Cparam, kernel = 'linear')
+    svm.fit(Features,Y)
 
+    #trainError = numpy.mean(numpy.abs(svm.pred(Features) - Y))
+    trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
+    return svm, trainError
 
 def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT=False, perTrain=0.90):
     '''
@@ -226,7 +225,9 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     # STEP C: Save the classifier to file
     if classifierType == "svm":
         Classifier = trainSVM(featuresNew, bestParam)
-        Classifier.save_model(modelName)
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+
         fo = open(modelName + "MEANS", "wb")
         cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -313,7 +314,9 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         # STEP C: Save the model to file
         if modelType == "svm":
             Classifier, _ = trainSVMregression(featuresNorm[0], regressionLabels[iRegression], bestParam)
-            Classifier.save_model(modelName + "_" + r)
+            with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
+                cPickle.dump(Classifier, fid)            
+
             fo = open(modelName + "_" + r + "MEANS", "wb")
             cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -393,7 +396,8 @@ def loadSVModel(SVMmodelName, isRegression=False):
     STD = numpy.array(STD)
 
     COEFF = []
-    SVM = mlpy.LibSvm.load_model(SVMmodelName)
+    with open(SVMmodelName, 'rb') as fid:
+        SVM = cPickle.load(fid)    
 
     if isRegression:
         return(SVM, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
@@ -671,9 +675,9 @@ def listOfFeatures2Matrix(features):
 
 def pcaDimRed(features, nDims):
     [X, Y] = listOfFeatures2Matrix(features)
-    pca = mlpy.PCA(method='cov')
-    pca.learn(X)
-    coeff = pca.coeff()
+    pca = sklearn.decomposition.PCA(n_components = nDims)
+    pca.fit(X)
+    coeff = pca.components_
     coeff = coeff[:, 0:nDims]
 
     featuresNew = []
@@ -713,7 +717,7 @@ def fileClassification(inputFile, modelName, modelType):
         MidTermFeatures = numpy.append(MidTermFeatures, beatConf)
     curFV = (MidTermFeatures - MEAN) / STD                # normalization
 
-    [Result, P] = classifierWrapper(Classifier, modelType, curFV)    # classification
+    [Result, P] = classifierWrapper(Classifier, modelType, curFV)    # classification        
     return Result, P, classNames
 
 
@@ -736,7 +740,7 @@ def fileRegression(inputFile, modelName, modelType):
 
     # FEATURE EXTRACTION
     # LOAD ONLY THE FIRST MODEL (for mtWin, etc)
-    if modelType == 'svm':
+    if modelType == 'svm':        
         [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
     elif modelType == 'knn':
         [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(regressionModels[0], True)

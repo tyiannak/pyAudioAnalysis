@@ -64,6 +64,7 @@ def featureVisualizationDirWrapper(directory):
     if not os.path.isdir(directory):
         raise Exception("Input folder not found!")
     aV.visualizeFeaturesFolder(directory, "pca", "")
+    #aV.visualizeFeaturesFolder(directory, "lda", "artist")
 
 
 def fileSpectrogramWrapper(wavFileName):
@@ -100,7 +101,7 @@ def classifyFileWrapper(inputFile, modelType, modelName):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [Result, P, classNames] = aT.fileClassification(inputFile, modelName, modelType)
+    [Result, P, classNames] = aT.fileClassification(inputFile, modelName, modelType)    
     print "{0:s}\t{1:s}".format("Class", "Probability")
     for i, c in enumerate(classNames):
         print "{0:s}\t{1:.2f}".format(c, P[i])
@@ -169,8 +170,8 @@ def regressionFolderWrapper(inputFolder, modelType, modelName):
 
     for i, r in enumerate(regressionNames):
         [Histogram, bins] = numpy.histogram(Results[:, i])
-        centers = (bins[0:-1] + bins[1::]) / 2.0
-        plt.subplot(len(regressionNames), 1, i)
+        centers = (bins[0:-1] + bins[1::]) / 2.0        
+        plt.subplot(len(regressionNames), 1, i + 1)
         plt.plot(centers, Histogram)
         plt.title(r)
     plt.show()
