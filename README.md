@@ -1,4 +1,9 @@
 # pyAudioAnalysis: A Python Audio Analysis Library
+*[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
+
+News: 
+ * August 2016: pyAudioAnalysis has been updated. mlpy is no longer used and all learning tasks (svm, kmeans, pcm, lda) are performed through the scikit-learn package. Also, dependencies have been simplified (see documentation for details)
+ * January 2016: *[PLOS-One Paper regarding pyAudioAnalysis (please cite!)] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610)*
 
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
  The user can perform the following tasks:
@@ -11,13 +16,6 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Extract audio thumbnails
  * Train and use audio regression models (example application: emotion recognition)
  * Apply dimensionality reduction techniques to visualize audio data and content similarities
-
-
-*[(NEW: PLOS One Paper regarding pyAudioAnalysis)] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610)*
-
-*[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
-
-*pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
 
 
 pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. For example, to train a classifier segments, given a set of WAV files stored in folders, each folder representing a different class,
@@ -41,6 +39,8 @@ python audioAnalysis.py fileSpectrogram -i data/doremi.wav
 ```
 
 *[Installing instructions and a complete documentation is provided in the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
+
+*pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
 
 *Author: [Theodoros Giannakopoulos]*
 
