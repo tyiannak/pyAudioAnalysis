@@ -5,6 +5,8 @@
 
 *[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
 
+...
+
 ## News
  * August 2016: pyAudioAnalysis has been updated. mlpy is no longer used and all learning tasks (svm, kmeans, pcm, lda) are performed through the scikit-learn package. Also, dependencies have been simplified (see documentation for details)
  * January 2016: *[PLOS-One Paper regarding pyAudioAnalysis (please cite!)] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610)*
@@ -25,6 +27,7 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)
+
 pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. Eg, this code trains an audio segment classifier, given a set of WAV files stored in folders (each folder representing a different class):
 
 ```
