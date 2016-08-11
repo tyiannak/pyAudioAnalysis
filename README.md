@@ -1,5 +1,6 @@
 # <img src="icon.png" align="left" height="78"/>  - 
 > Audio feature extraction, classification, segmentation and applications using Python 
+
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
