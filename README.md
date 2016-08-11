@@ -4,7 +4,7 @@
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * August 2016: Update: mlpy is no longer used. All learning tasks performed through the scikit-learn package (see documentation for details)
+ * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn (see documentation for details)
  * August 2016: Update: Dependencies have been simplified (see documentation for details)
  * January 2016: [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
 
