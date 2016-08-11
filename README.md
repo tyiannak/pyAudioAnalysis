@@ -1,5 +1,5 @@
 <img src="icon.png" align="left" height="70"/> A Python Library for Audio Feature Extraction, Classification, Segmentation and Applications 
-
+<p>
 *This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
 
 ## News
@@ -48,7 +48,7 @@ Result:
 ```
 
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file:
-```
+ ```
 python audioAnalysis.py fileSpectrogram -i data/doremi.wav
 ```
 
