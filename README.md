@@ -2,6 +2,7 @@
 
 |  1 |  2 |  3 |  2 |  1 |
 |---|---|---|---|---|
+|  1 |  2 |  3 |  2 |  1 |
 
 A Python Library for Audio Analysis: 
 Feature Extraction, Classification, Segmentation and Applications
