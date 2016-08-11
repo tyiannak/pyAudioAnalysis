@@ -1,7 +1,5 @@
-# <img src="icon.png" align="left" height="78"/>  - 
-> Audio feature extraction, classification, segmentation and applications using Python 
-
-*This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
+### <img src="icon.png" align="left" height="78"/>  Audio feature extraction, classification, segmentation and applications using Python 
+> *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
  * August 2016: Update: mlpy is no longer used. All learning tasks performed through the scikit-learn package (see documentation for details)
