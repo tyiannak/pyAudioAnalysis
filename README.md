@@ -4,8 +4,8 @@
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn (see documentation for details)
- * August 2016: Update: Dependencies have been simplified (see documentation for details)
+ * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn 
+ * August 2016: Update: Dependencies have been simplified 
  * January 2016: [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
 
 ## General
@@ -49,6 +49,7 @@ In addition, command-line support is provided for all functionalities. E.g. the 
 Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).
 
 ## Author
+<img src="http://cgi.di.uoa.gr/~tyiannak/image.jpg" align="left" height="100"/>
 [Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak)
 
 
