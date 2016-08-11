@@ -1,4 +1,4 @@
-# <img src="icon.png" align="left" height="50"/> -
+# A <img src="icon.png" align="left" height="50"/>
 
 > Feature Extraction, Classification, Segmentation and Applications
 
