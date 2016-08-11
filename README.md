@@ -1,6 +1,6 @@
-# <img src="icon.png" align="left" height="50"/> A Python Audio Analysis Library
-> This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation
-
+# <img src="icon.png" align="left" height="50"/> 
+> Feature Extraction, Classification, Segmentation and Applications
+*This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
 
 ## News
  * August 2016: pyAudioAnalysis has been updated. mlpy is no longer used and all learning tasks (svm, kmeans, pcm, lda) are performed through the scikit-learn package. Also, dependencies have been simplified (see documentation for details)
@@ -41,8 +41,6 @@ In addition, command-line support is provided for all functionalities. E.g. the 
 ```
 python audioAnalysis.py fileSpectrogram -i data/doremi.wav
 ```
-
-*[Installing instructions and a complete documentation is provided in the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
 
 *pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
 
