@@ -1,9 +1,6 @@
-# pyAudioAnalysis <img src="icon.png" align="right" height="50"/>
-> A Python Audio Analysis Library
+# <img src="icon.png" align="left" height="50"/> A Python Audio Analysis Library
+> This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation
 
-*[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
-
-...
 
 ## News
  * August 2016: pyAudioAnalysis has been updated. mlpy is no longer used and all learning tasks (svm, kmeans, pcm, lda) are performed through the scikit-learn package. Also, dependencies have been simplified (see documentation for details)
