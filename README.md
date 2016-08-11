@@ -50,6 +50,7 @@ Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioA
 
 ## Author
 <img src="http://cgi.di.uoa.gr/~tyiannak/image.jpg" align="left" height="100"/>
-[Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak)
+
+[Theodoros Giannakopoulos, PhD] (http://www.di.uoa.gr/~tyiannak) 
 
 
