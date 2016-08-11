@@ -1,4 +1,8 @@
 <img src="icon.png" align="left" height="70"/>
+
+|  1 |  2 |  3 |  2 |  1 |
+|---|---|---|---|---|
+
 A Python Library for Audio Analysis: 
 Feature Extraction, Classification, Segmentation and Applications
 *This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
