@@ -1,6 +1,5 @@
-<img src="icon.png" align="left" height="130"/>
 
-# A Python library for audio feature extraction, classification, segmentation and applications
+# <img src="icon.png" align="left" height="130"/> A Python library for audio feature extraction, classification, segmentation and applications
 
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
