@@ -1,6 +1,6 @@
 # <img src="icon.png" align="left" height="78"/>  Audio feature extraction, classification, segmentation and applications using Python
 
-*This doc contains general info on the lib. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
+*This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
  * August 2016: Update: mlpy is no longer used. All learning tasks performed through the scikit-learn package (see documentation for details)
@@ -24,7 +24,7 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  ```
 pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3
 ```
- * Clone source: 
+ * Clone the source of this library: 
  ```
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 ```
@@ -45,7 +45,7 @@ Result:
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
 ## Further reading
-Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
+Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).
 
 ## Author
 [Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak)
