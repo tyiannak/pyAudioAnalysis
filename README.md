@@ -1,4 +1,4 @@
-# <img src="icon.png" align="left" height="78"/>  A Python Library for Audio Feature Extraction, Classification, Segmentation and Applications 
+# <img src="icon.png" align="left" height="78"/>  Python library for audio feature extraction, classification, segmentation and applications 
 
 *This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
 
@@ -8,16 +8,15 @@
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
- * Extract a wide range of audio *features* and representations (e.g. spectrogram, chromagram)
- * *Classify* unknown samples
- * *Train*, parameter tune and *evaluate* segment-based classifiers
+ * Extract audio *features* and representations (e.g. mfccs, spectrogram, chromagram)
+ * *Classify* unknown sounds
+ * *Train*, parameter tune and *evaluate* classifiers of audio segments
  * *Detect* audio events and exclude silence periods from long recordings
- * Perform *supervised segmentation* (i.e. joint segmentation - classification)
+ * Perform *supervised segmentation* (joint segmentation - classification)
  * Perform *unsupervised segmentation* (e.g. speaker diarization)
  * Extract audio *thumbnails*
- * Train and use audio *regression* models (example application: emotion recognition)
- * Apply dimensionality reduction techniques to *visualize* audio data and content similarities
-
+ * Train and use *audio regression* models (example application: emotion recognition)
+ * Apply dimensionality reduction to *visualize* audio data and content similarities
 
 ## Installation
  * Install dependencies:
