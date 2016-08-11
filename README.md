@@ -44,8 +44,10 @@ Result:
 
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
-*pyAudioAnalysis can serve as an introduction to Audio Analysis in Python, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
+## Further reading
+Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).*
 
-*Author: [Theodoros Giannakopoulos]*
+## Author
+[Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak)
 
 
