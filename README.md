@@ -1,6 +1,4 @@
-<img src="icon.png" align="right" height="40"/>
-
-# pyAudioAnalysis
+# pyAudioAnalysis <img src="icon.png" align="right" height="50"/>
 > A Python Audio Analysis Library
 
 *[(follow this link for the complete documentation)] (https://github.com/tyiannak/pyAudioAnalysis/wiki)*
