@@ -1,23 +1,22 @@
-# <img src="icon.png" align="left" height="70"/>  A Python Library for Audio Feature Extraction, Classification, Segmentation and Applications 
+# <img src="icon.png" align="left" height="78"/>  A Python Library for Audio Feature Extraction, Classification, Segmentation and Applications 
 
 *This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
 
 ## News
  * August 2016: pyAudioAnalysis has been updated. mlpy is no longer used and all learning tasks (svm, kmeans, pcm, lda) are performed through the scikit-learn package. Also, dependencies have been simplified (see documentation for details)
- * January 2016: *[PLOS-One Paper regarding pyAudioAnalysis (please cite!)] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610)*
+ * January 2016: [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
 
 ## General
-pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks, including: feature extraction, classification, segmentation and visualization. 
- The user can perform the following tasks:
- * Extract a wide range of audio features and representations (e.g. spectrogram, chromagram)
- * Train, parameter tune and evaluate segment-based classifiers
- * Classify unknown samples
- * Detect audio events and exclude silence periods from long recordings
- * Perform supervised segmentation (i.e. apply a clasification model on fix-sized segments)
- * Perform unsupervised segmentation (e.g. speaker diarization)
- * Extract audio thumbnails
- * Train and use audio regression models (example application: emotion recognition)
- * Apply dimensionality reduction techniques to visualize audio data and content similarities
+pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
+ * Extract a wide range of audio *features* and representations (e.g. spectrogram, chromagram)
+ * *Classify* unknown samples
+ * *Train*, parameter tune and *evaluate* segment-based classifiers
+ * *Detect* audio events and exclude silence periods from long recordings
+ * Perform *supervised segmentation* (i.e. joint segmentation - classification)
+ * Perform *unsupervised segmentation* (e.g. speaker diarization)
+ * Extract audio *thumbnails*
+ * Train and use audio *regression* models (example application: emotion recognition)
+ * Apply dimensionality reduction techniques to *visualize* audio data and content similarities
 
 
 ## Installation
