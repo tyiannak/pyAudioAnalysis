@@ -1,5 +1,4 @@
-# A <img src="icon.png" align="left" height="50"/>
-
+# <img src="icon.png" align="left" height="50"/> A Python Library for Audio Analysis
 > Feature Extraction, Classification, Segmentation and Applications
 
 *This doc contains general info. Follow [this link] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete documentation*
@@ -21,6 +20,16 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Train and use audio regression models (example application: emotion recognition)
  * Apply dimensionality reduction techniques to visualize audio data and content similarities
 
+
+## Installation
+ * Install dependencies:
+ ```
+pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3
+```
+ * Clone source: 
+ ```
+git clone https://github.com/tyiannak/pyAudioAnalysis.git
+```
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)
