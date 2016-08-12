@@ -46,11 +46,27 @@ Result:
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
 ## Further reading
-Apart from this README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).
+Apart from the current README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Please use the following citation when citing pyAudioAnalysis in your research work:
+'''
+@article{giannakopoulos2015pyaudioanalysis,
+  title={pyAudioAnalysis: An Open-Source Python Library for Audio Signal Analysis},
+  author={Giannakopoulos, Theodoros},
+  journal={PloS one},
+  volume={10},
+  number={12},
+  year={2015},
+  publisher={Public Library of Science}
+}
+'''
+
+Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).
 
 ## Author
 <img src="http://cgi.di.uoa.gr/~tyiannak/image.jpg" align="left" height="100"/>
 
-[Theodoros Giannakopoulos, PhD] (http://www.di.uoa.gr/~tyiannak) 
+[Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak) 
+Postdoc researcher at NCSR Demokritos
+Athens
+Greece
 
 
