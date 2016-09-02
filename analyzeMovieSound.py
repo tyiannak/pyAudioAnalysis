@@ -79,7 +79,7 @@ def getMusicSegmentsFromFile(inputFile):
 	elif modelType=='knn':
 		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
 
-	flagsInd, classNames, acc = aS.mtFileClassification(inputFile, modelName, modelType, plotResults = False, gtFile = "")
+	flagsInd, classNames, acc, CM = aS.mtFileClassification(inputFile, modelName, modelType, plotResults = False, gtFile = "")
 	segs, classes = aS.flags2segs(flagsInd, mtStep)
 
 	for i, s in enumerate(segs):
@@ -172,7 +172,7 @@ def main(argv):
 		wavFilesList.extend(glob.glob(strFilePattern))
 		wavFilesList = sorted(wavFilesList)		
 		for i,w in enumerate(wavFilesList):			
-			[flagsInd, classesAll, acc] = aS.mtFileClassification(w, "data/svmMovies8classes", "svm", False, '')
+			[flagsInd, classesAll, acc, CM] = aS.mtFileClassification(w, "data/svmMovies8classes", "svm", False, '')
 			histTemp = numpy.zeros( (len(classesAll), ) )
 			for f in flagsInd:
 				histTemp[int(f)] += 1.0

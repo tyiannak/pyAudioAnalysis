@@ -117,6 +117,23 @@ def segs2flags(segStart, segEnd, segLabel, winSize):
         curPos += winSize
     return numpy.array(flags), classNames
 
+def computePreRec(CM, classNames):
+    '''
+    This function computes the Precision, Recall and F1 measures, given a confusion matrix
+    '''
+    numOfClasses = CM.shape[0]
+    if len(classNames) != numOfClasses:
+        print "Error in computePreRec! Confusion matrix and classNames list must be of the same size!"
+        return
+    Precision = []
+    Recall = []
+    F1 = []    
+    for i, c in enumerate(classNames):
+        Precision.append(CM[i,i] / numpy.sum(CM[:,i]))
+        Recall.append(CM[i,i] / numpy.sum(CM[i,:]))
+        F1.append( 2 * Precision[-1] * Recall[-1] / (Precision[-1] + Recall[-1]))
+    return Recall, Precision, F1
+
 
 def readSegmentGT(gtFile):
     '''
@@ -417,13 +434,15 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
     except:
         fo.close()
     fo.close()
+
     #Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);    # feature extraction
     [Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))
     flagsInd = hmm.predict(Features.T)                            # apply model
     #for i in range(len(flagsInd)):
     #    if classesAll[flagsInd[i]]=="silence":
     #        flagsInd[i]=classesAll.index("speech")
-                                                # plot results
+                   
+                                                                             # plot results
     if os.path.isfile(gtFileName):
         [segStart, segEnd, segLabels] = readSegmentGT(gtFileName)
         flagsGT, classNamesGT = segs2flags(segStart, segEnd, segLabels, mtStep)
@@ -433,14 +452,19 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
                 flagsGTNew.append(classesAll.index(classNamesGT[flagsGT[j]]))
             else:
                 flagsGTNew.append(-1)
+        CM = numpy.zeros((len(classNamesGT), len(classNamesGT)))
         flagsIndGT = numpy.array(flagsGTNew)
+        for i in range(min(flagsInd.shape[0], flagsIndGT.shape[0])):
+            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1                
     else:
         flagsIndGT = numpy.array([])    
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
     if acc >= 0:
         print "Overall Accuracy: {0:.2f}".format(acc)
+        return (flagsInd, classNamesGT, acc, CM)
+    else:
+        return (flagsInd, classesAll, -1, -1)
 
-    return flagsInd, classesAll, acc
 
 
 def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtFile=""):
@@ -494,7 +518,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     (segs, classes) = flags2segs(flags, mtStep)            # convert fix-sized flags to segments and classes
     segs[-1] = len(x) / float(Fs)
 
-    # Load grount-truth:
+    # Load grount-truth:    
     if os.path.isfile(gtFile):
         [segStartGT, segEndGT, segLabelsGT] = readSegmentGT(gtFile)
         flagsGT, classNamesGT = segs2flags(segStartGT, segEndGT, segLabelsGT, mtStep)
@@ -504,32 +528,53 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
                 flagsIndGT.append(classNames.index(classNamesGT[flagsGT[j]]))
             else:
                 flagsIndGT.append(-1)
-        flagsIndGT = numpy.array(flagsIndGT)
+        flagsIndGT = numpy.array(flagsIndGT)        
+        CM = numpy.zeros((len(classNamesGT), len(classNamesGT)))
+        for i in range(min(flagsInd.shape[0], flagsIndGT.shape[0])):
+            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1        
     else:
+        CM = []
         flagsIndGT = numpy.array([])
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, not plotResults)
     if acc >= 0:
-        print "Overall Accuracy: {0:.3f}".format(acc)
-    return (flagsInd, classNames, acc)
+        print "Overall Accuracy: {0:.3f}".format(acc)    
+        return (flagsInd, classNamesGT, acc, CM)
+    else:
+        return (flagsInd, classNames, acc, CM)
 
 
 def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
     flagsAll = numpy.array([])
     classesAll = []
     accuracys = []
+    
     for i, f in enumerate(glob.glob(dirName + os.sep + '*.wav')):            # for each WAV file
         wavFile = f
         print wavFile
         gtFile = f.replace('.wav', '.segments')                             # open for annotated file
 
         if methodName.lower() in ["svm", "knn"]:
-            flagsInd, classNames, acc = mtFileClassification(wavFile, modelName, methodName, False, gtFile)
+            flagsInd, classNames, acc, CMt = mtFileClassification(wavFile, modelName, methodName, False, gtFile)
         else:
-            flagsInd, classNames, acc = hmmSegmentation(wavFile, modelName, False, gtFile)
+            flagsInd, classNames, acc, CMt = hmmSegmentation(wavFile, modelName, False, gtFile)
         if acc > -1:
+            if i==0:
+                CM = numpy.copy(CMt)
+            else:                
+                CM = CM + CMt
             accuracys.append(acc)
+            print CMt, classNames
+            print CM
+            [Rec, Pre, F1] = computePreRec(CMt, classNames)
+
+    CM = CM / numpy.sum(CM)
+    [Rec, Pre, F1] = computePreRec(CM, classNames)
+
     print " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
     print "Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean())
+    print "Average Recall: {0:.1f}".format(100.0*numpy.array(Rec).mean())
+    print "Average Precision: {0:.1f}".format(100.0*numpy.array(Pre).mean())
+    print "Average F1: {0:.1f}".format(100.0*numpy.array(F1).mean())    
     print "Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys)))
     print "Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min())
     print "Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max())
