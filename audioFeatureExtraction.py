@@ -242,9 +242,8 @@ def stChromaFeaturesInit(nfft, fs):
     """
     This function initializes the chroma matrices used in the calculation of the chroma features
     """
-    freqs = numpy.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])
-    Cp = 27.50
-
+    freqs = numpy.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])    
+    Cp = 27.50    
     nChroma = numpy.round(12.0 * numpy.log2(freqs / Cp)).astype(int)
 
     nFreqsPerChroma = numpy.zeros((nChroma.shape[0], ))
@@ -253,6 +252,7 @@ def stChromaFeaturesInit(nfft, fs):
     for u in uChroma:
         idx = numpy.nonzero(nChroma == u)
         nFreqsPerChroma[idx] = idx[0].shape
+    
     return nChroma, nFreqsPerChroma
 
 
@@ -261,10 +261,16 @@ def stChromaFeatures(X, fs, nChroma, nFreqsPerChroma):
     #TODO: 2 bug with large windows
 
     chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
-    spec = X**2
-    C = numpy.zeros((nChroma.shape[0],))
-    C[nChroma] = spec
-    C /= nFreqsPerChroma[nChroma]
+    spec = X**2    
+    if nChroma.max()<nChroma.shape[0]:        
+        C = numpy.zeros((nChroma.shape[0],))
+        C[nChroma] = spec
+        C /= nFreqsPerChroma[nChroma]
+    else:        
+        I = numpy.nonzero(nChroma>nChroma.shape[0])[0][0]        
+        C = numpy.zeros((nChroma.shape[0],))
+        C[nChroma[0:I-1]] = spec            
+        C /= nFreqsPerChroma
     finalC = numpy.zeros((12, 1))
     newD = int(numpy.ceil(C.shape[0] / 12.0) * 12)
     C2 = numpy.zeros((newD, ))
