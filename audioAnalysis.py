@@ -328,7 +328,7 @@ def parse_arguments():
 
     trainClass = tasks.add_parser("trainClassifier", help="Train an SVM or KNN classifier")
     trainClass.add_argument("-i", "--input", nargs="+", required=True, help="Input directories")
-    trainClass.add_argument("--method", choices=["svm", "knn"], required=True, help="Classifier type")
+    trainClass.add_argument("--method", choices=["svm", "knn", "randomforest","gradientboosting","extratrees"], required=True, help="Classifier type")
     trainClass.add_argument("--beat", action="store_true", help="Compute beat features")
     trainClass.add_argument("-o", "--output", required=True, help="Generated classifier filename")
 
@@ -340,7 +340,7 @@ def parse_arguments():
 
     classFile = tasks.add_parser("classifyFile", help="Classify a file using an existing classifier")
     classFile.add_argument("-i", "--input", required=True, help="Input audio file")
-    classFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Classifier type (svm or knn)")
+    classFile.add_argument("--model", choices=["svm", "knn", "randomforest","gradientboosting", "extratrees"], required=True, help="Classifier type (svm or knn or randomforest or gradientboosting or extratrees)") 
     classFile.add_argument("--classifier", required=True, help="Classifier to use (path)")
 
     trainHMM = tasks.add_parser("trainHMMsegmenter_fromfile", help="Train an HMM from file + annotation data")
@@ -358,7 +358,7 @@ def parse_arguments():
 
     segmentClassifyFile = tasks.add_parser("segmentClassifyFile", help="Segmentation - classification of a WAV file given a trained SVM or kNN")
     segmentClassifyFile.add_argument("-i", "--input", required=True, help="Input audio file")
-    segmentClassifyFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Model type")
+    segmentClassifyFile.add_argument("--model", choices=["svm", "knn", "randomforest","gradientboosting","extratrees"], required=True, help="Model type")
     segmentClassifyFile.add_argument("--modelName", required=True, help="Model path")
 
     segmentClassifyFileHMM = tasks.add_parser("segmentClassifyFileHMM", help="Segmentation - classification of a WAV file given a trained HMM")
@@ -378,7 +378,7 @@ def parse_arguments():
 
     classFolder = tasks.add_parser("classifyFolder")
     classFolder.add_argument("-i", "--input", required=True, help="Input folder")
-    classFolder.add_argument("--model", choices=["svm", "knn"], required=True, help="Classifier type")
+    classFolder.add_argument("--model", choices=["svm", "knn", "randomforest","gradientboosting","extratrees"], required=True, help="Classifier type")
     classFolder.add_argument("--classifier", required=True, help="Classifier to use (filename)")
     classFolder.add_argument("--details", action="store_true", help="Plot details (otherwise only counts per class are shown)")
 
@@ -448,7 +448,7 @@ if __name__ == "__main__":
         trainHMMsegmenter_fromfile(args.input, args.ground, args.output, args.mtwin, args.mtstep)
     elif args.task == "trainHMMsegmenter_fromdir":                                            # Train an hmm segmenter-classifier from a list of WAVs and annotations stored in a folder
         trainHMMsegmenter_fromdir(args.input, args.output, args.mtwin, args.mtstep)
-    elif args.task == "segmentClassifyFile":                                                  # Apply a classifier (svm or knn) for segmentation-classificaiton to a WAV file
+    elif args.task == "segmentClassifyFile":                                                  # Apply a classifier (svm or knn or randomforest or gradientboosting or extratrees) for segmentation-classificaiton to a WAV file
         segmentclassifyFileWrapper(args.input, args.modelName, args.model)
     elif args.task == "segmentClassifyFileHMM":                                               # Apply an hmm for segmentation-classificaiton to a WAV file
         segmentclassifyFileWrapperHMM(args.input, args.hmm)

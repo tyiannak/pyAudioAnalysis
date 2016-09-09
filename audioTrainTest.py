@@ -18,6 +18,7 @@ from scipy import linalg as la
 from scipy.spatial import distance
 import sklearn.svm
 import sklearn.decomposition
+import sklearn.ensemble
 
 def signal_handler(signal, frame):
     print 'You pressed Ctrl+C! - EXIT'
@@ -51,8 +52,8 @@ def classifierWrapper(classifier, classifierType, testSample):
     '''
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
-        - classifier:        a classifier object of type sklearn.svm.SVC or kNN (defined in this library)
-        - classifierType:    "svm" or "knn"
+        - classifier:        a classifier object of type sklearn.svm.SVC or kNN (defined in this library) or sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.GradientBoostingClassifier  or sklearn.ensemble.ExtraTreesClassifier
+        - classifierType:    "svm" or "knn" or "randomforests" or "gradientboosting" or "extratrees"
         - testSample:        a feature vector (numpy array)
     RETURNS:
         - R:            class ID
@@ -74,7 +75,7 @@ def classifierWrapper(classifier, classifierType, testSample):
     P = -1
     if classifierType == "knn":
         [R, P] = classifier.classify(testSample)
-    elif classifierType == "svm":
+    elif classifierType == "svm" or classifierType == "randomforest" or classifierType == "gradientboosting" or "extratrees":
         R = classifier.predict(testSample.reshape(1,-1))[0]
         P = classifier.predict_proba(testSample.reshape(1,-1))[0]
     return [R, P]
@@ -93,8 +94,9 @@ def regressionWrapper(model, modelType, testSample):
     EXAMPLE (for some audio signal stored in array x):
         TODO
     '''
-    if modelType == "svm":
+    if modelType == "svm" or modelType == "randomforest":
         return (model.predict(testSample.reshape(1,-1))[0])
+
     #    elif classifierType == "knn":
     #    TODO
 
@@ -166,13 +168,88 @@ def trainSVM(features, Cparam):
     return svm
 
 
+def trainRandomForest(features, n_estimators):
+    '''
+    Train a multi-class decision tree classifier.
+    Note:     This function is simply a wrapper to the sklearn functionality for SVM training
+              See function trainSVM_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
+    ARGUMENTS:
+        - features:         a list ([numOfClasses x 1]) whose elements containt numpy matrices of features
+                            each matrix features[i] of class i is [numOfSamples x numOfDimensions]
+        - n_estimators:     number of trees in the forest
+    RETURNS:
+        - svm:              the trained SVM variable
+
+    NOTE:
+        This function trains a linear-kernel SVM for a given C value. For a different kernel, other types of parameters should be provided.
+    '''
+
+    [X, Y] = listOfFeatures2Matrix(features)
+    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
+    rf.fit(X,Y)
+
+    return rf
+
+def trainGradientBoosting(features, n_estimators):
+    '''
+    Train a gradient boosting classifier
+    Note:     This function is simply a wrapper to the sklearn functionality for SVM training
+              See function trainSVM_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
+    ARGUMENTS:
+        - features:         a list ([numOfClasses x 1]) whose elements containt numpy matrices of features
+                            each matrix features[i] of class i is [numOfSamples x numOfDimensions]
+        - n_estimators:     number of trees in the forest
+    RETURNS:
+        - svm:              the trained SVM variable
+
+    NOTE:
+        This function trains a linear-kernel SVM for a given C value. For a different kernel, other types of parameters should be provided.
+    '''
+
+    [X, Y] = listOfFeatures2Matrix(features)
+    rf = sklearn.ensemble.GradientBoostingClassifier(n_estimators = n_estimators)
+    rf.fit(X,Y)
+
+    return rf
+
+def trainExtraTrees(features, n_estimators):
+    '''
+    Train a gradient boosting classifier
+    Note:     This function is simply a wrapper to the sklearn functionality for extra tree classifiers
+              See function trainSVM_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
+    ARGUMENTS:
+        - features:         a list ([numOfClasses x 1]) whose elements containt numpy matrices of features
+                            each matrix features[i] of class i is [numOfSamples x numOfDimensions]
+        - n_estimators:     number of trees in the forest
+    RETURNS:
+        - svm:              the trained SVM variable
+
+    NOTE:
+        This function trains a linear-kernel SVM for a given C value. For a different kernel, other types of parameters should be provided.
+    '''
+
+    [X, Y] = listOfFeatures2Matrix(features)
+    et = sklearn.ensemble.ExtraTreesClassifier(n_estimators = n_estimators)
+    et.fit(X,Y)
+
+    return et
+
+
 def trainSVMregression(Features, Y, Cparam):    
     svm = sklearn.svm.SVR(C = Cparam, kernel = 'linear')
-    svm.fit(Features,Y)
-
-    #trainError = numpy.mean(numpy.abs(svm.pred(Features) - Y))
+    print Features.shape, Y
+    svm.fit(Features,Y)    
     trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
     return svm, trainError
+
+# TODO (not avaiable for regression?)
+#def trainRandomForestRegression(Features, Y, n_estimators):    
+#    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
+#    print Features.shape, Y
+#    rf.fit(Features,Y)
+#    trainError = numpy.mean(numpy.abs(rf.predict(Features) - Y))
+#    return rf, trainError
+
 
 def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT=False, perTrain=0.90):
     '''
@@ -181,7 +258,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         listOfDirs:        list of paths of directories. Each directory contains a signle audio class whose samples are stored in seperate WAV files.
         mtWin, mtStep:        mid-term window length and step
         stWin, stStep:        short-term window and step
-        classifierType:        "svm" or "knn"
+        classifierType:        "svm" or "knn" or "randomforest" or "gradientboosting" or "extratrees"
         modelName:        name of the model to be saved
     RETURNS:
         None. Resulting classifier along with the respective model parameters are saved on files.
@@ -207,9 +284,14 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     # STEP B: Classifier Evaluation and Parameter Selection:
     if classifierType == "svm":
         classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
+    elif classifierType == "randomforest":
+        classifierParams = numpy.array([10, 25, 50, 100,200,500])
     elif classifierType == "knn":
-        classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15])
-        #classifierParams = numpy.array([51])
+        classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15])        
+    elif classifierType == "gradientboosting":
+        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
+    elif classifierType == "extratrees":
+        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
 
     # get optimal classifeir parameter:
     bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
@@ -227,7 +309,6 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         Classifier = trainSVM(featuresNew, bestParam)
         with open(modelName, 'wb') as fid:                                            # save to file
             cPickle.dump(Classifier, fid)            
-
         fo = open(modelName + "MEANS", "wb")
         cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -238,6 +319,48 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
+    elif classifierType == "randomforest":
+        Classifier = trainRandomForest(featuresNew, bestParam)
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+        fo = open(modelName + "MEANS", "wb")
+        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        fo.close()
+    elif classifierType == "gradientboosting":
+        Classifier = trainGradientBoosting(featuresNew, bestParam)
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+        fo = open(modelName + "MEANS", "wb")
+        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        fo.close()        
+    elif classifierType == "extratrees":
+        Classifier = trainExtraTrees(featuresNew, bestParam)
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+        fo = open(modelName + "MEANS", "wb")
+        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        fo.close()                
     elif classifierType == "knn":
         [X, Y] = listOfFeatures2Matrix(featuresNew)
         X = X.tolist()
@@ -264,7 +387,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         dirName:        path of directory containing the WAV files and Regression CSVs
         mtWin, mtStep:        mid-term window length and step
         stWin, stStep:        short-term window and step
-        modelType:        "svm" or "knn"
+        modelType:        "svm" or "knn" or "randomforest"
         modelName:        name of the model to be saved
     RETURNS:
         None. Resulting regression model along with the respective model parameters are saved on files.
@@ -288,8 +411,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
                         index = fileNames.index(row[0]+".wav")
                         curRegressionLabels[index] = float(row[1])
         regressionLabels.append(curRegressionLabels)                         # curRegressionLabels is the list of values for the current regression problem
-        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name
-
+        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name    
     if len(features) == 0:
         print "ERROR: No data found in any input folder!"
         return
@@ -299,7 +421,10 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     # TODO: ARRF WRITE????
     # STEP B: Classifier Evaluation and Parameter Selection:
     if modelType == "svm":
-        modelParams = numpy.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0, 10.0])
+        modelParams = numpy.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0, 10.0])        
+    elif modelType == "randomforest":
+        modelParams = numpy.array([5, 10, 25, 50, 100])
+
 #    elif modelType == "knn":
 #        modelParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]);
 
@@ -316,7 +441,6 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             Classifier, _ = trainSVMregression(featuresNorm[0], regressionLabels[iRegression], bestParam)
             with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
                 cPickle.dump(Classifier, fid)            
-
             fo = open(modelName + "_" + r + "MEANS", "wb")
             cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -326,6 +450,21 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             fo.close()
+        '''             TODO
+        elif modelType == "randomforest":
+            Classifier, _ = trainRandomForestRegression(featuresNorm[0], regressionLabels[iRegression], bestParam)            
+            with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
+                cPickle.dump(Classifier, fid)            
+            fo = open(modelName + "_" + r + "MEANS", "wb")
+            cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            fo.close()
+        '''
     #    elif classifierType == "knn":
 
 
@@ -405,6 +544,124 @@ def loadSVModel(SVMmodelName, isRegression=False):
         return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
 
+def loadRandomForestModel(RFmodelName, isRegression=False):
+    '''
+    This function loads an SVM model either for classification or training.
+    ARGMUMENTS:
+        - SVMmodelName:     the path of the model to be loaded
+        - isRegression:     a flag indigating whereas this model is regression or not
+    '''
+    try:
+        fo = open(RFmodelName+"MEANS", "rb")
+    except IOError:
+            print "Load Random Forest Model: Didn't find file"
+            return
+    try:
+        MEAN = cPickle.load(fo)
+        STD = cPickle.load(fo)
+        if not isRegression:
+            classNames = cPickle.load(fo)
+        mtWin = cPickle.load(fo)
+        mtStep = cPickle.load(fo)
+        stWin = cPickle.load(fo)
+        stStep = cPickle.load(fo)
+        computeBEAT = cPickle.load(fo)
+
+    except:
+        fo.close()
+    fo.close()
+
+    MEAN = numpy.array(MEAN)
+    STD = numpy.array(STD)
+
+    COEFF = []
+    with open(RFmodelName, 'rb') as fid:
+        RF = cPickle.load(fid)    
+
+    if isRegression:
+        return(RF, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
+    else:
+        return(RF, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
+
+def loadGradientBoosting(GBModelName, isRegression=False):
+    '''
+    This function loads gradient boosting either for classification or training.
+    ARGMUMENTS:
+        - SVMmodelName:     the path of the model to be loaded
+        - isRegression:     a flag indigating whereas this model is regression or not
+    '''
+    try:
+        fo = open(GBModelName+"MEANS", "rb")
+    except IOError:
+            print "Load Random Forest Model: Didn't find file"
+            return
+    try:
+        MEAN = cPickle.load(fo)
+        STD = cPickle.load(fo)
+        if not isRegression:
+            classNames = cPickle.load(fo)
+        mtWin = cPickle.load(fo)
+        mtStep = cPickle.load(fo)
+        stWin = cPickle.load(fo)
+        stStep = cPickle.load(fo)
+        computeBEAT = cPickle.load(fo)
+
+    except:
+        fo.close()
+    fo.close()
+
+    MEAN = numpy.array(MEAN)
+    STD = numpy.array(STD)
+
+    COEFF = []
+    with open(GBModelName, 'rb') as fid:
+        GB = cPickle.load(fid)    
+
+    if isRegression:
+        return(GB, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
+    else:
+        return(GB, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
+
+def loadExtraTrees(ETmodelName, isRegression=False):
+    '''
+    This function loads extra trees either for classification or training.
+    ARGMUMENTS:
+        - SVMmodelName:     the path of the model to be loaded
+        - isRegression:     a flag indigating whereas this model is regression or not
+    '''
+    try:
+        fo = open(ETmodelName+"MEANS", "rb")
+    except IOError:
+            print "Load Random Forest Model: Didn't find file"
+            return
+    try:
+        MEAN = cPickle.load(fo)
+        STD = cPickle.load(fo)
+        if not isRegression:
+            classNames = cPickle.load(fo)
+        mtWin = cPickle.load(fo)
+        mtStep = cPickle.load(fo)
+        stWin = cPickle.load(fo)
+        stStep = cPickle.load(fo)
+        computeBEAT = cPickle.load(fo)
+
+    except:
+        fo.close()
+    fo.close()
+
+    MEAN = numpy.array(MEAN)
+    STD = numpy.array(STD)
+
+    COEFF = []
+    with open(ETmodelName, 'rb') as fid:
+        GB = cPickle.load(fid)    
+
+    if isRegression:
+        return(GB, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
+    else:
+        return(GB, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
+
+
 def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode, perTrain=0.90):
     '''
     ARGUMENTS:
@@ -412,7 +669,7 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
                 each matrix features[i] of class i is [numOfSamples x numOfDimensions]
         ClassNames:    list of class names (strings)
         nExp:        number of cross-validation experiments
-        ClassifierName: svm or knn
+        ClassifierName: svm or knn or randomforest
         Params:        list of classifier parameters (for parameter tuning during cross-validation)
         parameterMode:    0: choose parameters that lead to maximum overall classification ACCURACY
                 1: choose parameters that lead to maximum overall F1 MEASURE
@@ -455,6 +712,12 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
                         Classifier = trainSVM(featuresTrain, C)
                     elif ClassifierName == "knn":
                         Classifier = trainKNN(featuresTrain, C)
+                    elif ClassifierName == "randomforest":
+                        Classifier = trainRandomForest(featuresTrain, C)
+                    elif ClassifierName == "gradientboosting":
+                        Classifier = trainGradientBoosting(featuresTrain, C)
+                    elif ClassifierName == "extratrees":
+                        Classifier = trainExtraTrees(featuresTrain, C)
 
                     CMt = numpy.zeros((nClasses, nClasses))
                     for c1 in range(nClasses):
@@ -523,7 +786,7 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
         features:     numpy matrices of features [numOfSamples x numOfDimensions]
         labels:       list of sample labels
         nExp:         number of cross-validation experiments
-        MethodName:   svm or knn
+        MethodName:   "svm" or "randomforest"
         Params:       list of classifier params to be evaluated
     RETURNS:
          bestParam:   the value of the input parameter that optimizes the selected performance measure
@@ -550,10 +813,13 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
                     labelsTrain = [labels[randperm[i]] for i in range(nTrain)]
                     labelsTest = [labels[randperm[i + nTrain]] for i in range(nSamples - nTrain)]
 
-                    # train multi-class svms:
-                    if MethodName == "svm":
-                        featuresTrain = numpy.matrix(featuresTrain)
-                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)
+                    # train multi-class svms:                    
+                    featuresTrain = numpy.matrix(featuresTrain)                                 
+                    if MethodName == "svm":                                        
+                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)                        
+                    # TODO
+                    #elif MethodName == "randomforest":
+                    #    [Classifier, trainError] = trainRandomForestRegression(featuresTrain, labelsTrain, C)
 # TODO KNN
 #                    elif ClassifierName=="knn":
 #                        Classifier = trainKNN(featuresTrain, C)
@@ -705,6 +971,12 @@ def fileClassification(inputFile, modelName, modelType):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
     elif modelType == 'knn':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
+    elif modelType == 'randomforest':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(modelName)
+    elif modelType == 'gradientboosting':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoosting(modelName)
+    elif modelType == 'extratrees':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTrees(modelName)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)

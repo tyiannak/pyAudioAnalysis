@@ -490,6 +490,14 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
     elif modelType == 'knn':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
+    elif modelType == 'randomforest':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadRandomForestModel(modelName)
+    elif modelType == 'gradientboosting':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadGradientBoosting(modelName)
+    elif modelType == 'extratrees':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadExtraTrees(modelName)
+
+
     if computeBEAT:
         print "Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation"
         return (-1, -1, -1)
@@ -553,7 +561,7 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
         print wavFile
         gtFile = f.replace('.wav', '.segments')                             # open for annotated file
 
-        if methodName.lower() in ["svm", "knn"]:
+        if methodName.lower() in ["svm", "knn","randomforest","gradientboosting","extratrees"]:
             flagsInd, classNames, acc, CMt = mtFileClassification(wavFile, modelName, methodName, False, gtFile)
         else:
             flagsInd, classNames, acc, CMt = hmmSegmentation(wavFile, modelName, False, gtFile)
