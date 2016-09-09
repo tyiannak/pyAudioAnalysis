@@ -622,7 +622,7 @@ def loadGradientBoosting(GBModelName, isRegression=False):
     else:
         return(GB, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
-def loadExtraTrees(ETmodelName, isRegression=False):
+def loadExtraTreesModel(ETmodelName, isRegression=False):
     '''
     This function loads extra trees either for classification or training.
     ARGMUMENTS:
@@ -974,9 +974,9 @@ def fileClassification(inputFile, modelName, modelType):
     elif modelType == 'randomforest':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(modelName)
     elif modelType == 'gradientboosting':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoosting(modelName)
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoostingModel(modelName)
     elif modelType == 'extratrees':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTrees(modelName)
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTreesModel(modelName)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
