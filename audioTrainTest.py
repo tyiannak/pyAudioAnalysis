@@ -583,7 +583,7 @@ def loadRandomForestModel(RFmodelName, isRegression=False):
     else:
         return(RF, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
-def loadGradientBoosting(GBModelName, isRegression=False):
+def loadGradientBoostingModel(GBModelName, isRegression=False):
     '''
     This function loads gradient boosting either for classification or training.
     ARGMUMENTS:
