@@ -493,9 +493,9 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     elif modelType == 'randomforest':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadRandomForestModel(modelName)
     elif modelType == 'gradientboosting':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadGradientBoosting(modelName)
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadGradientBoostingModel(modelName)
     elif modelType == 'extratrees':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadExtraTrees(modelName)
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadExtraTreesModel(modelName)
 
 
     if computeBEAT:
