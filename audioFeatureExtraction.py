@@ -342,7 +342,9 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
     if (PLOT):
         fig, ax = plt.subplots()
         chromaGramToPlot = chromaGram.transpose()[::-1, :]
-        Ratio = chromaGramToPlot.shape[1] / (3*chromaGramToPlot.shape[0])
+        Ratio = chromaGramToPlot.shape[1] / (3*chromaGramToPlot.shape[0])        
+        if Ratio < 1:
+            Ratio = 1
         chromaGramToPlot = numpy.repeat(chromaGramToPlot, Ratio, axis=0)
         imgplot = plt.imshow(chromaGramToPlot)
         Fstep = int(nfft / 5.0)
