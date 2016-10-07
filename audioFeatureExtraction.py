@@ -55,6 +55,54 @@ def stEnergyEntropy(frame, numOfShortBlocks=10):
     return Entropy
 
 
+def stHarmonic(frame, fs):
+    """
+    Computes harmonic ratio and pitch
+    """
+    M = int(numpy.round(0.016 * fs)) - 1
+    R = numpy.correlate(frame, frame, mode='full')
+
+    g = R[len(frame)-1]
+    R = R[len(frame):-1]
+
+    # estimate m0 (as the first zero crossing of R)
+    [a, ] = numpy.nonzero(numpy.diff(numpy.sign(R)))
+
+    if len(a) == 0:
+        m0 = len(R)-1
+    else:
+        m0 = a[0]
+    if M > len(R):
+        M = len(R) - 1
+
+    Gamma = numpy.zeros((M), dtype=numpy.float64)
+    CSum = numpy.cumsum(frame ** 2)
+    Gamma[m0:M] = R[m0:M] / (numpy.sqrt((g * CSum[M:m0:-1])) + eps)
+
+    ZCR = stZCR(Gamma)
+
+    if ZCR > 0.15:
+        HR = 0.0
+        f0 = 0.0
+    else:
+        if len(Gamma) == 0:
+            HR = 1.0
+            blag = 0.0
+            Gamma = numpy.zeros((M), dtype=numpy.float64)
+        else:
+            HR = numpy.max(Gamma)
+            blag = numpy.argmax(Gamma)
+
+        # Get fundamental frequency:
+        f0 = fs / (blag + eps)
+        if f0 > 5000:
+            f0 = 0.0
+        if HR < 0.1:
+            f0 = 0.0
+
+    return (HR, f0)
+
+
 """ Frequency-domain audio features """
 
 
@@ -111,7 +159,7 @@ def stSpectralFlux(X, Xprev):
     return F
 
 
-def stSpectralRollOff(X, c, fs):
+def stSpectralRollOff(X, c):
     """Computes spectral roll-off"""
     totalEnergy = numpy.sum(X ** 2)
     fftLength = len(X)
@@ -126,52 +174,27 @@ def stSpectralRollOff(X, c, fs):
     return (mC)
 
 
-def stHarmonic(frame, fs):
-    """
-    Computes harmonic ratio and pitch
-    """
-    M = numpy.round(0.016 * fs) - 1
-    R = numpy.correlate(frame, frame, mode='full')
+def stSpectralFlatness(X):
+    """Computes spectral flatness"""
+    geoMean = numpy.exp(numpy.sum(numpy.log(X**2))/len(X))
+    arithMean = numpy.sum(X**2)/len(X)
+    return geoMean/arithMean
 
-    g = R[len(frame)-1]
-    R = R[len(frame):-1]
 
-    # estimate m0 (as the first zero crossing of R)
-    [a, ] = numpy.nonzero(numpy.diff(numpy.sign(R)))
+def stSpectralCrestFactor(X):
+    """Computes spectral Crest factor"""
+    peak = max(X)
+    rms = numpy.sqrt(numpy.sum(X**2)/len(X))
+    return peak/rms
 
-    if len(a) == 0:
-        m0 = len(R)-1
-    else:
-        m0 = a[0]
-    if M > len(R):
-        M = len(R) - 1
 
-    Gamma = numpy.zeros((M), dtype=numpy.float64)
-    CSum = numpy.cumsum(frame ** 2)
-    Gamma[m0:M] = R[m0:M] / (numpy.sqrt((g * CSum[M:m0:-1])) + eps)
-
-    ZCR = stZCR(Gamma)
-
-    if ZCR > 0.15:
-        HR = 0.0
-        f0 = 0.0
-    else:
-        if len(Gamma) == 0:
-            HR = 1.0
-            blag = 0.0
-            Gamma = numpy.zeros((M), dtype=numpy.float64)
-        else:
-            HR = numpy.max(Gamma)
-            blag = numpy.argmax(Gamma)
-
-        # Get fundamental frequency:
-        f0 = fs / (blag + eps)
-        if f0 > 5000:
-            f0 = 0.0
-        if HR < 0.1:
-            f0 = 0.0
-
-    return (HR, f0)
+def stVoice2WhiteRatio(X, fs):
+    """Computes voice-to-white ratio"""
+    voiced_bin_begin = int(300.0/(fs/(2.0*len(X))))
+    voiced_bin_end = int(4000.0/(fs/(2.0*len(X))))
+    NUM = sum([X[ind]**2 for ind in numpy.arange(voiced_bin_begin, voiced_bin_end+1)])
+    DEN = sum(X**2) + eps
+    return 10*numpy.log(NUM/DEN)
 
 
 def mfccInitFilterBanks(fs, nfft):
@@ -573,7 +596,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         [curFV[3], curFV[4]] = stSpectralCentroidAndSpread(X, Fs)    # spectral centroid and spread
         curFV[5] = stSpectralEntropy(X)                  # spectral entropy
         curFV[6] = stSpectralFlux(X, Xprev)              # spectral flux
-        curFV[7] = stSpectralRollOff(X, 0.90, Fs)        # spectral rolloff
+        curFV[7] = stSpectralRollOff(X, 0.90)        # spectral rolloff
         curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps, 0] = stMFCC(X, fbank, nceps).copy()    # MFCCs
 
         chromaNames, chromaF = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)
