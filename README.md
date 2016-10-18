@@ -4,6 +4,7 @@
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
+ * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
  * September 2016: New segment classifiers (from sklearn): random forests, extra trees and gradient boosting
  * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn 
  * August 2016: Update: Dependencies have been simplified 
