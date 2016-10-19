@@ -14,6 +14,7 @@ version = '1.0'
 setup(name=package,
 	version=version,
 	packages = ['pyaudio_analysis','data'],
+        scripts = ['pyaudio_analysis/audioAnalysis.py'],
 	cmdclass={'build_py': build_py},
 	author='Theodoros Giannakopoulos',
 	author_email='tyiannak@gmail.com',
