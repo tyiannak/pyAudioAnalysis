@@ -111,7 +111,7 @@ def stSpectralCentroidAndSpread(X, fs):
     ind = (numpy.arange(1, len(X) + 1)) * (fs/(2.0 * len(X)))
 
     Xt = X.copy()
-    Xt = Xt / Xt.max()
+    Xt = Xt / (Xt.max() + eps)
     NUM = numpy.sum(ind * Xt)
     DEN = numpy.sum(Xt) + eps
 
@@ -176,8 +176,10 @@ def stSpectralRollOff(X, c):
 
 def stSpectralFlatness(X):
     """Computes spectral flatness"""
-    geoMean = numpy.exp(numpy.sum(numpy.log(X**2))/len(X))
+    geoMean = numpy.exp(numpy.sum(numpy.log((X + eps)**2))/len(X))
     arithMean = numpy.sum(X**2)/len(X)
+    if arithMean == 0:
+        return 0
     return geoMean/arithMean
 
 
@@ -185,6 +187,8 @@ def stSpectralCrestFactor(X):
     """Computes spectral Crest factor"""
     peak = max(X)
     rms = numpy.sqrt(numpy.sum(X**2)/len(X))
+    if rms==0:
+        return 0
     return peak/rms
 
 
@@ -194,7 +198,7 @@ def stVoice2WhiteRatio(X, fs):
     voiced_bin_end = int(4000.0/(fs/(2.0*len(X))))
     NUM = sum([X[ind]**2 for ind in numpy.arange(voiced_bin_begin, voiced_bin_end+1)])
     DEN = sum(X**2) + eps
-    return 10*numpy.log(NUM/DEN)
+    return 10*numpy.log(NUM/DEN + eps)
 
 
 def mfccInitFilterBanks(fs, nfft):
