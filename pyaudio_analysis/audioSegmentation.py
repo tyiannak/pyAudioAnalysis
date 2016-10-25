@@ -615,12 +615,13 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=Fals
     # Step 2: train binary SVM classifier of low vs high energy frames
     EnergySt = ShortTermFeatures[1, :]                  # keep only the energy short-term sequence (2nd feature)
     E = numpy.sort(EnergySt)                            # sort the energy feature values:
-    L1 = int(len(E) / 20)                               # number of 10% of the total short-term windows
-    T1 = numpy.mean(E[0:L1])                            # compute "lower" 10% energy threshold
-    T2 = numpy.mean(E[-L1:-1])                          # compute "higher" 10% energy threshold
+    L1 = int(len(E) / 10)                               # number of 10% of the total short-term windows
+    T1 = numpy.mean(E[0:L1]) + 0.000000000000001                 # compute "lower" 10% energy threshold
+    T2 = numpy.mean(E[-L1:-1]) + 0.000000000000001                # compute "higher" 10% energy threshold
     Class1 = ShortTermFeatures[:, numpy.where(EnergySt <= T1)[0]]         # get all features that correspond to low energy
     Class2 = ShortTermFeatures[:, numpy.where(EnergySt >= T2)[0]]         # get all features that correspond to high energy
     featuresSS = [Class1.T, Class2.T]                                    # form the binary classification task and ...
+    
     [featuresNormSS, MEANSS, STDSS] = aT.normalizeFeatures(featuresSS)   # normalize and ...
     SVM = aT.trainSVM(featuresNormSS, 1.0)                               # train the respective SVM probabilistic model (ONSET vs SILENCE)
 
