@@ -555,8 +555,8 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     numOfChromaFeatures = 13
     totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
 #    totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
-    stFeatures = numpy.array([], dtype=numpy.float64)
 
+    stFeatures = []
     while (curPos + Win - 1 < N):                        # for each short-term window until the end of signal
         countFrames += 1
         x = signal[curPos:curPos+Win]                    # get current window
@@ -592,12 +592,10 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 #            print numpy.nonzero(chromaF > 5*chromaF.mean())[0].shape[0]
         #HR, curFV[numOfTimeSpectralFeatures+nceps] = stHarmonic(x, Fs)
         # curFV[numOfTimeSpectralFeatures+nceps+1] = freq_from_autocorr(x, Fs)
-        if countFrames == 1:
-            stFeatures = curFV                                        # initialize feature matrix (if first frame)
-        else:
-            stFeatures = numpy.concatenate((stFeatures, curFV), 1)    # update feature matrix
+        stFeatures.append(curFV)
         Xprev = X.copy()
 
+    stFeatures = numpy.concatenate(stFeatures, 1)
     return numpy.array(stFeatures)
 
 
