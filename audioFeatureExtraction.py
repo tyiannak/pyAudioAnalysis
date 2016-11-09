@@ -596,7 +596,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         Xprev = X.copy()
 
     stFeatures = numpy.concatenate(stFeatures, 1)
-    return numpy.array(stFeatures)
+    return stFeatures
 
 
 def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
