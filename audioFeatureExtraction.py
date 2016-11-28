@@ -267,7 +267,7 @@ def stChromaFeatures(X, fs, nChroma, nFreqsPerChroma):
         C[nChroma] = spec
         C /= nFreqsPerChroma[nChroma]
     else:        
-        I = numpy.nonzero(nChroma>nChroma.shape[0])[0][0]        
+        I = numpy.nonzero(nChroma>=nChroma.shape[0])[0][0]
         C = numpy.zeros((nChroma.shape[0],))
         C[nChroma[0:I-1]] = spec            
         C /= nFreqsPerChroma
