@@ -12,22 +12,24 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
 	'''
 
 	types = (dirName+os.sep+'*.mp3',) # the tuple of file types
-	filesToProcess = []
-
-	tag = eyeD3.Tag()	
+	filesToProcess = []	
 
 	for files in types:
 		filesToProcess.extend(glob.glob(files))		
 
 	for f in filesToProcess:
-		tag.link(f)
-		if useMp3TagsAsName:
-			artist = tag.getArtist()
-			title = tag.getTitle()
-			if len(title)>0 and len(artist)>0:
-				wavFileName = ntpath.split(f)[0] + os.sep + artist.replace(","," ") + " --- " + title.replace(","," ") + ".wav"
+		#tag.link(f)
+		audioFile = eyed3.load(f)				
+		if useMp3TagsAsName and audioFile.tag != None:			
+			artist = audioFile.tag.artist
+			title = audioFile.tag.title
+			if artist!=None and title!=None:
+				if len(title)>0 and len(artist)>0:
+					wavFileName = ntpath.split(f)[0] + os.sep + artist.replace(","," ") + " --- " + title.replace(","," ") + ".wav"
+				else:
+					wavFileName = f.replace(".mp3",".wav")	
 			else:
-				wavFileName = f.replace(".mp3",".wav")	
+				wavFileName = f.replace(".mp3",".wav")						
 		else:
 			wavFileName = f.replace(".mp3",".wav")		
 		command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + wavFileName + "\"";
