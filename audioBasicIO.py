@@ -1,4 +1,4 @@
-import os, glob, eyed3, ntpath, shutil
+import os, glob, eyeD3, ntpath, shutil
 import scipy.io.wavfile as wavfile
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
