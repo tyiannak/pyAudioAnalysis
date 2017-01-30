@@ -200,6 +200,7 @@ def segmentclassifyFileWrapper(inputWavFile, modelName, modelType):
     if not os.path.isfile(inputWavFile):
         raise Exception("Input audio file not found!")
     gtFile = inputWavFile.replace(".wav", ".segments")
+    gtFile = inputWavFile.replace(".mp3", ".segments")    
     aS.mtFileClassification(inputWavFile, modelName, modelType, True, gtFile)
 
 
