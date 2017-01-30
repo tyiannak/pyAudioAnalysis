@@ -5,6 +5,7 @@
 
 ## News
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
+ * January 2017: *mp3* files are also supported for single file feature extraction, classification and segmentation (using pydub library)
  * September 2016: New segment classifiers (from sklearn): random forests, extra trees and gradient boosting
  * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn 
  * August 2016: Update: Dependencies have been simplified 
@@ -25,7 +26,7 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
 ## Installation
  * Install dependencies:
  ```
-pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3
+pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3 pydub
 ```
  * Clone the source of this library: 
  ```
