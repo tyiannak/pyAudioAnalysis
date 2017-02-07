@@ -167,6 +167,28 @@ def trainSVM(features, Cparam):
 
     return svm
 
+def trainSVM_RBF(features, Cparam):
+    '''
+    Train a multi-class probabilitistic SVM classifier.
+    Note:     This function is simply a wrapper to the sklearn functionality for SVM training
+              See function trainSVM_feature() to use a wrapper on both the feature extraction and the SVM training (and parameter tuning) processes.
+    ARGUMENTS:
+        - features:         a list ([numOfClasses x 1]) whose elements containt numpy matrices of features
+                            each matrix features[i] of class i is [numOfSamples x numOfDimensions]
+        - Cparam:           SVM parameter C (cost of constraints violation)
+    RETURNS:
+        - svm:              the trained SVM variable
+
+    NOTE:
+        This function trains a linear-kernel SVM for a given C value. For a different kernel, other types of parameters should be provided.
+    '''
+
+    [X, Y] = listOfFeatures2Matrix(features)
+    svm = sklearn.svm.SVC(C = Cparam, kernel = 'rbf',  probability = True)        
+    svm.fit(X,Y)
+
+    return svm
+
 
 def trainRandomForest(features, n_estimators):
     '''
@@ -282,7 +304,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
             return
 
     # STEP B: Classifier Evaluation and Parameter Selection:
-    if classifierType == "svm":
+    if classifierType == "svm" or classifierType == "svm_rbf":
         classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0])
     elif classifierType == "randomforest":
         classifierParams = numpy.array([10, 25, 50, 100,200,500])
@@ -319,6 +341,21 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
+    elif classifierType == "svm+rbf":
+        Classifier = trainSVM_RBF(featuresNew, bestParam)
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+        fo = open(modelName + "MEANS", "wb")
+        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        fo.close()
+
     elif classifierType == "randomforest":
         Classifier = trainRandomForest(featuresNew, bestParam)
         with open(modelName, 'wb') as fid:                                            # save to file
@@ -710,6 +747,8 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
                     # train multi-class svms:
                     if ClassifierName == "svm":
                         Classifier = trainSVM(featuresTrain, C)
+                    elif ClassifierName == "svm_rbf":
+                        Classifier = trainSVM_RBF(featuresTrain, C)
                     elif ClassifierName == "knn":
                         Classifier = trainKNN(featuresTrain, C)
                     elif ClassifierName == "randomforest":

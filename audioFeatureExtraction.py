@@ -726,10 +726,10 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
 
-    wavFilesList = sorted(wavFilesList)
+    wavFilesList = sorted(wavFilesList)    
 
-    for wavFile in wavFilesList:
-        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file
+    for wavFile in wavFilesList:        
+        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file        
         t1 = time.clock()
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono
         if computeBEAT:                                          # mid-term feature extraction for current file
