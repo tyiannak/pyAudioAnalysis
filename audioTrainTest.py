@@ -341,7 +341,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
-    elif classifierType == "svm+rbf":
+    elif classifierType == "svm_rbf":
         Classifier = trainSVM_RBF(featuresNew, bestParam)
         with open(modelName, 'wb') as fid:                                            # save to file
             cPickle.dump(Classifier, fid)            
@@ -1006,7 +1006,7 @@ def fileClassification(inputFile, modelName, modelType):
         print "fileClassification: wav file not found!"
         return (-1, -1, -1)
 
-    if modelType == 'svm':
+    if (modelType) == 'svm' or (modelType == 'svm_rbf'):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
     elif modelType == 'knn':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
