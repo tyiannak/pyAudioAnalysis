@@ -486,7 +486,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
         print "mtFileClassificationError: input modelType not found!"
         return (-1, -1, -1)
     # Load classifier:
-    if modelType == 'svm':
+    if (modelType == 'svm') or (modelType == 'svm_rbf'):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
     elif modelType == 'knn':
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
@@ -526,7 +526,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     (segs, classes) = flags2segs(flags, mtStep)            # convert fix-sized flags to segments and classes
     segs[-1] = len(x) / float(Fs)
 
-    # Load grount-truth:    
+    # Load grount-truth:        
     if os.path.isfile(gtFile):
         [segStartGT, segEndGT, segLabelsGT] = readSegmentGT(gtFile)
         flagsGT, classNamesGT = segs2flags(segStartGT, segEndGT, segLabelsGT, mtStep)
@@ -561,7 +561,7 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
         print wavFile
         gtFile = f.replace('.wav', '.segments')                             # open for annotated file
 
-        if methodName.lower() in ["svm", "knn","randomforest","gradientboosting","extratrees"]:
+        if methodName.lower() in ["svm", "svm_rbf", "knn","randomforest","gradientboosting","extratrees"]:
             flagsInd, classNames, acc, CMt = mtFileClassification(wavFile, modelName, methodName, False, gtFile)
         else:
             flagsInd, classNames, acc, CMt = hmmSegmentation(wavFile, modelName, False, gtFile)
