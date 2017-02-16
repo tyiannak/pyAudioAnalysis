@@ -721,7 +721,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
     allMtFeatures = numpy.array([])
     processingTimes = []
 
-    types = ('*.wav', '*.aif',  '*.aiff')
+    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3')
     wavFilesList = []
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
