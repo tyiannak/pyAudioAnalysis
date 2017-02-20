@@ -121,14 +121,10 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
 
-    files = "*.wav"
-    if os.path.isdir(inputFolder):
-        strFilePattern = os.path.join(inputFolder, files)
-    else:
-        strFilePattern = inputFolder + files
-
+    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3')
     wavFilesList = []
-    wavFilesList.extend(glob.glob(strFilePattern))
+    for files in types:
+        wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
     wavFilesList = sorted(wavFilesList)
     if len(wavFilesList) == 0:
         print "No WAV files found!"
