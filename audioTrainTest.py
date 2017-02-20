@@ -258,8 +258,7 @@ def trainExtraTrees(features, n_estimators):
 
 
 def trainSVMregression(Features, Y, Cparam):    
-    svm = sklearn.svm.SVR(C = Cparam, kernel = 'linear')
-    print Features.shape, Y
+    svm = sklearn.svm.SVR(C = Cparam, kernel = 'linear')    
     svm.fit(Features,Y)    
     trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
     return svm, trainError
