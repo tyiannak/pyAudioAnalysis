@@ -92,6 +92,11 @@ def readAudioFile(path):
     except IOError: 
         print "Error: file not found or other I/O error."
         return (-1,-1)
+
+    if x.ndim==2:
+        if x.shape[1]==1:
+            x = x.flatten()
+
     return (Fs, x)
 
 def stereo2mono(x):
