@@ -484,7 +484,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
 
     if not os.path.isfile(modelName):
         print "mtFileClassificationError: input modelType not found!"
-        return (-1, -1, -1)
+        return (-1, -1, -1, -1)
     # Load classifier:
     if (modelType == 'svm') or (modelType == 'svm_rbf'):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
@@ -500,10 +500,10 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
 
     if computeBEAT:
         print "Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation"
-        return (-1, -1, -1)
+        return (-1, -1, -1, -1)
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # load input file
     if Fs == -1:                                           # could not read file
-        return (-1, -1, -1)
+        return (-1, -1, -1, -1)
     x = audioBasicIO.stereo2mono(x)                        # convert stereo (if) to mono
     Duration = len(x) / Fs
     # mid-term feature extraction:
