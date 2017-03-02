@@ -78,7 +78,7 @@ def readAudioFile(path):
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav':
+        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':
             audiofile = AudioSegment.from_file(path)
             data = numpy.fromstring(audiofile._data, numpy.int16)
             Fs = audiofile.frame_rate
