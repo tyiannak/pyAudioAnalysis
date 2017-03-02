@@ -579,20 +579,18 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         chromaNames, chromaF = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)
         curFV[numOfTimeSpectralFeatures + nceps: numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF
         curFV[numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF.std()
-#        curFV[numOfTimeSpectralFeatures+nceps+numOfChromaFeatures-1] = numpy.nonzero( chromaF > 2.0 * chromaF.mean() )[0].shape[0]
-#        temp = numpy.sort(chromaF[:,0])
-#        curFV[numOfTimeSpectralFeatures+numOfChromaFeatures] = temp[-1] / numpy.mean(temp[0:5])
-#        temp = numpy.sort(chromaF[:,0])
-#        if countFrames==10 or countFrames==30:
-#            A = int(temp[-1] / numpy.mean(temp[0:5]))/10
-#            for a in range(A):
-#                print("|"),
-#            print
-#        if countFrames==20:
-#            print numpy.nonzero(chromaF > 5*chromaF.mean())[0].shape[0]
-        #HR, curFV[numOfTimeSpectralFeatures+nceps] = stHarmonic(x, Fs)
-        # curFV[numOfTimeSpectralFeatures+nceps+1] = freq_from_autocorr(x, Fs)
         stFeatures.append(curFV)
+        # delta features
+        '''
+        if countFrames>1:
+            delta = curFV - prevFV
+            curFVFinal = numpy.concatenate((curFV, delta))            
+        else:
+            curFVFinal = numpy.concatenate((curFV, curFV))
+        prevFV = curFV
+        stFeatures.append(curFVFinal)        
+        '''
+        # end of delta
         Xprev = X.copy()
 
     stFeatures = numpy.concatenate(stFeatures, 1)
@@ -721,7 +719,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
     allMtFeatures = numpy.array([])
     processingTimes = []
 
-    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3')
+    types = ('*.wav', '*.aif',  '*.aiff', '*.mp3','*.au')
     wavFilesList = []
     for files in types:
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
