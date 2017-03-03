@@ -13,7 +13,7 @@ def annotation2files(wavFile, csvFile):
         Input CSV file must be of the format <T1>\t<T2>\t<Label>
     '''    
     
-    [Fs, x] = wavfile.read(wavFile)
+    [Fs, x] = audioBasicIO.readAudioFile(wavFile)
     with open(csvFile, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t', quotechar='|')
         for j, row in enumerate(reader):
@@ -31,4 +31,12 @@ def main(argv):
     annotation2files(wavFile, annotationFile)
 
 if __name__ == '__main__':
+    # This file can be used to extract a series of annotated WAV files based on (a) an audio file (mp3 or wav) and 
+    # (b) a segment annotation file e.g. a "label" file generated in audacity
+    # usage:
+    # python audacityAnnotation2WAVs.py <audiofilepath> <annotationfilepath>
+    #
+    # The <annotationfilepath> is actually a tab-seperated file where each line has the format <startTime>\t<entTime>\t<classLabel>
+    # The result of this process is a  series of WAV files with a file name <audiofilepath>_<startTime>_<endTime>_<classLabel>
     main(sys.argv)
+    
