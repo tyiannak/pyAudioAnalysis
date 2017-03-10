@@ -913,7 +913,7 @@ def printConfusionMatrix(CM, ClassNames):
             c = c[0:3]
         print "{0:s}".format(c),
         for j in range(len(ClassNames)):
-            print "\t{0:.1f}".format(100.0 * CM[i][j] / numpy.sum(CM)),
+            print "\t{0:.2f}".format(100.0 * CM[i][j] / numpy.sum(CM)),
         print
 
 
