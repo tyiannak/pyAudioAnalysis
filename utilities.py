@@ -4,30 +4,19 @@ def isfloat(x):
         """
         Check if argument is float
         """
-        try:
-                a = float(x)
-        except ValueError:
-                return False
-        else:
-                return True
+        return isinstance(x, float)
 
 def isint(x):
         """
         Check if argument is int
         """
-        try:
-                a = float(x)
-                b = int(a)
-        except ValueError:
-                return False
-        else:
-                return a == b
+        return isinstance(x, int)
 
 def isNum(x):
         """
         Check if string argument is numerical
         """
-        return isfloat(x) or isint(x)
+        return isinstance(x, int) or isinstance(x, float) or isinstance(x, complex)
 
 
 def peakdet(v, delta, x = None):
@@ -100,4 +89,3 @@ def peakdet(v, delta, x = None):
                 lookformax = True
 
     return numpy.array(maxtab), numpy.array(mintab)
-
