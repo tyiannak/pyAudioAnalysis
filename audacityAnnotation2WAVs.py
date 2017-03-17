@@ -22,7 +22,7 @@ def annotation2files(wavFile, csvFile):
             T2 = float(row[1].replace(",","."))            
             label = "%s_%s_%.2f_%.2f.wav" % (wavFile, row[2], T1, T2)
             label = label.replace(" ", "_")
-            xtemp = x[round(T1*Fs):round(T2*Fs)]            
+            xtemp = x[int(round(T1*Fs)):int(round(T2*Fs))]            
             print T1, T2, label, xtemp.shape
             wavfile.write(label, Fs, xtemp)  
 
