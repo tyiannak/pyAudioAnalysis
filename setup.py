@@ -28,7 +28,7 @@ setup(
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
-    install_requires=['numpy', 'matplotlib', 'scipy', 'sklearn', 'hmmlearn', 'simplejson', 'eyed3'],
+    install_requires=['numpy', 'matplotlib', 'scipy', 'sklearn', 'hmmlearn', 'simplejson', 'eyed3', 'pydub'],
 
     #package_data={
     #    'pyAudioAnalysis': ['data/*'],
