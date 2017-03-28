@@ -685,6 +685,13 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=Fals
     return segmentLimits
 
 
+def getAllDistances(M):
+    sums = numpy.zeros(M.T.shape[0])
+    for i in range(M.T.shape[0]):
+        sums[i] = numpy.sum(numpy.linalg.norm(M.T - M.T[i], axis=1))
+    return sums
+
+
 def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.05, LDAdim=35, PLOT=False):
     '''
     ARGUMENTS:
@@ -741,7 +748,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     numOfWindows = MidTermFeatures.shape[1]
 
     # remove outliers:
-    DistancesAll = numpy.sum(distance.squareform(distance.pdist(MidTermFeaturesNorm.T)), axis=0)
+    DistancesAll = getAllDistances(MidTermFeaturesNorm)
     MDistancesAll = numpy.mean(DistancesAll)
     iNonOutLiers = numpy.nonzero(DistancesAll < 1.2 * MDistancesAll)[0]
 
