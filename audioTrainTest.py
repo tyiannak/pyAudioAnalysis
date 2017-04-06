@@ -327,77 +327,18 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 
     # STEP C: Save the classifier to file
     if classifierType == "svm":
-        Classifier = trainSVM(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
+        Classifier = trainSVM(featuresNew, bestParam)        
     elif classifierType == "svm_rbf":
         Classifier = trainSVM_RBF(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-
     elif classifierType == "randomforest":
         Classifier = trainRandomForest(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
     elif classifierType == "gradientboosting":
         Classifier = trainGradientBoosting(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()        
     elif classifierType == "extratrees":
         Classifier = trainExtraTrees(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()                
-    elif classifierType == "knn":
+
+
+    if classifierType == "knn":
         [X, Y] = listOfFeatures2Matrix(featuresNew)
         X = X.tolist()
         Y = Y.tolist()
@@ -414,6 +355,19 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
+    elif classifierType == "svm" or classifierType == "svm_rbf" or classifierType == "randomforest" or classifierType == "gradientboosting" or classifierType == "extratrees":
+        with open(modelName, 'wb') as fid:                                            # save to file
+            cPickle.dump(Classifier, fid)            
+        fo = open(modelName + "MEANS", "wb")
+        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        fo.close()        
 
 
 def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, modelName, computeBEAT=False):
