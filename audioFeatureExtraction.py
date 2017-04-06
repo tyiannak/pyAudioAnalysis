@@ -616,7 +616,7 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
     for i in range(numOfStatistics * numOfFeatures):
         mtFeatures.append([])
 
-    for i in range(numOfFeatures):        # for each of the short-term features:
+    for i in xrange(numOfFeatures):        # for each of the short-term features:
         curPos = 0
         N = len(stFeatures[i])
         while (curPos < N):
@@ -773,9 +773,9 @@ def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT
     '''
 
     # feature extraction for each class:
-    features = []
+    features   = []
+    fileNames  = []
     classNames = []
-    fileNames = []
     for i, d in enumerate(dirNames):
         [f, fn] = dirWavFeatureExtraction(d, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
         if f.shape[0] > 0:       # if at least one audio file has been found in the provided folder:
