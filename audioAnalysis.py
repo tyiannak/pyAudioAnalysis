@@ -84,10 +84,14 @@ def fileChromagramWrapper(wavFileName):
 
 
 def trainClassifierWrapper(method, beatFeatures, directories, modelName):
-    if len(directories) < 2:
-        raise Exception("At least 2 directories are needed")
-    aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
-                       method.lower(), modelName, computeBEAT=beatFeatures)
+    aT.featureAndTrain(
+        directories, 1,  1,
+        aT.shortTermWindow,
+        aT.shortTermStep  ,
+        method.lower()    ,
+        modelName         , 
+        computeBEAT=beatFeatures
+    )
 
 
 def trainRegressionWrapper(method, beatFeatures, dirName, modelName):
@@ -327,7 +331,7 @@ def parse_arguments():
     chroma.add_argument("-i", "--input", required=True, help="Input audio file")
 
     trainClass = tasks.add_parser("trainClassifier", help="Train an SVM or KNN classifier")
-    trainClass.add_argument("-i", "--input", nargs="+", required=True, help="Input directories")
+    trainClass.add_argument("-i", "--input", nargs=2, required=True, help="Input directories")
     trainClass.add_argument("--method", choices=["svm", "svm_rbf", "knn", "randomforest","gradientboosting","extratrees"], required=True, help="Classifier type")
     trainClass.add_argument("--beat", action="store_true", help="Compute beat features")
     trainClass.add_argument("-o", "--output", required=True, help="Generated classifier filename")

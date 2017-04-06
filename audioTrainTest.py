@@ -325,97 +325,46 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     STD = STD.tolist()
     featuresNew = featuresNorm
 
-    # STEP C: Save the classifier to file
-    if classifierType == "svm":
+    classifier_list = ["svm", "svm_rbf", "randomforest", "gradientboosting", "extratrees"]
+    
+    # STEP C: Train Classifier
+    if classifierType   == "svm":
         Classifier = trainSVM(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
     elif classifierType == "svm_rbf":
         Classifier = trainSVM_RBF(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-
     elif classifierType == "randomforest":
         Classifier = trainRandomForest(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
     elif classifierType == "gradientboosting":
-        Classifier = trainGradientBoosting(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()        
+        Classifier = trainGradientBoosting(featuresNew, bestParam)   
     elif classifierType == "extratrees":
-        Classifier = trainExtraTrees(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()                
+        Classifier = trainExtraTrees(featuresNew, bestParam)          
     elif classifierType == "knn":
         [X, Y] = listOfFeatures2Matrix(featuresNew)
         X = X.tolist()
         Y = Y.tolist()
-        fo = open(modelName, "wb")
-        cPickle.dump(X, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(Y,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
+    
+    
+    # STEP D: Save classifier to file
+    if classifierType in classifier_list:
+        modelName += "MEANS"
+        with open(modelName, 'wb') as fid:                                            
+            cPickle.dump(Classifier, fid)
+    else:
+         with open(modelName, "wb") as fo:
+            cPickle.dump(X, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(Y,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            
+    # STEP F: Save the features to a file
+    with open(modelName, "wb") as fo:
         cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(bestParam,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-
-
+    
 def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, modelName, computeBEAT=False):
     '''
     This function is used as a wrapper to segment-based audio feature extraction and classifier training.
