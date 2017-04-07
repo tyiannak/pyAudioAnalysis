@@ -8,6 +8,7 @@ import shutil
 import audioop
 import signal
 import csv
+import sets
 import ntpath
 import audioFeatureExtraction as aF
 import audioBasicIO
@@ -287,133 +288,78 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 
     # STEP A: Feature Extraction:
     [features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
+    
+    if len(features) > 0 and len(sets.Set([len(f) > 0 for f in features])) == 1:
+        
+        numOfFeatures = features[0].shape[1]
+        featureNames = ["features" + str(d + 1) for d in range(numOfFeatures)]
 
-    if len(features) == 0:
-        print "trainSVM_feature ERROR: No data found in any input folder!"
-        return
+        writeTrainDataToARFF(modelName, features, classNames, featureNames)
 
-    numOfFeatures = features[0].shape[1]
-    featureNames = ["features" + str(d + 1) for d in range(numOfFeatures)]
+        # STEP B: Classifier Evaluation and Parameter Selection:
+        if classifierType == "svm" or classifierType == "svm_rbf":
+            classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0, 20.0])
+        elif classifierType == "randomforest":
+            classifierParams = numpy.array([10, 25, 50, 100,200,500])
+        elif classifierType == "knn":
+            classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15])        
+        elif classifierType == "gradientboosting":
+            classifierParams = numpy.array([10, 25, 50, 100,200,500])        
+        elif classifierType == "extratrees":
+            classifierParams = numpy.array([10, 25, 50, 100,200,500])        
 
-    writeTrainDataToARFF(modelName, features, classNames, featureNames)
+        # get optimal classifeir parameter:
+        bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
 
-    for i, f in enumerate(features):
-        if len(f) == 0:
-            print "trainSVM_feature ERROR: " + listOfDirs[i] + " folder is empty or non-existing!"
-            return
+        print "Selected params: {0:.5f}".format(bestParam)
 
-    # STEP B: Classifier Evaluation and Parameter Selection:
-    if classifierType == "svm" or classifierType == "svm_rbf":
-        classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0, 20.0])
-    elif classifierType == "randomforest":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])
-    elif classifierType == "knn":
-        classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15])        
-    elif classifierType == "gradientboosting":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
-    elif classifierType == "extratrees":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
+        C = len(classNames)
+        [featuresNorm, MEAN, STD] = normalizeFeatures(features)        # normalize features
+        MEAN = MEAN.tolist()
+        STD = STD.tolist()
+        featuresNew = featuresNorm
 
-    # get optimal classifeir parameter:
-    bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
-
-    print "Selected params: {0:.5f}".format(bestParam)
-
-    C = len(classNames)
-    [featuresNorm, MEAN, STD] = normalizeFeatures(features)        # normalize features
-    MEAN = MEAN.tolist()
-    STD = STD.tolist()
-    featuresNew = featuresNorm
-
-    # STEP C: Save the classifier to file
-    if classifierType == "svm":
-        Classifier = trainSVM(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-    elif classifierType == "svm_rbf":
-        Classifier = trainSVM_RBF(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-
-    elif classifierType == "randomforest":
-        Classifier = trainRandomForest(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
-    elif classifierType == "gradientboosting":
-        Classifier = trainGradientBoosting(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()        
-    elif classifierType == "extratrees":
-        Classifier = trainExtraTrees(featuresNew, bestParam)
-        with open(modelName, 'wb') as fid:                                            # save to file
-            cPickle.dump(Classifier, fid)            
-        fo = open(modelName + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()                
-    elif classifierType == "knn":
-        [X, Y] = listOfFeatures2Matrix(featuresNew)
-        X = X.tolist()
-        Y = Y.tolist()
-        fo = open(modelName, "wb")
-        cPickle.dump(X, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(Y,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(bestParam,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
+        classifier_list = ["svm", "svm_rbf", "randomforest", "gradientboosting", "extratrees"]
+        
+        # STEP C: Train Classifier
+        if classifierType   == "svm":
+            Classifier = trainSVM(featuresNew, bestParam)
+        elif classifierType == "svm_rbf":
+            Classifier = trainSVM_RBF(featuresNew, bestParam)
+        elif classifierType == "randomforest":
+            Classifier = trainRandomForest(featuresNew, bestParam)
+        elif classifierType == "gradientboosting":
+            Classifier = trainGradientBoosting(featuresNew, bestParam)   
+        elif classifierType == "extratrees":
+            Classifier = trainExtraTrees(featuresNew, bestParam)          
+        elif classifierType == "knn":
+            [X, Y] = listOfFeatures2Matrix(featuresNew)
+            X = X.tolist()
+            Y = Y.tolist()
+        
+        
+        # STEP D: Save classifier to file
+        if classifierType in classifier_list:
+            modelName += "MEANS"
+            with open(modelName, 'wb') as fid:                                            
+                cPickle.dump(Classifier, fid)
+        else:
+             with open(modelName, "wb") as fo:
+                cPickle.dump(X, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+                cPickle.dump(Y,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
+                
+        # STEP F: Save the features to a file
+        with open(modelName, "wb") as fo:
+            cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+    else:
+        print "trainSVM_feature ERROR: one or more input folders are empty"
 
 
 def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, modelName, computeBEAT=False):
@@ -505,39 +451,42 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 
 
 def loadKNNModel(kNNModelName, isRegression=False):
-    try:
-        fo = open(kNNModelName, "rb")
-    except IOError:
-        print "didn't find file"
-        return
-    try:
-        X = cPickle.load(fo)
-        Y = cPickle.load(fo)
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
-        if not isRegression:
-            classNames = cPickle.load(fo)
-        K = cPickle.load(fo)
-        mtWin = cPickle.load(fo)
-        mtStep = cPickle.load(fo)
-        stWin = cPickle.load(fo)
-        stStep = cPickle.load(fo)
-        computeBEAT = cPickle.load(fo)
-    except:
-        fo.close()
-    fo.close()
-
-    X = numpy.array(X)
-    Y = numpy.array(Y)
-    MEAN = numpy.array(MEAN)
-    STD = numpy.array(STD)
-
-    Classifier = kNN(X, Y, K)  # Note: a direct call to the kNN constructor is used here
-
-    if isRegression:
-        return(Classifier, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
-    else:
-        return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
+    
+    MEAN = None
+    STD  = None
+    mtWin  = None
+    stWin  = None
+    stStep = None
+    mtStep = None
+    classNames  = None
+    computeBEAT = None
+    Classifier  = None
+    
+    with open(kNNModelName, "rb") as fo:
+        try:
+            X = cPickle.load(fo)
+            Y = cPickle.load(fo)
+            MEAN = cPickle.load(fo)
+            STD = cPickle.load(fo)
+            if not isRegression:
+                classNames = cPickle.load(fo)
+            K = cPickle.load(fo)
+            mtWin = cPickle.load(fo)
+            mtStep = cPickle.load(fo)
+            stWin = cPickle.load(fo)
+            stStep = cPickle.load(fo)
+            computeBEAT = cPickle.load(fo)
+            
+            X = numpy.array(X)
+            Y = numpy.array(Y)
+            MEAN = numpy.array(MEAN)
+            STD = numpy.array(STD)
+            
+            Classifier = kNN(X, Y, K)  # Note: a direct call to the kNN constructor is used here
+        except:
+           print "Loading KNN features error"
+        
+    return (Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
 
 def loadSVModel(SVMmodelName, isRegression=False):
@@ -547,38 +496,37 @@ def loadSVModel(SVMmodelName, isRegression=False):
         - SVMmodelName:     the path of the model to be loaded
         - isRegression:        a flag indigating whereas this model is regression or not
     '''
-    try:
-        fo = open(SVMmodelName+"MEANS", "rb")
-    except IOError:
-            print "Load SVM Model: Didn't find file"
-            return
-    try:
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
-        if not isRegression:
-            classNames = cPickle.load(fo)
-        mtWin = cPickle.load(fo)
-        mtStep = cPickle.load(fo)
-        stWin = cPickle.load(fo)
-        stStep = cPickle.load(fo)
-        computeBEAT = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
-
-    MEAN = numpy.array(MEAN)
-    STD = numpy.array(STD)
-
-    COEFF = []
+    SVM  = None
+    MEAN = None
+    STD  = None
+    mtWin  = None
+    stWin  = None
+    stStep = None
+    mtStep = None
+    classNames  = None
+    computeBEAT = None
+    
+    with open(SVMmodelName + "MEANS", 'rb') as fo:
+        try:
+            MEAN = cPickle.load(fo)
+            STD  = cPickle.load(fo)
+            if not isRegression:
+                classNames = cPickle.load(fo)
+            mtWin  = cPickle.load(fo)
+            mtStep = cPickle.load(fo)
+            stWin  = cPickle.load(fo)
+            stStep = cPickle.load(fo)
+            computeBEAT = cPickle.load(fo)
+            
+            MEAN = numpy.array(MEAN)
+            STD = numpy.array(STD)
+        except:
+            print "Loading svm features error"
+        
     with open(SVMmodelName, 'rb') as fid:
         SVM = cPickle.load(fid)    
-
-    if isRegression:
-        return(SVM, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
-    else:
-        return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
-
+        
+    return (SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
 def loadRandomForestModel(RFmodelName, isRegression=False):
     '''
@@ -996,38 +944,38 @@ def pcaDimRed(features, nDims):
 
 def fileClassification(inputFile, modelName, modelType):
     # Load classifier:
+    
+    P = -1
+    Result = -1
+    classNames = -1
+   
+    try:
+        if (modelType) == 'svm' or (modelType == 'svm_rbf'):
+            [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
+        elif modelType == 'knn':
+            [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
+        elif modelType == 'randomforest':
+            [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(modelName)
+        elif modelType == 'gradientboosting':
+            [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoostingModel(modelName)
+        elif modelType == 'extratrees':
+            [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTreesModel(modelName)
 
-    if not os.path.isfile(modelName):
-        print "fileClassification: input modelName not found!"
-        return (-1, -1, -1)
+        [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
+        x = audioBasicIO.stereo2mono(x)
+        # feature extraction:
+        [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
+        MidTermFeatures = MidTermFeatures.mean(axis=1)        # long term averaging of mid-term statistics
+        if computeBEAT:
+            [beat, beatConf] = aF.beatExtraction(s, stStep)
+            MidTermFeatures = numpy.append(MidTermFeatures, beat)
+            MidTermFeatures = numpy.append(MidTermFeatures, beatConf)
+        curFV = (MidTermFeatures - MEAN) / STD                # normalization
 
-    if not os.path.isfile(inputFile):
-        print "fileClassification: wav file not found!"
-        return (-1, -1, -1)
-
-    if (modelType) == 'svm' or (modelType == 'svm_rbf'):
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
-    elif modelType == 'knn':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
-    elif modelType == 'randomforest':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(modelName)
-    elif modelType == 'gradientboosting':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoostingModel(modelName)
-    elif modelType == 'extratrees':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTreesModel(modelName)
-
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
-    x = audioBasicIO.stereo2mono(x)
-    # feature extraction:
-    [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
-    MidTermFeatures = MidTermFeatures.mean(axis=1)        # long term averaging of mid-term statistics
-    if computeBEAT:
-        [beat, beatConf] = aF.beatExtraction(s, stStep)
-        MidTermFeatures = numpy.append(MidTermFeatures, beat)
-        MidTermFeatures = numpy.append(MidTermFeatures, beatConf)
-    curFV = (MidTermFeatures - MEAN) / STD                # normalization
-
-    [Result, P] = classifierWrapper(Classifier, modelType, curFV)    # classification        
+        [Result, P] = classifierWrapper(Classifier, modelType, curFV)    # classification   
+    except Exception as e:
+        print e
+             
     return Result, P, classNames
 
 
@@ -1051,9 +999,9 @@ def fileRegression(inputFile, modelName, modelType):
     # FEATURE EXTRACTION
     # LOAD ONLY THE FIRST MODEL (for mtWin, etc)
     if modelType == 'svm':        
-        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
+        [_, _, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
     elif modelType == 'knn':
-        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(regressionModels[0], True)
+        [_, _, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(regressionModels[0], True)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
@@ -1072,9 +1020,9 @@ def fileRegression(inputFile, modelName, modelType):
             print "fileClassification: input modelName not found!"
             return (-1, -1, -1)
         if modelType == 'svm':
-            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
+            [Model, MEAN, STD, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
         elif modelType == 'knn':
-            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(r, True)
+            [Model, MEAN, STD, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(r, True)
         curFV = (MidTermFeatures - MEAN) / STD                  # normalization
         R.append(regressionWrapper(Model, modelType, curFV))    # classification
     return R, regressionNames
