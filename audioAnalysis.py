@@ -243,8 +243,12 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     [A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, Fs, stWindow, stStep, thumbnailWrapperSize)    # find thumbnailWrapper endpoints
 
     # write thumbnailWrappers to WAV files:
-    thumbnailWrapperFileName1 = inputFile.replace(".wav", "_thumb1.wav")
-    thumbnailWrapperFileName2 = inputFile.replace(".wav", "_thumb2.wav")
+    if inputFile.endswith(".wav"):
+        thumbnailWrapperFileName1 = inputFile.replace(".wav", "_thumb1.wav")
+        thumbnailWrapperFileName2 = inputFile.replace(".wav", "_thumb2.wav")
+    if inputFile.endswith(".mp3"):
+        thumbnailWrapperFileName1 = inputFile.replace(".mp3", "_thumb1.mp3")
+        thumbnailWrapperFileName2 = inputFile.replace(".mp3", "_thumb2.mp3")        
     wavfile.write(thumbnailWrapperFileName1, Fs, x[int(Fs * A1):int(Fs * A2)])
     wavfile.write(thumbnailWrapperFileName2, Fs, x[int(Fs * B1):int(Fs * B2)])
     print "1st thumbnailWrapper (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailWrapperFileName1, A1, A2)
