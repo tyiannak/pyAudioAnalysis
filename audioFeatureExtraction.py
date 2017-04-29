@@ -18,6 +18,7 @@ import audioTrainTest as aT
 import audioBasicIO
 import utilities
 from scipy.signal import lfilter, hamming
+from scipy.stats import skew, kurtosis
 #from scikits.talkbox import lpc
 
 eps = 0.00000001
@@ -609,7 +610,8 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
 
     stFeatures = stFeatureExtraction(signal, Fs, stWin, stStep)
     numOfFeatures = len(stFeatures)
-    numOfStatistics = 2
+    # Mean, std, skewness, kurtosis
+    numOfStatistics = 4
 
     mtFeatures = []
     #for i in range(numOfStatistics * numOfFeatures + 1):
@@ -628,6 +630,8 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
 
             mtFeatures[i].append(numpy.mean(curStFeatures))
             mtFeatures[i+numOfFeatures].append(numpy.std(curStFeatures))
+            mtFeatures[i+2*numOfFeatures].append(skew(curStFeatures))
+            mtFeatures[i+3*numOfFeatures].append(kurtosis(curStFeatures))
             #mtFeatures[i+2*numOfFeatures].append(numpy.std(curStFeatures) / (numpy.mean(curStFeatures)+0.00000010))
             curPos += mtStepRatio
 
