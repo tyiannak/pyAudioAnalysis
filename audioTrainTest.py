@@ -263,6 +263,7 @@ def trainSVMregression(Features, Y, Cparam):
     trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
     return svm, trainError
 
+
 # TODO (not avaiable for regression?)
 #def trainRandomForestRegression(Features, Y, n_estimators):    
 #    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
@@ -277,15 +278,16 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     This function is used as a wrapper to segment-based audio feature extraction and classifier training.
     ARGUMENTS:
         listOfDirs:        list of paths of directories. Each directory contains a signle audio class whose samples are stored in seperate WAV files.
-        mtWin, mtStep:        mid-term window length and step
-        stWin, stStep:        short-term window and step
-        classifierType:        "svm" or "knn" or "randomforest" or "gradientboosting" or "extratrees"
-        modelName:        name of the model to be saved
+        mtWin, mtStep:     mid-term window length and step
+        stWin, stStep:     short-term window and step
+        classifierType:    "svm" or "knn" or "randomforest" or "gradientboosting" or "extratrees"
+        modelName:         name of the model to be saved
     RETURNS:
         None. Resulting classifier along with the respective model parameters are saved on files.
     '''
 
-    # STEP A: Feature Extraction:
+    # --------------------------------- #
+    print "STEP A: Feature Extraction"
     [features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
 
     if len(features) == 0:
@@ -302,30 +304,30 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
             print "trainSVM_feature ERROR: " + listOfDirs[i] + " folder is empty or non-existing!"
             return
 
-    # STEP B: Classifier Evaluation and Parameter Selection:
+    # --------------------------------- #
+    print "STEP B: Classifier Evaluation and Parameter Selection"
     if classifierType == "svm" or classifierType == "svm_rbf":
         classifierParams = numpy.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0, 20.0])
     elif classifierType == "randomforest":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])
+        classifierParams = numpy.array([10, 25, 50, 100, 200, 500])
     elif classifierType == "knn":
         classifierParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15])        
     elif classifierType == "gradientboosting":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
+        classifierParams = numpy.array([10, 25, 50, 100, 200, 500])        
     elif classifierType == "extratrees":
-        classifierParams = numpy.array([10, 25, 50, 100,200,500])        
+        classifierParams = numpy.array([10, 25, 50, 100, 200, 500])        
 
-    # get optimal classifeir parameter:
     bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
-
     print "Selected params: {0:.5f}".format(bestParam)
 
     C = len(classNames)
-    [featuresNorm, MEAN, STD] = normalizeFeatures(features)        # normalize features
+    [featuresNorm, MEAN, STD] = normalizeFeatures(features)
     MEAN = MEAN.tolist()
     STD = STD.tolist()
     featuresNew = featuresNorm
 
-    # STEP C: Save the classifier to file
+    # --------------------------------- #
+    print "STEP C: Train"
     if classifierType == "svm":
         Classifier = trainSVM(featuresNew, bestParam)        
     elif classifierType == "svm_rbf":
@@ -337,8 +339,10 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     elif classifierType == "extratrees":
         Classifier = trainExtraTrees(featuresNew, bestParam)
 
-
+    # --------------------------------- #
+    print "STEP D: Save the classifier to file"
     if classifierType == "knn":
+
         [X, Y] = listOfFeatures2Matrix(featuresNew)
         X = X.tolist()
         Y = Y.tolist()
@@ -355,8 +359,11 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
+        print modelName + " saved"
+
     elif classifierType == "svm" or classifierType == "svm_rbf" or classifierType == "randomforest" or classifierType == "gradientboosting" or classifierType == "extratrees":
-        with open(modelName, 'wb') as fid:                                            # save to file
+
+        with open(modelName, 'wb') as fid:
             cPickle.dump(Classifier, fid)            
         fo = open(modelName + "MEANS", "wb")
         cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -367,7 +374,8 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()        
+        fo.close()
+        print "svm " + modelName + " saved"      
 
 
 def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, modelName, computeBEAT=False):
@@ -516,6 +524,10 @@ def loadSVModel(SVMmodelName, isRegression=False):
         stWin = cPickle.load(fo)
         stStep = cPickle.load(fo)
         computeBEAT = cPickle.load(fo)
+
+        print MEAN
+        print STD
+        print mtWin, mtStep, stWin, stStep, computeBEAT
 
     except:
         fo.close()
