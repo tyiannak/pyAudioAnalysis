@@ -1,5 +1,6 @@
 import os, glob, eyed3, ntpath, shutil, numpy
 import scipy.io.wavfile as wavfile
+import pydub
 from pydub import AudioSegment
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
@@ -78,8 +79,13 @@ def readAudioFile(path):
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':
-            audiofile = AudioSegment.from_file(path)
+        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':            
+            try:
+                audiofile = AudioSegment.from_file(path)
+            except pydub.exceptions.CouldntDecodeError:
+                print "Error: file not found or other I/O error. (DECODING FAILED)"
+                return (-1,-1)                
+
             data = numpy.fromstring(audiofile._data, numpy.int16)
             Fs = audiofile.frame_rate
             x = []
@@ -103,6 +109,8 @@ def stereo2mono(x):
     '''
     This function converts the input signal (stored in a numpy array) to MONO (if it is STEREO)
     '''
+    if isinstance(x, int):
+        return -1
     if x.ndim==1:
         return x
     elif x.ndim==2:
