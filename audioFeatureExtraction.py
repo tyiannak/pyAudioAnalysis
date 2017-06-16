@@ -410,6 +410,8 @@ def beatExtraction(stFeatures, winSize, PLOT=False):
     HistAll = numpy.zeros((maxBeatTime,))
     for ii, i in enumerate(toWatch):                                        # for each feature
         DifThres = 2.0 * (numpy.abs(stFeatures[i, 0:-1] - stFeatures[i, 1::])).mean()    # dif threshold (3 x Mean of Difs)
+        if DifThres<=0:
+            DifThres = 0.0000000000000001        
         [pos1, _] = utilities.peakdet(stFeatures[i, :], DifThres)           # detect local maxima
         posDifs = []                                                        # compute histograms of local maxima changes
         for j in range(len(pos1)-1):
@@ -542,7 +544,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     signal = signal / (2.0 ** 15)
     DC = signal.mean()
     MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / MAX
+    signal = (signal - DC) / (MAX + 0.0000000001)
 
     N = len(signal)                                # total number of samples
     curPos = 0
