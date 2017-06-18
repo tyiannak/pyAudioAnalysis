@@ -371,6 +371,7 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 
     flagsAll = numpy.array([])
     classesAll = []
+    initializedFall = False
     for i, f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):               # for each WAV file
         wavFile = f
         gtFile = f.replace('.wav', '.segments')                                 # open for annotated file
@@ -396,8 +397,9 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
 
         flagsAll = numpy.append(flagsAll, numpy.array(flagsNew))
 
-        if i == 0:
+        if not initializedFall:
             Fall = F
+            initializedFall = True
         else:
             Fall = numpy.concatenate((Fall, F), axis=1)
     startprob, transmat, means, cov = trainHMM_computeStatistics(Fall, flagsAll)        # compute HMM statistics
