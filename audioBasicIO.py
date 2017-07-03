@@ -86,7 +86,12 @@ def readAudioFile(path):
                 print "Error: file not found or other I/O error. (DECODING FAILED)"
                 return (-1,-1)                
 
-            data = numpy.fromstring(audiofile._data, numpy.int16)
+            if audiofile.sample_width==2:                
+                data = numpy.fromstring(audiofile._data, numpy.int16)
+            elif audiofile.sample_width==4:
+                data = numpy.fromstring(audiofile._data, numpy.int32)
+            else:
+                return (-1, -1)
             Fs = audiofile.frame_rate
             x = []
             for chn in xrange(audiofile.channels):
