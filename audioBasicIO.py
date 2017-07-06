@@ -82,7 +82,8 @@ def readAudioFile(path):
         elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':            
             try:
                 audiofile = AudioSegment.from_file(path)
-            except pydub.exceptions.CouldntDecodeError:
+            #except pydub.exceptions.CouldntDecodeError:
+            except:
                 print "Error: file not found or other I/O error. (DECODING FAILED)"
                 return (-1,-1)                
 

@@ -984,6 +984,11 @@ def fileClassification(inputFile, modelName, modelType):
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
+
+    if isinstance(x, int):                                 # audio file IO problem
+        return (-1, -1, -1)
+
+
     # feature extraction:
     [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
     MidTermFeatures = MidTermFeatures.mean(axis=1)        # long term averaging of mid-term statistics
