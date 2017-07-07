@@ -987,7 +987,8 @@ def fileClassification(inputFile, modelName, modelType):
 
     if isinstance(x, int):                                 # audio file IO problem
         return (-1, -1, -1)
-
+    if x.shape[0] / float(Fs) <= mtWin:
+        return (-1, -1, -1)
 
     # feature extraction:
     [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
