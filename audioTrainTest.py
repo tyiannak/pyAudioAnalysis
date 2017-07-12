@@ -409,8 +409,8 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             for row in CSVreader:
                 if len(row) == 2:
-                    if row[0]+".wav" in fileNames:
-                        index = fileNames.index(row[0]+".wav")
+                    if row[0] in fileNames:
+                        index = fileNames.index(row[0])
                         curRegressionLabels[index] = float(row[1])
         regressionLabels.append(curRegressionLabels)                         # curRegressionLabels is the list of values for the current regression problem
         regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name    
