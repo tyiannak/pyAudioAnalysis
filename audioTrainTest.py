@@ -94,7 +94,7 @@ def regressionWrapper(model, modelType, testSample):
     EXAMPLE (for some audio signal stored in array x):
         TODO
     '''
-    if modelType == "svm" or modelType == "randomforest":
+    if modelType == "svm" or modelType == "randomforest" or modelType == "svm_rbf":
         return (model.predict(testSample.reshape(1,-1))[0])
 
     #    elif classifierType == "knn":
@@ -263,6 +263,13 @@ def trainSVMregression(Features, Y, Cparam):
     trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
     return svm, trainError
 
+
+def trainSVMregression_rbf(Features, Y, Cparam):    
+    svm = sklearn.svm.SVR(C = Cparam, kernel = 'rbf')    
+    svm.fit(Features,Y)    
+    trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
+    return svm, trainError
+
 # TODO (not avaiable for regression?)
 #def trainRandomForestRegression(Features, Y, n_estimators):    
 #    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
@@ -403,17 +410,17 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     CSVs = glob.glob(dirName + os.sep + "*.csv")
     regressionLabels = []
     regressionNames = []
-    for c in CSVs:                                                  # for each CSV
-        curRegressionLabels = numpy.zeros((len(fileNames, )))       # read filenames, map to "fileNames" and append respective values in the regressionLabels
-        with open(c, 'rb') as csvfile:
+    for c in CSVs:                                                            # for each CSV
+        curRegressionLabels = numpy.zeros((len(fileNames, )))                 # read filenames, map to "fileNames" and append respective values in the regressionLabels
+        with open(c, 'rb') as csvfile:                                        # open the csv file that contains the current target value's annotations
             CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             for row in CSVreader:
-                if len(row) == 2:
-                    if row[0] in fileNames:
+                if len(row) == 2:                                             # if the current row contains two fields (filename, target value)
+                    if row[0] in fileNames:                                   # ... and if the current filename exists in the list of filenames
                         index = fileNames.index(row[0])
                         curRegressionLabels[index] = float(row[1])
-        regressionLabels.append(curRegressionLabels)                         # curRegressionLabels is the list of values for the current regression problem
-        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name    
+        regressionLabels.append(curRegressionLabels)                          # curRegressionLabels is the list of values for the current regression problem
+        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name  
     if len(features) == 0:
         print "ERROR: No data found in any input folder!"
         return
@@ -422,7 +429,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 
     # TODO: ARRF WRITE????
     # STEP B: Classifier Evaluation and Parameter Selection:
-    if modelType == "svm":
+    if modelType == "svm" or modelType == "svm_rbf":
         modelParams = numpy.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0, 10.0])        
     elif modelType == "randomforest":
         modelParams = numpy.array([5, 10, 25, 50, 100])
@@ -441,6 +448,10 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         # STEP C: Save the model to file
         if modelType == "svm":
             Classifier, _ = trainSVMregression(featuresNorm[0], regressionLabels[iRegression], bestParam)
+        if modelType == "svm_rbf":
+            Classifier, _ = trainSVMregression_rbf(featuresNorm[0], regressionLabels[iRegression], bestParam)
+
+        if modelType == "svm" or modelType == "svm_rbf":
             with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
                 cPickle.dump(Classifier, fid)            
             fo = open(modelName + "_" + r + "MEANS", "wb")
@@ -820,7 +831,9 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
                     # train multi-class svms:                    
                     featuresTrain = numpy.matrix(featuresTrain)                                 
                     if MethodName == "svm":                                        
-                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)                        
+                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)  
+                    elif MethodName == "svm_rbf":                      
+                        [Classifier, trainError] = trainSVMregression_rbf(featuresTrain, labelsTrain, C)  
                     # TODO
                     #elif MethodName == "randomforest":
                     #    [Classifier, trainError] = trainRandomForestRegression(featuresTrain, labelsTrain, C)

@@ -730,7 +730,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
 
     wavFilesList = sorted(wavFilesList)    
-
+    wavFilesList2 = []
     for i, wavFile in enumerate(wavFilesList):        
         print "Analyzing file {0:d} of {1:d}: {2:s}".format(i+1, len(wavFilesList), wavFile.encode('utf-8'))
         if os.stat(wavFile).st_size == 0:
@@ -740,12 +740,12 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
         if isinstance(x, int):
             continue        
 
-
         t1 = time.clock()        
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono                
         if x.shape[0]<float(Fs)/10:
             print "  (AUDIO FILE TOO SMALL - SKIPPING)"
             continue
+        wavFilesList2.append(wavFile)
         if computeBEAT:                                          # mid-term feature extraction for current file
             [MidTermFeatures, stFeatures] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
             [beat, beatConf] = beatExtraction(stFeatures, stStep)
@@ -767,7 +767,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
             processingTimes.append((t2 - t1) / duration)
     if len(processingTimes) > 0:
         print "Feature extraction complexity ratio: {0:.1f} x realtime".format((1.0 / numpy.mean(numpy.array(processingTimes))))
-    return (allMtFeatures, wavFilesList)
+    return (allMtFeatures, wavFilesList2)
 
 
 def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT=False):
