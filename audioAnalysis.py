@@ -338,7 +338,7 @@ def parse_arguments():
 
     trainReg = tasks.add_parser("trainRegression")
     trainReg.add_argument("-i", "--input", required=True, help="Input directory")
-    trainReg.add_argument("--method", choices=["svm", "knn","svm_rbf"], required=True, help="Classifier type")
+    trainReg.add_argument("--method", choices=["svm", "randomforest","svm_rbf"], required=True, help="Classifier type")
     trainReg.add_argument("--beat", action="store_true", help="Compute beat features")
     trainReg.add_argument("-o", "--output", required=True, help="Generated classifier filename")
 
