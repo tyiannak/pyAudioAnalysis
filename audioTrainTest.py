@@ -270,14 +270,12 @@ def trainSVMregression_rbf(Features, Y, Cparam):
     trainError = numpy.mean(numpy.abs(svm.predict(Features) - Y))
     return svm, trainError
 
-# TODO (not avaiable for regression?)
-#def trainRandomForestRegression(Features, Y, n_estimators):    
-#    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
-#    print Features.shape, Y
-#    rf.fit(Features,Y)
-#    trainError = numpy.mean(numpy.abs(rf.predict(Features) - Y))
-#    return rf, trainError
 
+def trainRandomForestRegression(Features, Y, n_estimators):    
+    rf = sklearn.ensemble.RandomForestRegressor(n_estimators = n_estimators)
+    rf.fit(Features,Y)
+    trainError = numpy.mean(numpy.abs(rf.predict(Features) - Y))
+    return rf, trainError
 
 def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, modelName, computeBEAT=False, perTrain=0.90):
     '''
@@ -450,8 +448,10 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             Classifier, _ = trainSVMregression(featuresNorm[0], regressionLabels[iRegression], bestParam)
         if modelType == "svm_rbf":
             Classifier, _ = trainSVMregression_rbf(featuresNorm[0], regressionLabels[iRegression], bestParam)
+        if modelType == "randomforest":
+            Classifier, _ = trainRandomForestRegression(featuresNorm[0], regressionLabels[iRegression], bestParam)
 
-        if modelType == "svm" or modelType == "svm_rbf":
+        if modelType == "svm" or modelType == "svm_rbf" or modelType == "randomforest":
             with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
                 cPickle.dump(Classifier, fid)            
             fo = open(modelName + "_" + r + "MEANS", "wb")
@@ -463,22 +463,6 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             fo.close()
-        '''             TODO
-        elif modelType == "randomforest":
-            Classifier, _ = trainRandomForestRegression(featuresNorm[0], regressionLabels[iRegression], bestParam)            
-            with open(modelName + "_" + r, 'wb') as fid:                                            # save to file
-                cPickle.dump(Classifier, fid)            
-            fo = open(modelName + "_" + r + "MEANS", "wb")
-            cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(mtWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(mtStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(stWin, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            fo.close()
-        '''
-    #    elif classifierType == "knn":
 
 
 def loadKNNModel(kNNModelName, isRegression=False):
@@ -831,16 +815,11 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
                     # train multi-class svms:                    
                     featuresTrain = numpy.matrix(featuresTrain)                                 
                     if MethodName == "svm":                                        
-                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)  
+                        [Classifier, trainError] = trainSVMregression(featuresTrain, labelsTrain, C)     
                     elif MethodName == "svm_rbf":                      
-                        [Classifier, trainError] = trainSVMregression_rbf(featuresTrain, labelsTrain, C)  
-                    # TODO
-                    #elif MethodName == "randomforest":
-                    #    [Classifier, trainError] = trainRandomForestRegression(featuresTrain, labelsTrain, C)
-# TODO KNN
-#                    elif ClassifierName=="knn":
-#                        Classifier = trainKNN(featuresTrain, C)
-
+                        [Classifier, trainError] = trainSVMregression_rbf(featuresTrain, labelsTrain, C)                                             
+                    elif MethodName == "randomforest":
+                        [Classifier, trainError] = trainRandomForestRegression(featuresTrain, labelsTrain, C)
                     ErrorTest = []
                     ErrorTestBaseline = []
                     for itest, fTest in enumerate(featuresTest):
