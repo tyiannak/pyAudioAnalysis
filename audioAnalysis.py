@@ -377,7 +377,7 @@ def parse_arguments():
 
     regFile = tasks.add_parser("regressionFile")
     regFile.add_argument("-i", "--input", required=True, help="Input audio file")
-    regFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Regression type")
+    regFile.add_argument("--model", choices=["svm", "svm_rbf","randomforest"], required=True, help="Regression type")
     regFile.add_argument("--regression", required=True, help="Regression model to use")
 
     classFolder = tasks.add_parser("classifyFolder")

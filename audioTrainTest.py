@@ -1014,10 +1014,10 @@ def fileRegression(inputFile, modelName, modelType):
 
     # FEATURE EXTRACTION
     # LOAD ONLY THE FIRST MODEL (for mtWin, etc)
-    if modelType == 'svm':        
+    if modelType == 'svm' or modelType == "svm_rbf":        
         [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
-    elif modelType == 'knn':
-        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(regressionModels[0], True)
+    elif modelType == 'randomforest':
+        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(regressionModels[0], True)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
@@ -1035,10 +1035,10 @@ def fileRegression(inputFile, modelName, modelType):
         if not os.path.isfile(r):
             print "fileClassification: input modelName not found!"
             return (-1, -1, -1)
-        if modelType == 'svm':
+        if modelType == 'svm' or modelType == "svm_rbf":
             [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
-        elif modelType == 'knn':
-            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(r, True)
+        elif modelType == 'randomforest':
+            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(r, True)
         curFV = (MidTermFeatures - MEAN) / STD                  # normalization
         R.append(regressionWrapper(Model, modelType, curFV))    # classification
     return R, regressionNames
