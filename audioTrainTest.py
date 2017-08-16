@@ -403,27 +403,35 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     [features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName], mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
     features = features[0]
     fileNames = [ntpath.basename(f) for f in fileNames[0]]
+    featuresFinal = []
 
     # Read CSVs:
     CSVs = glob.glob(dirName + os.sep + "*.csv")
     regressionLabels = []
     regressionNames = []
+    featuresFinal = []
     for c in CSVs:                                                            # for each CSV
-        curRegressionLabels = numpy.zeros((len(fileNames, )))                 # read filenames, map to "fileNames" and append respective values in the regressionLabels
+        #curRegressionLabels = numpy.zeros((len(fileNames, )))                 # read filenames, map to "fileNames" and append respective values in the regressionLabels
+        curRegressionLabels = []
+        featuresTemp = []
         with open(c, 'rb') as csvfile:                                        # open the csv file that contains the current target value's annotations
             CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             for row in CSVreader:
                 if len(row) == 2:                                             # if the current row contains two fields (filename, target value)
                     if row[0] in fileNames:                                   # ... and if the current filename exists in the list of filenames
                         index = fileNames.index(row[0])
-                        curRegressionLabels[index] = float(row[1])
-        regressionLabels.append(curRegressionLabels)                          # curRegressionLabels is the list of values for the current regression problem
-        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name  
-    if len(features) == 0:
-        print "ERROR: No data found in any input folder!"
-        return
+                        #curRegressionLabels[index] = float(row[1])
+                        curRegressionLabels.append(float(row[1]))
+                        featuresTemp.append(features[index,:])
 
-    numOfFeatures = features.shape[1]
+        featuresFinal.append(numpy.array(featuresTemp))
+        regressionLabels.append(numpy.array(curRegressionLabels))                          # curRegressionLabels is the list of values for the current regression problem
+        regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name   
+        if len(features) == 0:
+            print "ERROR: No data found in any input folder!"
+            return
+
+    numOfFeatures = featuresFinal[0].shape[1]
 
     # TODO: ARRF WRITE????
     # STEP B: Classifier Evaluation and Parameter Selection:
@@ -434,14 +442,20 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 
 #    elif modelType == "knn":
 #        modelParams = numpy.array([1, 3, 5, 7, 9, 11, 13, 15]);
+    errors = []
+    errorsBase = []
+    bestParams = []
 
     for iRegression, r in enumerate(regressionNames):
         # get optimal classifeir parameter:
         print "Regression task " + r
-        bestParam = evaluateRegression(features, regressionLabels[iRegression], 100, modelType, modelParams)
+        bestParam, error, berror = evaluateRegression(featuresFinal[iRegression], regressionLabels[iRegression], 100, modelType, modelParams)
+        errors.append(error)
+        errorsBase.append(berror)
+        bestParams.append(bestParam)
         print "Selected params: {0:.5f}".format(bestParam)
 
-        [featuresNorm, MEAN, STD] = normalizeFeatures([features])        # normalize features
+        [featuresNorm, MEAN, STD] = normalizeFeatures([featuresFinal[iRegression]])        # normalize features
 
         # STEP C: Save the model to file
         if modelType == "svm":
@@ -463,6 +477,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
             cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
             fo.close()
+    return errors, errorsBase, bestParams
 
 
 def loadKNNModel(kNNModelName, isRegression=False):
@@ -844,7 +859,7 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
         if i == bestInd:
             print "\t\t best",
         print
-    return Params[bestInd]
+    return Params[bestInd], ErrorsAll[bestInd], ErrorsBaselineAll[bestInd]
 
 
 def printConfusionMatrix(CM, ClassNames):
