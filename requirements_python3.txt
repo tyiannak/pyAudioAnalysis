@@ -1,0 +1,10 @@
+eyeD3==0.8
+gi==1.2
+hmmlearn==0.2.0
+matplotlib==1.5.1
+numpy==1.11.0
+pydub==0.20.0
+scikit_learn==0.19.0
+scipy==0.19.1
+simplejson==3.11.1
+six==1.10.0
