@@ -114,7 +114,7 @@ def stSpectralFlux(X, Xprev):
     return F
 
 
-def stSpectralRollOff(X, c, fs):
+def stSpectralRollOff(X, c):
     """Computes spectral roll-off"""
     totalEnergy = numpy.sum(X ** 2)
     fftLength = len(X)
@@ -578,7 +578,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         [curFV[3], curFV[4]] = stSpectralCentroidAndSpread(X, Fs)    # spectral centroid and spread
         curFV[5] = stSpectralEntropy(X)                  # spectral entropy
         curFV[6] = stSpectralFlux(X, Xprev)              # spectral flux
-        curFV[7] = stSpectralRollOff(X, 0.90, Fs)        # spectral rolloff
+        curFV[7] = stSpectralRollOff(X, 0.90)        # spectral rolloff
         curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps, 0] = stMFCC(X, fbank, nceps).copy()    # MFCCs
 
         chromaNames, chromaF = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)
