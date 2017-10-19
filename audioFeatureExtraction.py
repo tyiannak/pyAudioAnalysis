@@ -569,6 +569,12 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         X = abs(fft(x))                                  # get fft magnitude
         X = X[0:nFFT]                                    # normalize fft
         X = X / len(X)
+
+        if X.max() == 0:                                 # pass empty frame
+            if countFrames == 1:
+                countFrames = 0
+            continue
+
         if countFrames == 1:
             Xprev = X.copy()                             # keep previous fft mag (used in spectral flux)
         curFV = numpy.zeros((totalNumOfFeatures, 1))
