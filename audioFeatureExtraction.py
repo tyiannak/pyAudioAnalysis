@@ -538,13 +538,14 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     Win = int(Win)
     Step = int(Step)
 
-    # Signal normalization
-    signal = numpy.double(signal)
+    if signal.dtype == numpy.int16:
+        # Signal normalization
+        signal = numpy.double(signal)
 
-    signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / (MAX + 0.0000000001)
+        signal = signal / (2.0 ** 15)
+        DC = signal.mean()
+        MAX = (numpy.abs(signal)).max()
+        signal = (signal - DC) / (MAX + 0.0000000001)
 
     N = len(signal)                                # total number of samples
     curPos = 0
