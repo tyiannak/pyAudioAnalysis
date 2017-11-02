@@ -64,13 +64,13 @@ def peakdet(v, delta, x = None):
     v = numpy.asarray(v)
     
     if len(v) != len(x):
-        sys.exit('Input vectors v and x must have same length')
+        raise ValueError('Input vectors v and x must have same length')
     
     if not numpy.isscalar(delta):
-        sys.exit('Input argument delta must be a scalar')
+        raise ValueError('Input argument delta must be a scalar')
     
     if delta <= 0:
-        sys.exit('Input argument delta must be positive')
+        raise ValueError('Input argument delta must be positive')
     
     mn, mx = numpy.Inf, -numpy.Inf
     mnpos, mxpos = numpy.NaN, numpy.NaN
