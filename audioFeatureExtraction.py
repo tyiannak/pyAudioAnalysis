@@ -20,6 +20,9 @@ import utilities
 from scipy.signal import lfilter, hamming
 #from scikits.talkbox import lpc
 
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
 eps = 0.00000001
 
 """ Time-domain audio features """
@@ -407,6 +410,8 @@ def beatExtraction(stFeatures, winSize, PLOT=False):
     HistAll = numpy.zeros((maxBeatTime,))
     for ii, i in enumerate(toWatch):                                        # for each feature
         DifThres = 2.0 * (numpy.abs(stFeatures[i, 0:-1] - stFeatures[i, 1::])).mean()    # dif threshold (3 x Mean of Difs)
+        if DifThres<=0:
+            DifThres = 0.0000000000000001        
         [pos1, _] = utilities.peakdet(stFeatures[i, :], DifThres)           # detect local maxima
         posDifs = []                                                        # compute histograms of local maxima changes
         for j in range(len(pos1)-1):
@@ -539,7 +544,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     signal = signal / (2.0 ** 15)
     DC = signal.mean()
     MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / MAX
+    signal = (signal - DC) / (MAX + 0.0000000001)
 
     N = len(signal)                                # total number of samples
     curPos = 0
@@ -725,18 +730,22 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
         wavFilesList.extend(glob.glob(os.path.join(dirName, files)))
 
     wavFilesList = sorted(wavFilesList)    
-
+    wavFilesList2 = []
     for i, wavFile in enumerate(wavFilesList):        
         print "Analyzing file {0:d} of {1:d}: {2:s}".format(i+1, len(wavFilesList), wavFile.encode('utf-8'))
         if os.stat(wavFile).st_size == 0:
             print "   (EMPTY FILE -- SKIPPING)"
             continue        
-        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file                
+        [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file    
+        if isinstance(x, int):
+            continue        
+
         t1 = time.clock()        
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono                
         if x.shape[0]<float(Fs)/10:
             print "  (AUDIO FILE TOO SMALL - SKIPPING)"
             continue
+        wavFilesList2.append(wavFile)
         if computeBEAT:                                          # mid-term feature extraction for current file
             [MidTermFeatures, stFeatures] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
             [beat, beatConf] = beatExtraction(stFeatures, stStep)
@@ -745,19 +754,20 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
 
         MidTermFeatures = numpy.transpose(MidTermFeatures)
         MidTermFeatures = MidTermFeatures.mean(axis=0)         # long term averaging of mid-term statistics
-        if computeBEAT:
-            MidTermFeatures = numpy.append(MidTermFeatures, beat)
-            MidTermFeatures = numpy.append(MidTermFeatures, beatConf)
-        if len(allMtFeatures) == 0:                              # append feature vector
-            allMtFeatures = MidTermFeatures
-        else:
-            allMtFeatures = numpy.vstack((allMtFeatures, MidTermFeatures))
-        t2 = time.clock()
-        duration = float(len(x)) / Fs
-        processingTimes.append((t2 - t1) / duration)
+        if (not numpy.isnan(MidTermFeatures).any()) and (not numpy.isinf(MidTermFeatures).any()):            
+            if computeBEAT:
+                MidTermFeatures = numpy.append(MidTermFeatures, beat)
+                MidTermFeatures = numpy.append(MidTermFeatures, beatConf)
+            if len(allMtFeatures) == 0:                              # append feature vector
+                allMtFeatures = MidTermFeatures
+            else:
+                allMtFeatures = numpy.vstack((allMtFeatures, MidTermFeatures))
+            t2 = time.clock()
+            duration = float(len(x)) / Fs
+            processingTimes.append((t2 - t1) / duration)
     if len(processingTimes) > 0:
         print "Feature extraction complexity ratio: {0:.1f} x realtime".format((1.0 / numpy.mean(numpy.array(processingTimes))))
-    return (allMtFeatures, wavFilesList)
+    return (allMtFeatures, wavFilesList2)
 
 
 def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT=False):
@@ -815,6 +825,9 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
 
     for i, wavFile in enumerate(wavFilesList):
         [Fs, x] = audioBasicIO.readAudioFile(wavFile)            # read file
+        if isinstance(x, int):
+            continue        
+        
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono
         [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))  # mid-term feature
 

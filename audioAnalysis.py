@@ -243,8 +243,12 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     [A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, Fs, stWindow, stStep, thumbnailWrapperSize)    # find thumbnailWrapper endpoints
 
     # write thumbnailWrappers to WAV files:
-    thumbnailWrapperFileName1 = inputFile.replace(".wav", "_thumb1.wav")
-    thumbnailWrapperFileName2 = inputFile.replace(".wav", "_thumb2.wav")
+    if inputFile.endswith(".wav"):
+        thumbnailWrapperFileName1 = inputFile.replace(".wav", "_thumb1.wav")
+        thumbnailWrapperFileName2 = inputFile.replace(".wav", "_thumb2.wav")
+    if inputFile.endswith(".mp3"):
+        thumbnailWrapperFileName1 = inputFile.replace(".mp3", "_thumb1.mp3")
+        thumbnailWrapperFileName2 = inputFile.replace(".mp3", "_thumb2.mp3")        
     wavfile.write(thumbnailWrapperFileName1, Fs, x[int(Fs * A1):int(Fs * A2)])
     wavfile.write(thumbnailWrapperFileName2, Fs, x[int(Fs * B1):int(Fs * B2)])
     print "1st thumbnailWrapper (stored in file {0:s}): {1:4.1f}sec -- {2:4.1f}sec".format(thumbnailWrapperFileName1, A1, A2)
@@ -334,7 +338,7 @@ def parse_arguments():
 
     trainReg = tasks.add_parser("trainRegression")
     trainReg.add_argument("-i", "--input", required=True, help="Input directory")
-    trainReg.add_argument("--method", choices=["svm", "knn"], required=True, help="Classifier type")
+    trainReg.add_argument("--method", choices=["svm", "randomforest","svm_rbf"], required=True, help="Classifier type")
     trainReg.add_argument("--beat", action="store_true", help="Compute beat features")
     trainReg.add_argument("-o", "--output", required=True, help="Generated classifier filename")
 
@@ -373,7 +377,7 @@ def parse_arguments():
 
     regFile = tasks.add_parser("regressionFile")
     regFile.add_argument("-i", "--input", required=True, help="Input audio file")
-    regFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Regression type")
+    regFile.add_argument("--model", choices=["svm", "svm_rbf","randomforest"], required=True, help="Regression type")
     regFile.add_argument("--regression", required=True, help="Regression model to use")
 
     classFolder = tasks.add_parser("classifyFolder")
