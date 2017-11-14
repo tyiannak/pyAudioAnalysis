@@ -1,3 +1,5 @@
 *~
 *.pyc
 *.npy
+*.idea
+pyAudioAnalysis.egg-info/
