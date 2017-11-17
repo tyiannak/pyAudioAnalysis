@@ -338,7 +338,7 @@ def parse_arguments():
 
     trainReg = tasks.add_parser("trainRegression")
     trainReg.add_argument("-i", "--input", required=True, help="Input directory")
-    trainReg.add_argument("--method", choices=["svm", "knn","svm_rbf"], required=True, help="Classifier type")
+    trainReg.add_argument("--method", choices=["svm", "randomforest","svm_rbf"], required=True, help="Classifier type")
     trainReg.add_argument("--beat", action="store_true", help="Compute beat features")
     trainReg.add_argument("-o", "--output", required=True, help="Generated classifier filename")
 
@@ -377,7 +377,7 @@ def parse_arguments():
 
     regFile = tasks.add_parser("regressionFile")
     regFile.add_argument("-i", "--input", required=True, help="Input audio file")
-    regFile.add_argument("--model", choices=["svm", "knn"], required=True, help="Regression type")
+    regFile.add_argument("--model", choices=["svm", "svm_rbf","randomforest"], required=True, help="Regression type")
     regFile.add_argument("--regression", required=True, help="Regression model to use")
 
     classFolder = tasks.add_parser("classifyFolder")
