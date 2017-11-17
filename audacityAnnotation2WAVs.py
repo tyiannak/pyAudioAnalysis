@@ -1,5 +1,8 @@
-import glob, os
-import audioBasicIO, sys, csv
+import glob
+import os
+import audioBasicIO
+import sys
+import csv
 import scipy.io.wavfile as wavfile
 
 
