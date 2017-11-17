@@ -5,7 +5,7 @@
 import glob, sys, os
 
 def getVideoFilesFromFolder(dirPath):
-	types = (dirPath+os.sep+'*.avi', dirPath+os.sep+'*.mkv', dirPath+os.sep+'*.mp4', dirPath+os.sep+'*.mp3', dirPath+os.sep+'*.flac') # the tuple of file types
+	types = (dirPath+os.sep+'*.avi', dirPath+os.sep+'*.mkv', dirPath+os.sep+'*.mp4', dirPath+os.sep+'*.mp3', dirPath+os.sep+'*.flac', dirPath+os.sep+'*.ogg') # the tuple of file types
 	files_grabbed = []
 	for files in types:
 		files_grabbed.extend(glob.glob(files))
