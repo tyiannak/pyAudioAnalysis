@@ -104,7 +104,7 @@ def stSpectralFlux(X, Xprev):
     Computes the spectral flux feature of the current frame
     ARGUMENTS:
         X:        the abs(fft) of the current frame
-        Xpre:        the abs(fft) of the previous frame
+        Xprev:        the abs(fft) of the previous frame
     """
     # compute the spectral flux as the sum of square distances:
     sumX = numpy.sum(X + eps)
