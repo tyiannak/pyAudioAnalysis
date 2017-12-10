@@ -1,4 +1,4 @@
-import os, sys, shutil, glob, numpy, csv, cPickle
+import os, sys, shutil, glob, numpy, csv, pickle as cPickle
 import scipy.io.wavfile as wavfile
 import audioBasicIO
 import audioTrainTest as aT
