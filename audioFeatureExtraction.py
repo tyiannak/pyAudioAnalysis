@@ -3,7 +3,7 @@ import time
 import os
 import glob
 import numpy
-import cPickle
+import pickle as cPickle    #updated for higher version compatibility (Himadri Sekhar Das - India, 10-12-20170
 import aifc
 import math
 from numpy import NaN, Inf, arange, isscalar, array
