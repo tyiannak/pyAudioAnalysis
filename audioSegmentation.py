@@ -16,7 +16,7 @@ import os.path
 import sklearn
 import sklearn.cluster
 import hmmlearn.hmm
-import cPickle
+import pickle as cPickle    #updated for higher version compatibility (Himadri Sekhar Das - India, 10-12-20170
 import glob
 
 """ General utility functions """
