@@ -2,7 +2,7 @@ import sys
 import numpy
 import os
 import glob
-import cPickle
+import pickle as cPickle    #updated for higher version compatibility (Himadri Sekhar Das - India, 10-12-20170
 import signal
 import csv
 import ntpath
