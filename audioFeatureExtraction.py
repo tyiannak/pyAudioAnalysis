@@ -610,8 +610,6 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
     mtWinRatio = int(round(mtWin / stStep))
     mtStepRatio = int(round(mtStep / stStep))
 
-    mtFeatures = []
-
     stFeatures = stFeatureExtraction(signal, Fs, stWin, stStep)
     numOfFeatures = len(stFeatures)
     numOfStatistics = 2
