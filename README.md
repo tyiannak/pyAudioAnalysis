@@ -1,12 +1,12 @@
 
 # <img src="icon.png" align="left" height="130"/> A Python library for audio feature extraction, classification, segmentation and applications
 
-*This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
+*This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
  * Check out [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a python script for visualization of mp3 tags and lyrics
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
+ * [PLOS-One Paper regarding pyAudioAnalysis](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
@@ -31,7 +31,7 @@ git clone https://github.com/tyiannak/pyAudioAnalysis.git
 ```
 
 ## An audio classification example
-> More examples and detailed tutorials can be found [at the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki)
+> More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
 
 pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. Eg, this code first trains an audio segment classifier, given a set of WAV files stored in folders (each folder representing a different class) and then the trained classifier is used to classify an unknown audio WAV file
 
@@ -46,7 +46,7 @@ Result:
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
 ## Further reading
-Apart from the current README file and [the wiki] (https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Please use the following citation when citing pyAudioAnalysis in your research work:
+Apart from the current README file and [the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). Please use the following citation when citing pyAudioAnalysis in your research work:
 ```
 @article{giannakopoulos2015pyaudioanalysis,
   title={pyAudioAnalysis: An Open-Source Python Library for Audio Signal Analysis},
@@ -64,7 +64,7 @@ Finally, for Matlab-related audio analysis material check  [this book](http://ww
 ## Author
 <img src="https://tyiannak.github.io/files/3.JPG" align="left" height="100"/>
 
-[Theodoros Giannakopoulos] (https://tyiannak.github.io), 
+[Theodoros Giannakopoulos](https://tyiannak.github.io), 
 Director of Machine Learning at [Behavioral Signals](https://behavioralsignals.com)
 
 
