@@ -4,12 +4,9 @@
 *This doc contains general info. Click [here] (https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
+ * Check out [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a python script for visualization of mp3 tags and lyrics
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * January 2017: *mp3* files are also supported for single file feature extraction, classification and segmentation (using pydub library)
- * September 2016: New segment classifiers (from sklearn): random forests, extra trees and gradient boosting
- * August 2016: Update: mlpy no longer used. SVMs, PCA, etc performed through scikit-learn 
- * August 2016: Update: Dependencies have been simplified 
- * January 2016: [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
+ * [PLOS-One Paper regarding pyAudioAnalysis] (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
@@ -65,11 +62,9 @@ Apart from the current README file and [the wiki] (https://github.com/tyiannak/p
 Finally, for Matlab-related audio analysis material check  [this book](http://www.amazon.com/Introduction-Audio-Analysis-MATLAB%C2%AE-Approach/dp/0080993885).
 
 ## Author
-<img src="http://cgi.di.uoa.gr/~tyiannak/image.jpg" align="left" height="100"/>
+<img src="https://tyiannak.github.io/files/3.JPG" align="left" height="100"/>
 
-[Theodoros Giannakopoulos] (http://www.di.uoa.gr/~tyiannak), 
-Postdoc researcher at NCSR Demokritos, 
-Athens,
-Greece
+[Theodoros Giannakopoulos] (https://tyiannak.github.io), 
+Director of Machine Learning at [Behavioral Signals](https://behavioralsignals.com)
 
 
