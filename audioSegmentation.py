@@ -16,7 +16,7 @@ import os.path
 import sklearn
 import sklearn.cluster
 import hmmlearn.hmm
-import cPickle
+import pickle as cPickle    #updated for higher version compatibility (Himadri Sekhar Das - India, 10-12-20170
 import glob
 
 """ General utility functions """
@@ -123,7 +123,7 @@ def computePreRec(CM, classNames):
     '''
     numOfClasses = CM.shape[0]
     if len(classNames) != numOfClasses:
-        print "Error in computePreRec! Confusion matrix and classNames list must be of the same size!"
+        print ("Error in computePreRec! Confusion matrix and classNames list must be of the same size!")
         return
     Precision = []
     Recall = []
@@ -195,7 +195,7 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
                 AvDurations[i] = 0.0
 
         for i in range(Percentages.shape[0]):
-            print classNames[i], Percentages[i], AvDurations[i]
+            print (classNames[i], Percentages[i], AvDurations[i])
 
         font = {'size': 10}
         plt.rc('font', **font)
@@ -284,7 +284,7 @@ def trainHMM_computeStatistics(features, labels):
     nFeatures = features.shape[0]
 
     if features.shape[1] < labels.shape[0]:
-        print "trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!"
+        print ("trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!")
         labels = labels[0:features.shape[1]]
 
     # compute prior probabilities:
@@ -423,7 +423,7 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
     try:
         fo = open(hmmModelName, "rb")
     except IOError:
-        print "didn't find file"
+        print ("didn't find file")
         return
 
     try:
@@ -460,7 +460,7 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
         flagsIndGT = numpy.array([])    
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
     if acc >= 0:
-        print "Overall Accuracy: {0:.2f}".format(acc)
+        print ("Overall Accuracy: {0:.2f}".format(acc))
         return (flagsInd, classNamesGT, acc, CM)
     else:
         return (flagsInd, classesAll, -1, -1)
@@ -483,7 +483,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     '''
 
     if not os.path.isfile(modelName):
-        print "mtFileClassificationError: input modelType not found!"
+        print ("mtFileClassificationError: input modelType not found!")
         return (-1, -1, -1, -1)
     # Load classifier:
     if (modelType == 'svm') or (modelType == 'svm_rbf'):
@@ -499,7 +499,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
 
 
     if computeBEAT:
-        print "Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation"
+        print ("Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation")
         return (-1, -1, -1, -1)
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # load input file
     if Fs == -1:                                           # could not read file
@@ -545,7 +545,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
         flagsIndGT = numpy.array([])
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, not plotResults)
     if acc >= 0:
-        print "Overall Accuracy: {0:.3f}".format(acc)    
+        print ("Overall Accuracy: {0:.3f}".format(acc))   
         return (flagsInd, classNamesGT, acc, CM)
     else:
         return (flagsInd, classNames, acc, CM)
@@ -558,7 +558,7 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
     
     for i, f in enumerate(glob.glob(dirName + os.sep + '*.wav')):            # for each WAV file
         wavFile = f
-        print wavFile
+        print (wavFile)
         gtFile = f.replace('.wav', '.segments')                             # open for annotated file
 
         if methodName.lower() in ["svm", "svm_rbf", "knn","randomforest","gradientboosting","extratrees"]:
@@ -571,21 +571,21 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
             else:                
                 CM = CM + CMt
             accuracys.append(acc)
-            print CMt, classNames
-            print CM
+            print (CMt, classNames)
+            print (CM)
             [Rec, Pre, F1] = computePreRec(CMt, classNames)
 
     CM = CM / numpy.sum(CM)
     [Rec, Pre, F1] = computePreRec(CM, classNames)
 
-    print " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-    print "Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean())
-    print "Average Recall: {0:.1f}".format(100.0*numpy.array(Rec).mean())
-    print "Average Precision: {0:.1f}".format(100.0*numpy.array(Pre).mean())
-    print "Average F1: {0:.1f}".format(100.0*numpy.array(F1).mean())    
-    print "Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys)))
-    print "Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min())
-    print "Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max())
+    print (" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ")
+    print ("Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean()))
+    print ("Average Recall: {0:.1f}".format(100.0*numpy.array(Rec).mean()))
+    print ("Average Precision: {0:.1f}".format(100.0*numpy.array(Pre).mean()))
+    print ("Average F1: {0:.1f}".format(100.0*numpy.array(F1).mean()))
+    print ("Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys))))
+    print ("Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min()))
+    print ("Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max()))
 
 
 def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=False):
@@ -750,7 +750,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     #EnergyMean = numpy.mean(MidTermFeatures[1,:])
     #Thres = (1.5*EnergyMin + 0.5*EnergyMean) / 2.0
     #iNonOutLiers = numpy.nonzero(MidTermFeatures[1,:] > Thres)[0]
-    #print iNonOutLiers
+    #print (iNonOutLiers)
 
     perOutLier = (100.0 * (numOfWindows - iNonOutLiers.shape[0])) / numOfWindows
     MidTermFeaturesNormOr = MidTermFeaturesNorm
@@ -803,7 +803,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         Labels = numpy.zeros((mtFeaturesToReduce.shape[1], ));
         LDAstep = 1.0
         LDAstepRatio = LDAstep / stWin
-        #print LDAstep, LDAstepRatio
+        #print (LDAstep, LDAstepRatio)
         for i in range(Labels.shape[0]):
             Labels[i] = int(i*stWin/LDAstepRatio);        
         clf = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(n_components=LDAdim)
@@ -903,12 +903,12 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         if PLOT:
             ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
         purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
-        print "{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean)
+        print ("{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean))
         if PLOT:
             plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
     if PLOT:
         plt.xlabel("time (seconds)")
-        #print sRange, silAll    
+        #print (sRange, silAll)
         if numOfSpeakers<=0:
             plt.subplot(212)
             plt.plot(sRange, silAll)
@@ -942,10 +942,10 @@ def speakerDiarizationEvaluateScript(folderName, LDAs):
             N.append(-1)
     
     for l in LDAs:
-        print "LDA = {0:d}".format(l)
+        print ("LDA = {0:d}".format(l))
         for i, wavFile in enumerate(wavFilesList):
             speakerDiarization(wavFile, N[i], 2.0, 0.2, 0.05, l, PLOT = False)            
-        print
+        print ()
         
 def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize=10.0, Limit1 = 0, Limit2 = 1):
     '''
