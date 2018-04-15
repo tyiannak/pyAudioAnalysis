@@ -791,7 +791,7 @@ def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT
         if f.shape[0] > 0:       # if at least one audio file has been found in the provided folder:
             features.append(f)
             fileNames.append(fn)
-            if d[-1] == "/":
+            if d[-1] == os.sep:
                 classNames.append(d.split(os.sep)[-2])
             else:
                 classNames.append(d.split(os.sep)[-1])
