@@ -1,4 +1,4 @@
-import sys, os, alsaaudio, time, audioop, numpy, glob,  scipy, subprocess, wave, cPickle, threading, shutil
+import sys, os, alsaaudio, time, audioop, numpy, glob,  scipy, subprocess, wave, pickle as cPickle, threading, shutil
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wavfile
 from scipy.fftpack import rfft
