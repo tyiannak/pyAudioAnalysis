@@ -1,4 +1,4 @@
-import os, sys, shutil, glob, numpy, csv, cPickle
+import os, sys, shutil, glob, numpy, csv, pickle as cPickle
 import scipy.io.wavfile as wavfile
 import audioBasicIO
 import audioTrainTest as aT
@@ -28,7 +28,7 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
 	wavFilesList.extend(glob.glob(strFilePattern))
 	wavFilesList = sorted(wavFilesList)
 	if len(wavFilesList)==0:
-		print "No WAV files found!"
+		print ("No WAV files found!")
 		return 
 	
 	Results = []
@@ -40,14 +40,14 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
 		Result = int(Result)
 		Results.append(Result)
 		if outputMode:
-			print "{0:s}\t{1:s}".format(wavFile,classNames[Result])
+			print ("{0:s}\t{1:s}".format(wavFile,classNames[Result]))
 	Results = numpy.array(Results)
 	
-	# print distribution of classes:
+	# print ('distribution of classes:')
 	[Histogram, _] = numpy.histogram(Results, bins=numpy.arange(len(classNames)+1))
 	if outputMode:	
 		for i,h in enumerate(Histogram):
-			print "{0:20s}\t\t{1:d}".format(classNames[i], h)
+			print ("{0:20s}\t\t{1:d}".format(classNames[i], h))
 	PsAll = PsAll / numpy.sum(PsAll)
 
 
@@ -92,14 +92,14 @@ def analyzeDir(dirPath):
 		getMusicSegmentsFromFile(f)	
 		[c, P]= classifyFolderWrapper(f[0:-4] + "_musicSegments", "svm", "data/svmMusicGenre8", False)
 		if i==0:
-			print "".ljust(100)+"\t",
+			print ("".ljust(100)+"\t",)
 			for C in c:
-				print C.ljust(12)+"\t",
-			print
-		print f.ljust(100)+"\t",
+				print (C.ljust(12)+"\t",)
+			print ()
+		print (f.ljust(100)+"\t",)
 		for p in P:
-				print "{0:.2f}".format(p).ljust(12)+"\t",
-		print
+				print ("{0:.2f}".format(p).ljust(12)+"\t",)
+		print ()
 		
 def main(argv):	
 	
@@ -146,7 +146,7 @@ def main(argv):
 		try:
 			fo = open(argv[2], "rb")
 		except IOError:
-				print "didn't find file"
+				print ("didn't find file")
 				return
 		try:			
 			fileNames 	= cPickle.load(fo)
@@ -155,7 +155,7 @@ def main(argv):
 		except:
 			fo.close()
 		fo.close()	
-		print fileNames
+		print (fileNames)
 		Sim1 = numpy.reshape(Sim, (Sim.shape[0]*Sim.shape[1], 1))
 		plt.hist(Sim1)
 		plt.show()
@@ -179,14 +179,14 @@ def main(argv):
 			histTemp /= histTemp.sum()
 			
 			if i==0:
-				print "".ljust(100)+"\t",
+				print ("".ljust(100)+"\t",)
 				for C in classesAll:
-					print C.ljust(12)+"\t",
-				print
-			print w.ljust(100)+"\t",
+					print (C.ljust(12)+"\t",)
+				print ()
+			print (w.ljust(100)+"\t",)
 			for h in histTemp:				
-				print "{0:.2f}".format(h).ljust(12)+"\t",
-			print
+				print ("{0:.2f}".format(h).ljust(12)+"\t",)
+			print ()
 
 			
 	return 0
