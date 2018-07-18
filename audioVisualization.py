@@ -116,7 +116,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
     if dimReductionMethod=="pca":
         allMtFeatures, wavFilesList = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, computeBEAT = True)
         if allMtFeatures.shape[0]==0:
-            print "Error: No data found! Check input folder"
+            print ("Error: No data found! Check input folder")
             return
         
         namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
@@ -142,7 +142,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
     else:    
         allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
         if allMtFeatures.shape[0]==0:
-            print "Error: No data found! Check input folder"
+            print ("Error: No data found! Check input folder")
             return
         
         namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
