@@ -61,7 +61,7 @@ def convertFsDirWavToWav(dirName, Fs, nC):
     for f in filesToProcess:    
         _, wavFileName = ntpath.split(f)    
         command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + newDir + os.sep + wavFileName + "\"";
-        print command
+        print (command)
         os.system(command)
 
 def readAudioFile(path):
@@ -84,7 +84,7 @@ def readAudioFile(path):
                 audiofile = AudioSegment.from_file(path)
             #except pydub.exceptions.CouldntDecodeError:
             except:
-                print "Error: file not found or other I/O error. (DECODING FAILED)"
+                print ("Error: file not found or other I/O error. (DECODING FAILED)")
                 return (-1,-1)                
 
             if audiofile.sample_width==2:                
@@ -99,10 +99,10 @@ def readAudioFile(path):
                 x.append(data[chn::audiofile.channels])
             x = numpy.array(x).T
         else:
-            print "Error in readAudioFile(): Unknown file type!"
+            print ("Error in readAudioFile(): Unknown file type!")
             return (-1,-1)
     except IOError: 
-        print "Error: file not found or other I/O error."
+        print ("Error: file not found or other I/O error.")
         return (-1,-1)
 
     if x.ndim==2:
