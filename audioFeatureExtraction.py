@@ -20,6 +20,24 @@ import utilities
 from scipy.signal import lfilter, hamming
 #from scikits.talkbox import lpc
 
+def peakNormalise(signal):
+    maxValue = (numpy.abs(signal)).max()
+
+    if maxValue == 0:
+        maxValue = 0.0000000001
+    return signal / maxValue
+
+def meanNormalise(signal):
+    return signal - signal.mean()
+
+def normaliseSignal(signal):
+    signal = numpy.double(signal)
+
+    signal = signal / (2.0 ** 15)
+
+    signal = meanNormalise(signal)
+    return peakNormalise(signal)
+
 reload(sys)  
 sys.setdefaultencoding('utf8')
 
@@ -313,11 +331,8 @@ def stChromagram(signal, Fs, Win, Step, PLOT=False):
     """
     Win = int(Win)
     Step = int(Step)
-    signal = numpy.double(signal)
-    signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / (MAX - DC)
+    
+    signal = normaliseSignal(signal)
 
     N = len(signal)        # total number of signals
     curPos = 0
@@ -468,11 +483,9 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
     """
     Win = int(Win)
     Step = int(Step)
-    signal = numpy.double(signal)
-    signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / (MAX - DC)
+
+    signal = normaliseSignal(signal)
+
 
     N = len(signal)        # total number of signals
     curPos = 0
@@ -539,12 +552,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     Step = int(Step)
 
     # Signal normalization
-    signal = numpy.double(signal)
-
-    signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / (MAX + 0.0000000001)
+    signal = normaliseSignal(signal)
 
     N = len(signal)                                # total number of samples
     curPos = 0
@@ -642,12 +650,7 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
 # TODO
 def stFeatureSpeed(signal, Fs, Win, Step):
 
-    signal = numpy.double(signal)
-    signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (numpy.abs(signal)).max()
-    signal = (signal - DC) / MAX
-    # print (numpy.abs(signal)).max()
+    signal = normaliseSignal(signal)
 
     N = len(signal)        # total number of signals
     curPos = 0
