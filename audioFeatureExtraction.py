@@ -20,8 +20,6 @@ import utilities
 from scipy.signal import lfilter, hamming
 #from scikits.talkbox import lpc
 
-reload(sys)  
-sys.setdefaultencoding('utf8')
 
 eps = 0.00000001
 
