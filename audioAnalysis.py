@@ -119,16 +119,14 @@ def regressionFileWrapper(inputFile, modelType, modelName):
 def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
     if not os.path.isfile(modelName):
         raise Exception("Input modelName not found!")
-
     types = ('*.wav', '*.aif',  '*.aiff', '*.mp3')
     wavFilesList = []
     for files in types:
-        wavFilesList.extend(glob.glob(os.path.join(inputFolder, files)))
+        wavFilesList.extend(glob.glob((inputFolder + files)))
     wavFilesList = sorted(wavFilesList)
     if len(wavFilesList) == 0:
         print("No WAV files found!")
         return
-
     Results = []
     for wavFile in wavFilesList:
         [Result, P, classNames] = aT.fileClassification(wavFile, modelName,
