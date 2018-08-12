@@ -147,7 +147,7 @@ def readSegmentGT(gtFile):
      - segEnd:       a numpy array of segments' ending positions
      - segLabel:     a list of respective class labels (strings)
     '''
-    f = open(gtFile, "rb")
+    f = open(gtFile, 'rt')
     reader = csv.reader(f, delimiter=',')
     segStart = []
     segEnd = []
@@ -453,10 +453,10 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
                 flagsGTNew.append(classesAll.index(classNamesGT[flagsGT[j]]))
             else:
                 flagsGTNew.append(-1)
-        CM = numpy.zeros((len(classNamesGT), len(classNamesGT)))
+        CM = numpy.zeros((len(classesAll), len(classesAll)))
         flagsIndGT = numpy.array(flagsGTNew)
         for i in range(min(flagsInd.shape[0], flagsIndGT.shape[0])):
-            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1                
+            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1
     else:
         flagsIndGT = numpy.array([])    
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
