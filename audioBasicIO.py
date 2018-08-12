@@ -1,6 +1,5 @@
+from __future__ import print_function
 import os, glob, eyed3, ntpath, shutil, numpy
-import scipy.io.wavfile as wavfile
-import pydub
 from pydub import AudioSegment
 
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
@@ -35,7 +34,7 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
         else:
             wavFileName = f.replace(".mp3",".wav")      
         command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + wavFileName + "\"";
-        print command
+        print(command)
         os.system(command.decode('unicode_escape').encode('ascii','ignore').replace("\0",""))
 
 def convertFsDirWavToWav(dirName, Fs, nC):
@@ -61,7 +60,7 @@ def convertFsDirWavToWav(dirName, Fs, nC):
     for f in filesToProcess:    
         _, wavFileName = ntpath.split(f)    
         command = "avconv -i \"" + f + "\" -ar " +str(Fs) + " -ac " + str(nC) + " \"" + newDir + os.sep + wavFileName + "\"";
-        print command
+        print(command)
         os.system(command)
 
 def readAudioFile(path):
@@ -84,7 +83,8 @@ def readAudioFile(path):
                 audiofile = AudioSegment.from_file(path)
             #except pydub.exceptions.CouldntDecodeError:
             except:
-                print "Error: file not found or other I/O error. (DECODING FAILED)"
+                print("Error: file not found or other I/O error. "
+                      "(DECODING FAILED)")
                 return (-1,-1)                
 
             if audiofile.sample_width==2:                
@@ -95,14 +95,14 @@ def readAudioFile(path):
                 return (-1, -1)
             Fs = audiofile.frame_rate
             x = []
-            for chn in xrange(audiofile.channels):
+            for chn in list(range(audiofile.channels)):
                 x.append(data[chn::audiofile.channels])
             x = numpy.array(x).T
         else:
-            print "Error in readAudioFile(): Unknown file type!"
+            print("Error in readAudioFile(): Unknown file type!")
             return (-1,-1)
     except IOError: 
-        print "Error: file not found or other I/O error."
+        print("Error: file not found or other I/O error.")
         return (-1,-1)
 
     if x.ndim==2:
@@ -113,7 +113,8 @@ def readAudioFile(path):
 
 def stereo2mono(x):
     '''
-    This function converts the input signal (stored in a numpy array) to MONO (if it is STEREO)
+    This function converts the input signal
+    (stored in a numpy array) to MONO (if it is STEREO)
     '''
     if isinstance(x, int):
         return -1
