@@ -30,6 +30,11 @@ pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3 pydub
  ```
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 ```
+ * Or install using pip: 
+ ```
+pip install -e .
+```
+(also works with pip3 now)
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
