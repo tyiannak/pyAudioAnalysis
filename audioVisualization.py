@@ -7,17 +7,27 @@ import audioFeatureExtraction as aF
 import audioTrainTest as aT
 import sklearn
 import sklearn.discriminant_analysis
+import os
+import sys
+
 
 def generateColorMap():
     '''
-    This function generates a 256 jet colormap of HTML-like hex string colors (e.g. FF88AA)
+    This function generates a 256 jet colormap of HTML-like
+    hex string colors (e.g. FF88AA)
     '''
     Map = cm.jet(np.arange(256))
     stringColors = []
     for i in range(Map.shape[0]):
         rgb = (int(255*Map[i][0]), int(255*Map[i][1]), int(255*Map[i][2]))
-        stringColors.append(struct.pack('BBB',*rgb).encode('hex'))
+        if (sys.version_info > (3, 0)):
+            stringColors.append((struct.pack('BBB', *rgb).hex())) # python 3
+        else:
+            stringColors.append(
+                struct.pack('BBB', *rgb).encode('hex'))  # python2
+
     return stringColors
+
 
 def levenshtein(str1, s2):
     '''
@@ -32,12 +42,17 @@ def levenshtein(str1, s2):
     for i in range(0,N2):
         for j in range(0,N1):
             if str1[j] == s2[i]:
-                stringRange[i+1][j+1] = min(stringRange[i+1][j] + 1, stringRange[i][j+1] + 1, stringRange[i][j])
+                stringRange[i+1][j+1] = min(stringRange[i+1][j] + 1,
+                                            stringRange[i][j+1] + 1,
+                                            stringRange[i][j])
             else:
-                stringRange[i+1][j+1] = min(stringRange[i+1][j] + 1, stringRange[i][j+1] + 1, stringRange[i][j] + 1)
+                stringRange[i+1][j+1] = min(stringRange[i+1][j] + 1,
+                                            stringRange[i][j+1] + 1,
+                                            stringRange[i][j] + 1)
     return stringRange[N2][N1]
 
-def textListToColors(names):
+
+def text_list_to_colors(names):
     '''
     Generates a list of colors based on a list of names (strings). Similar strings correspond to similar colors.
     '''
@@ -58,7 +73,8 @@ def textListToColors(names):
     colors = [textmaps[int(c)] for c in textToColor]
     return colors
 
-def textListToColorsSimple(names):
+
+def text_list_to_colors_simple(names):
     '''
     Generates a list of colors based on a list of names (strings). Similar strings correspond to similar colors. 
     '''
@@ -66,28 +82,25 @@ def textListToColorsSimple(names):
     uNames.sort()
     textToColor = [ uNames.index(n) for n in names ]
     textToColor = np.array(textToColor)
-    textToColor = 255 * (textToColor - textToColor.min()) / (textToColor.max() - textToColor.min())
+    textToColor = 255 * (textToColor - textToColor.min()) / \
+                  (textToColor.max() - textToColor.min())
     textmaps = generateColorMap();
     colors = [textmaps[int(c)] for c in textToColor]
-    
-    # colors = [c for (n, c) in sorted(zip(names, colors))]
-
     return colors
+
 
 def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
     '''
     Generates a d3js chordial diagram that illustrates similarites
     '''
-    #colors = textListToColors(namesCategories)
-    colors = textListToColorsSimple(namesCategories)
+    colors = text_list_to_colors_simple(namesCategories)
     SM2 = SM.copy()
     SM2 = (SM2 + SM2.T) / 2.0
     for i in range(SM2.shape[0]):
         M = Threshold
 #        a = np.sort(SM2[i,:])[::-1]
 #        M = np.mean(a[0:int(SM2.shape[1]/3+1)])
-        SM2[i,SM2[i,:]<M] = 0;
-
+        SM2[i, SM2[i, :] < M] = 0;
     dirChordial = fileStr + "_Chordial"
     if not os.path.isdir(dirChordial):
         os.mkdir(dirChordial)
@@ -98,11 +111,12 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
     f = open(jsonPath,'w'); f.write(jsonSMMatrix);  f.close()
     f = open(namesPath,'w'); f.write("name,color\n"); 
     for i, n in enumerate(names):
-        f.write("{0:s},{1:s}\n".format(n,"#"+colors[i]))
+        f.write("{0:s},{1:s}\n".format(n,"#"+str(colors[i])))
     f.close()
 
     shutil.copyfile("data/similarities.html", dirChordial+os.sep+"similarities.html")
     shutil.copyfile("data/style.css", dirChordial+os.sep+"style.css")
+
 
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
     '''
