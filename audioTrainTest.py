@@ -395,7 +395,13 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         None. Resulting regression model along with the respective model parameters are saved on files.
     '''
     # STEP A: Feature Extraction:
-    [features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName], mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
+    [features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName],
+                                                           mtWin,
+                                                           mtStep,
+                                                           stWin,
+                                                           stStep,
+                                                           computeBEAT=
+                                                           computeBEAT)
     features = features[0]
     fileNames = [ntpath.basename(f) for f in fileNames[0]]
     featuresFinal = []
@@ -406,16 +412,14 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     regressionNames = []
     featuresFinal = []
     for c in CSVs:                                                            # for each CSV
-        #curRegressionLabels = numpy.zeros((len(fileNames, )))                 # read filenames, map to "fileNames" and append respective values in the regressionLabels
         curRegressionLabels = []
         featuresTemp = []
-        with open(c, 'rb') as csvfile:                                        # open the csv file that contains the current target value's annotations
+        with open(c, 'rt') as csvfile:                                        # open the csv file that contains the current target value's annotations
             CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             for row in CSVreader:
                 if len(row) == 2:                                             # if the current row contains two fields (filename, target value)
                     if row[0] in fileNames:                                   # ... and if the current filename exists in the list of filenames
                         index = fileNames.index(row[0])
-                        #curRegressionLabels[index] = float(row[1])
                         curRegressionLabels.append(float(row[1]))
                         featuresTemp.append(features[index,:])
 
@@ -852,10 +856,13 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
 
     print("{0:s}\t\t{1:s}\t\t{2:s}\t\t{3:s}".format("Param", "MSE", "T-MSE", "R-MSE"))
     for i in range(len(ErrorsAll)):
-        print("{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i], ErrorsAll[i], ErrorsTrainAll[i], ErrorsBaselineAll[i])),
+        print("{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i],
+                                                                ErrorsAll[i],
+                                                                ErrorsTrainAll[i],
+                                                                ErrorsBaselineAll[i]),end="")
         if i == bestInd:
-            print("\t\t best", end="")
-        print
+            print("\t\t best",end="")
+        print("")
     return Params[bestInd], ErrorsAll[bestInd], ErrorsBaselineAll[bestInd]
 
 
