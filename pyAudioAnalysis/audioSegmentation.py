@@ -3,9 +3,9 @@ import numpy
 import sklearn.cluster
 import scipy
 import os
-from . import audioFeatureExtraction as aF
-from . import audioTrainTest as aT
-from . import audioBasicIO
+from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import audioTrainTest as aT
+from pyAudioAnalysis import audioBasicIO
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import sklearn.discriminant_analysis
