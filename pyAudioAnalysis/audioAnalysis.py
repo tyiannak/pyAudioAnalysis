@@ -4,11 +4,11 @@ import os
 import numpy
 import glob
 import matplotlib.pyplot as plt
-from . import audioFeatureExtraction as aF
-from . import audioTrainTest as aT
-from . import audioSegmentation as aS
-from . import audioVisualization as aV
-from . import audioBasicIO
+from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import audioTrainTest as aT
+from pyAudioAnalysis import audioSegmentation as aS
+from pyAudioAnalysis import audioVisualization as aV
+from pyAudioAnalysis import audioBasicIO
 import scipy.io.wavfile as wavfile
 import matplotlib.patches
 
