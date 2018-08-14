@@ -1,13 +1,14 @@
+from __future__ import print_function
 import sys
 import numpy
 import os
 import glob
-import cPickle
+import pickle as cPickle
 import signal
 import csv
 import ntpath
-import audioFeatureExtraction as aF
-import audioBasicIO
+from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import audioBasicIO
 from scipy import linalg as la
 from scipy.spatial import distance
 import sklearn.svm
@@ -15,7 +16,7 @@ import sklearn.decomposition
 import sklearn.ensemble
 
 def signal_handler(signal, frame):
-    print 'You pressed Ctrl+C! - EXIT'
+    print('You pressed Ctrl+C! - EXIT')
     os.system("stty -cbreak echo")
     sys.exit(0)
 
@@ -288,7 +289,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
     [features, classNames, _] = aF.dirsWavFeatureExtraction(listOfDirs, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
 
     if len(features) == 0:
-        print "trainSVM_feature ERROR: No data found in any input folder!"
+        print("trainSVM_feature ERROR: No data found in any input folder!")
         return
 
     numOfFeatures = features[0].shape[1]
@@ -298,7 +299,7 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
 
     for i, f in enumerate(features):
         if len(f) == 0:
-            print "trainSVM_feature ERROR: " + listOfDirs[i] + " folder is empty or non-existing!"
+            print("trainSVM_feature ERROR: " + listOfDirs[i] + " folder is empty or non-existing!")
             return
 
     # STEP B: Classifier Evaluation and Parameter Selection:
@@ -322,13 +323,13 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
             if (not numpy.isnan(temp).any()) and (not numpy.isinf(temp).any()) :
                 fTemp.append(temp.tolist())
             else:
-                print "NaN Found! Feature vector not used for training"
+                print("NaN Found! Feature vector not used for training")
         features2.append(numpy.array(fTemp))
     features = features2
 
     bestParam = evaluateClassifier(features, classNames, 100, classifierType, classifierParams, 0, perTrain)
 
-    print "Selected params: {0:.5f}".format(bestParam)
+    print("Selected params: {0:.5f}".format(bestParam))
 
     C = len(classNames)
     [featuresNorm, MEAN, STD] = normalizeFeatures(features)        # normalize features
@@ -394,7 +395,13 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         None. Resulting regression model along with the respective model parameters are saved on files.
     '''
     # STEP A: Feature Extraction:
-    [features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName], mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
+    [features, _, fileNames] = aF.dirsWavFeatureExtraction([dirName],
+                                                           mtWin,
+                                                           mtStep,
+                                                           stWin,
+                                                           stStep,
+                                                           computeBEAT=
+                                                           computeBEAT)
     features = features[0]
     fileNames = [ntpath.basename(f) for f in fileNames[0]]
     featuresFinal = []
@@ -405,16 +412,14 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     regressionNames = []
     featuresFinal = []
     for c in CSVs:                                                            # for each CSV
-        #curRegressionLabels = numpy.zeros((len(fileNames, )))                 # read filenames, map to "fileNames" and append respective values in the regressionLabels
         curRegressionLabels = []
         featuresTemp = []
-        with open(c, 'rb') as csvfile:                                        # open the csv file that contains the current target value's annotations
+        with open(c, 'rt') as csvfile:                                        # open the csv file that contains the current target value's annotations
             CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             for row in CSVreader:
                 if len(row) == 2:                                             # if the current row contains two fields (filename, target value)
                     if row[0] in fileNames:                                   # ... and if the current filename exists in the list of filenames
                         index = fileNames.index(row[0])
-                        #curRegressionLabels[index] = float(row[1])
                         curRegressionLabels.append(float(row[1]))
                         featuresTemp.append(features[index,:])
 
@@ -422,7 +427,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
         regressionLabels.append(numpy.array(curRegressionLabels))                          # curRegressionLabels is the list of values for the current regression problem
         regressionNames.append(ntpath.basename(c).replace(".csv", ""))        # regression task name   
         if len(features) == 0:
-            print "ERROR: No data found in any input folder!"
+            print("ERROR: No data found in any input folder!")
             return
 
     numOfFeatures = featuresFinal[0].shape[1]
@@ -442,12 +447,12 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
 
     for iRegression, r in enumerate(regressionNames):
         # get optimal classifeir parameter:
-        print "Regression task " + r
+        print("Regression task " + r)
         bestParam, error, berror = evaluateRegression(featuresFinal[iRegression], regressionLabels[iRegression], 100, modelType, modelParams)
         errors.append(error)
         errorsBase.append(berror)
         bestParams.append(bestParam)
-        print "Selected params: {0:.5f}".format(bestParam)
+        print("Selected params: {0:.5f}".format(bestParam))
 
         [featuresNorm, MEAN, STD] = normalizeFeatures([featuresFinal[iRegression]])        # normalize features
 
@@ -478,7 +483,7 @@ def loadKNNModel(kNNModelName, isRegression=False):
     try:
         fo = open(kNNModelName, "rb")
     except IOError:
-        print "didn't find file"
+        print("didn't find file")
         return
     try:
         X = cPickle.load(fo)
@@ -520,7 +525,7 @@ def loadSVModel(SVMmodelName, isRegression=False):
     try:
         fo = open(SVMmodelName+"MEANS", "rb")
     except IOError:
-            print "Load SVM Model: Didn't find file"
+            print("Load SVM Model: Didn't find file")
             return
     try:
         MEAN = cPickle.load(fo)
@@ -560,7 +565,7 @@ def loadRandomForestModel(RFmodelName, isRegression=False):
     try:
         fo = open(RFmodelName+"MEANS", "rb")
     except IOError:
-            print "Load Random Forest Model: Didn't find file"
+            print("Load Random Forest Model: Didn't find file")
             return
     try:
         MEAN = cPickle.load(fo)
@@ -599,7 +604,7 @@ def loadGradientBoostingModel(GBModelName, isRegression=False):
     try:
         fo = open(GBModelName+"MEANS", "rb")
     except IOError:
-            print "Load Random Forest Model: Didn't find file"
+            print("Load Random Forest Model: Didn't find file")
             return
     try:
         MEAN = cPickle.load(fo)
@@ -638,7 +643,7 @@ def loadExtraTreesModel(ETmodelName, isRegression=False):
     try:
         fo = open(ETmodelName+"MEANS", "rb")
     except IOError:
-            print "Load Random Forest Model: Didn't find file"
+            print("Load Random Forest Model: Didn't find file")
             return
     try:
         MEAN = cPickle.load(fo)
@@ -702,15 +707,15 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
         nSamplesTotal += f.shape[0]
     if nSamplesTotal > 1000 and nExp > 50:
         nExp = 50
-        print "Number of training experiments changed to 50 due to high number of samples"
+        print("Number of training experiments changed to 50 due to high number of samples")
     if nSamplesTotal > 2000 and nExp > 10:
         nExp = 10
-        print "Number of training experiments changed to 10 due to high number of samples"
+        print("Number of training experiments changed to 10 due to high number of samples")
 
     for Ci, C in enumerate(Params):                # for each param value
                 CM = numpy.zeros((nClasses, nClasses))
                 for e in range(nExp):              # for each cross-validation iteration:
-                    print "Param = {0:.5f} - Classifier Evaluation Experiment {1:d} of {2:d}".format(C, e+1, nExp)
+                    print("Param = {0:.5f} - Classifier Evaluation Experiment {1:d} of {2:d}".format(C, e+1, nExp))
                     # split features:
                     featuresTrain, featuresTest = randSplitFeatures(featuresNorm, perTrain)
                     # train multi-class svms:
@@ -754,36 +759,38 @@ def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, param
                 F1All.append(numpy.mean(F1))
                 # print "{0:6.4f}{1:6.4f}{2:6.1f}{3:6.1f}".format(nu, g, 100.0*acAll[-1], 100.0*F1All[-1])
 
-    print ("\t\t"),
+    print("\t\t, end=""")
     for i, c in enumerate(ClassNames):
         if i == len(ClassNames)-1:
-            print "{0:s}\t\t".format(c),
+            print("{0:s}\t\t".format(c), end="")
         else:
-            print "{0:s}\t\t\t".format(c),
-    print ("OVERALL")
-    print ("\tC"),
+            print("{0:s}\t\t\t".format(c), end="")
+    print("OVERALL")
+    print("\tC", end="")
     for c in ClassNames:
-        print "\tPRE\tREC\tF1",
-    print "\t{0:s}\t{1:s}".format("ACC", "F1")
+        print("\tPRE\tREC\tF1", end="")
+    print("\t{0:s}\t{1:s}".format("ACC", "F1"))
     bestAcInd = numpy.argmax(acAll)
     bestF1Ind = numpy.argmax(F1All)
     for i in range(len(PrecisionClassesAll)):
-        print "\t{0:.3f}".format(Params[i]),
+        print("\t{0:.3f}".format(Params[i]), end="")
         for c in range(len(PrecisionClassesAll[i])):
-            print "\t{0:.1f}\t{1:.1f}\t{2:.1f}".format(100.0 * PrecisionClassesAll[i][c], 100.0 * RecallClassesAll[i][c], 100.0 * F1ClassesAll[i][c]),
-        print "\t{0:.1f}\t{1:.1f}".format(100.0 * acAll[i], 100.0 * F1All[i]),
+            print("\t{0:.1f}\t{1:.1f}\t{2:.1f}".format(100.0 * PrecisionClassesAll[i][c],
+                                                       100.0 * RecallClassesAll[i][c],
+                                                       100.0 * F1ClassesAll[i][c]), end="")
+        print("\t{0:.1f}\t{1:.1f}".format(100.0 * acAll[i], 100.0 * F1All[i]), end="")
         if i == bestF1Ind:
-            print "\t best F1",
+            print("\t best F1", end="")
         if i == bestAcInd:
-            print "\t best Acc",
-        print
+            print("\t best Acc", end="")
+        print("")
 
     if parameterMode == 0:    # keep parameters that maximize overall classification accuracy:
-        print "Confusion Matrix:"
+        print("Confusion Matrix:")
         printConfusionMatrix(CMsAll[bestAcInd], ClassNames)
         return Params[bestAcInd]
     elif parameterMode == 1:  # keep parameters that maximize overall F1 measure:
-        print "Confusion Matrix:"
+        print("Confusion Matrix:")
         printConfusionMatrix(CMsAll[bestF1Ind], ClassNames)
         return Params[bestF1Ind]
 
@@ -847,12 +854,15 @@ def evaluateRegression(features, labels, nExp, MethodName, Params):
 
     bestInd = numpy.argmin(ErrorsAll)
 
-    print "{0:s}\t\t{1:s}\t\t{2:s}\t\t{3:s}".format("Param", "MSE", "T-MSE", "R-MSE")
+    print("{0:s}\t\t{1:s}\t\t{2:s}\t\t{3:s}".format("Param", "MSE", "T-MSE", "R-MSE"))
     for i in range(len(ErrorsAll)):
-        print "{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i], ErrorsAll[i], ErrorsTrainAll[i], ErrorsBaselineAll[i]),
+        print("{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i],
+                                                                ErrorsAll[i],
+                                                                ErrorsTrainAll[i],
+                                                                ErrorsBaselineAll[i]),end="")
         if i == bestInd:
-            print "\t\t best",
-        print
+            print("\t\t best",end="")
+        print("")
     return Params[bestInd], ErrorsAll[bestInd], ErrorsBaselineAll[bestInd]
 
 
@@ -866,22 +876,22 @@ def printConfusionMatrix(CM, ClassNames):
     '''
 
     if CM.shape[0] != len(ClassNames):
-        print "printConfusionMatrix: Wrong argument sizes\n"
+        print("printConfusionMatrix: Wrong argument sizes\n")
         return
 
     for c in ClassNames:
         if len(c) > 4:
             c = c[0:3]
-        print "\t{0:s}".format(c),
-    print
+        print("\t{0:s}".format(c), end="")
+    print("")
 
     for i, c in enumerate(ClassNames):
         if len(c) > 4:
             c = c[0:3]
-        print "{0:s}".format(c),
+        print("{0:s}".format(c), end="")
         for j in range(len(ClassNames)):
-            print "\t{0:.2f}".format(100.0 * CM[i][j] / numpy.sum(CM)),
-        print
+            print("\t{0:.2f}".format(100.0 * CM[i][j] / numpy.sum(CM)), end="")
+        print("")
 
 
 def normalizeFeatures(features):
@@ -965,11 +975,11 @@ def fileClassification(inputFile, modelName, modelType):
     # Load classifier:
 
     if not os.path.isfile(modelName):
-        print "fileClassification: input modelName not found!"
+        print("fileClassification: input modelName not found!")
         return (-1, -1, -1)
 
     if not os.path.isfile(inputFile):
-        print "fileClassification: wav file not found!"
+        print("fileClassification: wav file not found!")
         return (-1, -1, -1)
 
     if (modelType) == 'svm' or (modelType == 'svm_rbf'):
@@ -1008,7 +1018,7 @@ def fileRegression(inputFile, modelName, modelType):
     # Load classifier:
 
     if not os.path.isfile(inputFile):
-        print "fileClassification: wav file not found!"
+        print("fileClassification: wav file not found!")
         return (-1, -1, -1)
 
     regressionModels = glob.glob(modelName + "_*")
@@ -1042,7 +1052,7 @@ def fileRegression(inputFile, modelName, modelType):
     R = []
     for ir, r in enumerate(regressionModels):
         if not os.path.isfile(r):
-            print "fileClassification: input modelName not found!"
+            print("fileClassification: input modelName not found!")
             return (-1, -1, -1)
         if modelType == 'svm' or modelType == "svm_rbf":
             [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
@@ -1058,7 +1068,7 @@ def lda(data, labels, redDim):
     data -= data.mean(axis=0)
     nData = numpy.shape(data)[0]
     nDim = numpy.shape(data)[1]
-    print nData, nDim
+    print(nData, nDim)
     Sw = numpy.zeros((nDim, nDim))
     Sb = numpy.zeros((nDim, nDim))
 
