@@ -1,22 +1,20 @@
+from __future__ import print_function
 import numpy
 import sklearn.cluster
-import time
 import scipy
 import os
-import audioFeatureExtraction as aF
-import audioTrainTest as aT
-import audioBasicIO
-import matplotlib.pyplot as plt
+from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import audioTrainTest as aT
+from pyAudioAnalysis import audioBasicIO
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 import sklearn.discriminant_analysis
 import csv
 import os.path
 import sklearn
 import sklearn.cluster
 import hmmlearn.hmm
-import cPickle
+import pickle as cPickle
 import glob
 
 """ General utility functions """
@@ -30,7 +28,8 @@ def smoothMovingAvg(inputSignal, windowLen=11):
         raise ValueError("Input vector needs to be bigger than window size.")
     if windowLen < 3:
         return inputSignal
-    s = numpy.r_[2*inputSignal[0] - inputSignal[windowLen-1::-1], inputSignal, 2*inputSignal[-1]-inputSignal[-1:-windowLen:-1]]
+    s = numpy.r_[2*inputSignal[0] - inputSignal[windowLen-1::-1],
+                 inputSignal, 2*inputSignal[-1]-inputSignal[-1:-windowLen:-1]]
     w = numpy.ones(windowLen, 'd')
     y = numpy.convolve(w/w.sum(), s, mode='same')
     return y[windowLen:-windowLen+1]
@@ -123,7 +122,8 @@ def computePreRec(CM, classNames):
     '''
     numOfClasses = CM.shape[0]
     if len(classNames) != numOfClasses:
-        print "Error in computePreRec! Confusion matrix and classNames list must be of the same size!"
+        print("Error in computePreRec! Confusion matrix and classNames "
+              "list must be of the same size!")
         return
     Precision = []
     Recall = []
@@ -147,7 +147,7 @@ def readSegmentGT(gtFile):
      - segEnd:       a numpy array of segments' ending positions
      - segLabel:     a list of respective class labels (strings)
     '''
-    f = open(gtFile, "rb")
+    f = open(gtFile, 'rt')
     reader = csv.reader(f, delimiter=',')
     segStart = []
     segEnd = []
@@ -195,7 +195,7 @@ def plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, ONLY_EVALU
                 AvDurations[i] = 0.0
 
         for i in range(Percentages.shape[0]):
-            print classNames[i], Percentages[i], AvDurations[i]
+            print(classNames[i], Percentages[i], AvDurations[i])
 
         font = {'size': 10}
         plt.rc('font', **font)
@@ -284,7 +284,8 @@ def trainHMM_computeStatistics(features, labels):
     nFeatures = features.shape[0]
 
     if features.shape[1] < labels.shape[0]:
-        print "trainHMM warning: number of short-term feature vectors must be greater or equal to the labels length!"
+        print("trainHMM warning: number of short-term feature vectors "
+              "must be greater or equal to the labels length!")
         labels = labels[0:features.shape[1]]
 
     # compute prior probabilities:
@@ -423,7 +424,7 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
     try:
         fo = open(hmmModelName, "rb")
     except IOError:
-        print "didn't find file"
+        print("didn't find file")
         return
 
     try:
@@ -452,15 +453,15 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
                 flagsGTNew.append(classesAll.index(classNamesGT[flagsGT[j]]))
             else:
                 flagsGTNew.append(-1)
-        CM = numpy.zeros((len(classNamesGT), len(classNamesGT)))
+        CM = numpy.zeros((len(classesAll), len(classesAll)))
         flagsIndGT = numpy.array(flagsGTNew)
         for i in range(min(flagsInd.shape[0], flagsIndGT.shape[0])):
-            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1                
+            CM[int(flagsIndGT[i]),int(flagsInd[i])] += 1
     else:
         flagsIndGT = numpy.array([])    
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classesAll, mtStep, not PLOT)
     if acc >= 0:
-        print "Overall Accuracy: {0:.2f}".format(acc)
+        print("Overall Accuracy: {0:.2f}".format(acc))
         return (flagsInd, classNamesGT, acc, CM)
     else:
         return (flagsInd, classesAll, -1, -1)
@@ -483,7 +484,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     '''
 
     if not os.path.isfile(modelName):
-        print "mtFileClassificationError: input modelType not found!"
+        print("mtFileClassificationError: input modelType not found!")
         return (-1, -1, -1, -1)
     # Load classifier:
     if (modelType == 'svm') or (modelType == 'svm_rbf'):
@@ -499,7 +500,9 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
 
 
     if computeBEAT:
-        print "Model " + modelName + " contains long-term music features (beat etc) and cannot be used in segmentation"
+        print("Model " + modelName + " contains long-term music features "
+                                     "(beat etc) and cannot be used in "
+                                     "segmentation")
         return (-1, -1, -1, -1)
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # load input file
     if Fs == -1:                                           # could not read file
@@ -545,7 +548,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
         flagsIndGT = numpy.array([])
     acc = plotSegmentationResults(flagsInd, flagsIndGT, classNames, mtStep, not plotResults)
     if acc >= 0:
-        print "Overall Accuracy: {0:.3f}".format(acc)    
+        print("Overall Accuracy: {0:.3f}".format(acc)  )
         return (flagsInd, classNamesGT, acc, CM)
     else:
         return (flagsInd, classNames, acc, CM)
@@ -558,7 +561,7 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
     
     for i, f in enumerate(glob.glob(dirName + os.sep + '*.wav')):            # for each WAV file
         wavFile = f
-        print wavFile
+        print(wavFile)
         gtFile = f.replace('.wav', '.segments')                             # open for annotated file
 
         if methodName.lower() in ["svm", "svm_rbf", "knn","randomforest","gradientboosting","extratrees"]:
@@ -571,21 +574,21 @@ def evaluateSegmentationClassificationDir(dirName, modelName, methodName):
             else:                
                 CM = CM + CMt
             accuracys.append(acc)
-            print CMt, classNames
-            print CM
+            print(CMt, classNames)
+            print(CM)
             [Rec, Pre, F1] = computePreRec(CMt, classNames)
 
     CM = CM / numpy.sum(CM)
     [Rec, Pre, F1] = computePreRec(CM, classNames)
 
-    print " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-    print "Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean())
-    print "Average Recall: {0:.1f}".format(100.0*numpy.array(Rec).mean())
-    print "Average Precision: {0:.1f}".format(100.0*numpy.array(Pre).mean())
-    print "Average F1: {0:.1f}".format(100.0*numpy.array(F1).mean())    
-    print "Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys)))
-    print "Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min())
-    print "Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max())
+    print(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ")
+    print("Average Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).mean()))
+    print("Average Recall: {0:.1f}".format(100.0*numpy.array(Rec).mean()))
+    print("Average Precision: {0:.1f}".format(100.0*numpy.array(Pre).mean()))
+    print("Average F1: {0:.1f}".format(100.0*numpy.array(F1).mean()))
+    print("Median Accuracy: {0:.1f}".format(100.0*numpy.median(numpy.array(accuracys))))
+    print("Min Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).min()))
+    print("Max Accuracy: {0:.1f}".format(100.0*numpy.array(accuracys).max()))
 
 
 def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=False):
@@ -635,7 +638,7 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=Fals
 
     # Step 4A: detect onset frame indices:
     ProbOnsetSorted = numpy.sort(ProbOnset)                        # find probability Threshold as a weighted average of top 10% and lower 10% of the values
-    Nt = ProbOnsetSorted.shape[0] / 10
+    Nt = int(ProbOnsetSorted.shape[0] / 10)
     T = (numpy.mean((1 - Weight) * ProbOnsetSorted[0:Nt]) + Weight * numpy.mean(ProbOnsetSorted[-Nt::]))
 
     MaxIdx = numpy.where(ProbOnset > T)[0]                         # get the indices of the frames that satisfy the thresholding
@@ -700,8 +703,8 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     x = audioBasicIO.stereo2mono(x)
     Duration = len(x) / Fs
 
-    [Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel(os.path.join("data","knnSpeakerAll"))
-    [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel(os.path.join("data","knnSpeakerFemaleMale"))
+    [Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.loadKNNModel(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
+    [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
 
     [MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs * stWin), round(Fs*stWin * 0.5))
 
@@ -903,7 +906,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         if PLOT:
             ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
         purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
-        print "{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean)
+        print("{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean))
         if PLOT:
             plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
     if PLOT:
@@ -942,7 +945,7 @@ def speakerDiarizationEvaluateScript(folderName, LDAs):
             N.append(-1)
     
     for l in LDAs:
-        print "LDA = {0:d}".format(l)
+        print("LDA = {0:d}".format(l))
         for i, wavFile in enumerate(wavFilesList):
             speakerDiarization(wavFile, N[i], 2.0, 0.2, 0.05, l, PLOT = False)            
         print
