@@ -114,8 +114,13 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
         f.write("{0:s},{1:s}\n".format(n,"#"+str(colors[i])))
     f.close()
 
-    shutil.copyfile("data/similarities.html", dirChordial+os.sep+"similarities.html")
-    shutil.copyfile("data/style.css", dirChordial+os.sep+"style.css")
+    shutil.copyfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 "data", "similarities.html"),
+                    dirChordial+os.sep+"similarities.html")
+    shutil.copyfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 "data",
+                                 "style.css"),
+                    dirChordial+os.sep+"style.css")
 
 
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
