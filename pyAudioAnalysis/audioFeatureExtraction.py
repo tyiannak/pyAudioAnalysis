@@ -177,13 +177,6 @@ def mfccInitFilterBanks(fs, nfft,
     https://pypi.python.org/pypi/scikits.talkbox
     """
 
-    # filter bank params:
-    lowfreq = 133.33
-    linsc = 200/3.
-    logsc = 1.0711703
-    numLinFiltTotal = 13
-    numLogFilt = 27
-
     if fs < 8000:
         nlogfil = 5
 
