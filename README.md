@@ -4,6 +4,7 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
+ * Latest pyAudioAnalysis update [2018-08-12] now compatible with Python 3
  * Check out [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a python script for visualization of mp3 tags and lyrics
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
  * [PLOS-One Paper regarding pyAudioAnalysis](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
@@ -29,6 +30,11 @@ pip install numpy matplotlib scipy sklearn hmmlearn simplejson eyed3 pydub
  ```
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 ```
+ * Install using pip: 
+ ```
+pip install -e .
+```
+(also works with pip3 now)
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
