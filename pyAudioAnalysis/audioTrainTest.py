@@ -422,6 +422,10 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
                         index = fileNames.index(row[0])
                         curRegressionLabels.append(float(row[1]))
                         featuresTemp.append(features[index,:])
+                    else:
+                        print("Warning: {} not found in list of files.".format(row[0]))
+                else:
+                    print("Warning: Row with unknown format in regression file")
 
         featuresFinal.append(numpy.array(featuresTemp))
         regressionLabels.append(numpy.array(curRegressionLabels))                          # curRegressionLabels is the list of values for the current regression problem
