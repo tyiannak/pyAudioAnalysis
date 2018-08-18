@@ -481,8 +481,8 @@ def stSpectogram(signal, Fs, Win, Step, PLOT=False):
         else:
             specgram = numpy.vstack((specgram, X))
 
-    FreqAxis = [((f + 1) * Fs) / (2 * nfft) for f in range(specgram.shape[1])]
-    TimeAxis = [(t * Step) / Fs for t in range(specgram.shape[0])]
+    FreqAxis = [float((f + 1) * Fs) / (2 * nfft) for f in range(specgram.shape[1])]
+    TimeAxis = [float(t * Step) / Fs for t in range(specgram.shape[0])]
 
     if (PLOT):
         fig, ax = plt.subplots()
