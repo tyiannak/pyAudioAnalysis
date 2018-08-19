@@ -487,17 +487,12 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
         print("mtFileClassificationError: input modelType not found!")
         return (-1, -1, -1, -1)
     # Load classifier:
-    if (modelType == 'svm') or (modelType == 'svm_rbf'):
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
-    elif modelType == 'knn':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
-    elif modelType == 'randomforest':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadRandomForestModel(modelName)
-    elif modelType == 'gradientboosting':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadGradientBoostingModel(modelName)
-    elif modelType == 'extratrees':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadExtraTreesModel(modelName)
-
+    if modelType == "knn":
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = \
+            aT.load_model_knn(modelName)
+    else:
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep,
+         computeBEAT] = aT.load_model(modelName)
 
     if computeBEAT:
         print("Model " + modelName + " contains long-term music features "
