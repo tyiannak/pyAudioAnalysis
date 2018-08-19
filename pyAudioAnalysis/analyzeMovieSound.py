@@ -12,9 +12,9 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
 		raise Exception("Input modelName not found!")
 
 	if modelType=='svm':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.load_model(modelName)
 	elif modelType=='knn':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.load_model_knn(modelName)
 
 	PsAll = numpy.zeros((len(classNames), ))	
 		
@@ -75,9 +75,9 @@ def getMusicSegmentsFromFile(inputFile):
 	[Fs, x] = audioBasicIO.readAudioFile(inputFile)	
 
 	if modelType=='svm':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadSVModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.load_model(modelName)
 	elif modelType=='knn':
-		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.loadKNNModel(modelName)
+		[Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = aT.load_model_knn(modelName)
 
 	flagsInd, classNames, acc, CM = aS.mtFileClassification(inputFile, modelName, modelType, plotResults = False, gtFile = "")
 	segs, classes = aS.flags2segs(flagsInd, mtStep)

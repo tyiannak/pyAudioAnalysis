@@ -58,7 +58,7 @@ def classifierWrapper(classifier, classifierType, testSample):
         import audioFeatureExtraction as aF
         import audioTrainTest as aT
         # load the classifier (here SVM, for kNN use loadKNNModel instead):
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.loadSVModel(modelName)
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.load_model(modelName)
         # mid-term feature extraction:
         [MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
         # feature normalization:
@@ -70,7 +70,11 @@ def classifierWrapper(classifier, classifierType, testSample):
     P = -1
     if classifierType == "knn":
         [R, P] = classifier.classify(testSample)
-    elif classifierType == "svm" or classifierType == "randomforest" or classifierType == "gradientboosting" or "extratrees":
+    elif classifierType == "svm" or \
+                    classifierType == "randomforest" or \
+                    classifierType == "gradientboosting" or \
+                    classifierType == "extratrees" or \
+                    classifierType == "svm_rbf":
         R = classifier.predict(testSample.reshape(1,-1))[0]
         P = classifier.predict_proba(testSample.reshape(1,-1))[0]
     return [R, P]
@@ -367,7 +371,10 @@ def featureAndTrain(listOfDirs, mtWin, mtStep, stWin, stStep, classifierType, mo
         cPickle.dump(stStep, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         cPickle.dump(computeBEAT, fo, protocol=cPickle.HIGHEST_PROTOCOL)
         fo.close()
-    elif classifierType == "svm" or classifierType == "svm_rbf" or classifierType == "randomforest" or classifierType == "gradientboosting" or classifierType == "extratrees":
+    elif classifierType == "svm" or classifierType == "svm_rbf" or \
+                    classifierType == "randomforest" or \
+                    classifierType == "gradientboosting" or \
+                    classifierType == "extratrees":
         with open(modelName, 'wb') as fid:                                            # save to file
             cPickle.dump(Classifier, fid)            
         fo = open(modelName + "MEANS", "wb")
@@ -483,7 +490,7 @@ def featureAndTrainRegression(dirName, mtWin, mtStep, stWin, stStep, modelType, 
     return errors, errorsBase, bestParams
 
 
-def loadKNNModel(kNNModelName, isRegression=False):
+def load_model_knn(kNNModelName, isRegression=False):
     try:
         fo = open(kNNModelName, "rb")
     except IOError:
@@ -519,15 +526,15 @@ def loadKNNModel(kNNModelName, isRegression=False):
         return(Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
 
-def loadSVModel(SVMmodelName, isRegression=False):
+def load_model(model_name, isRegression=False):
     '''
     This function loads an SVM model either for classification or training.
     ARGMUMENTS:
         - SVMmodelName:     the path of the model to be loaded
-        - isRegression:        a flag indigating whereas this model is regression or not
+        - isRegression:     a flag indigating whereas this model is regression or not
     '''
     try:
-        fo = open(SVMmodelName+"MEANS", "rb")
+        fo = open(model_name + "MEANS", "rb")
     except IOError:
             print("Load SVM Model: Didn't find file")
             return
@@ -549,132 +556,13 @@ def loadSVModel(SVMmodelName, isRegression=False):
     MEAN = numpy.array(MEAN)
     STD = numpy.array(STD)
 
-    COEFF = []
-    with open(SVMmodelName, 'rb') as fid:
+    with open(model_name, 'rb') as fid:
         SVM = cPickle.load(fid)    
 
     if isRegression:
         return(SVM, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
     else:
         return(SVM, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
-
-
-def loadRandomForestModel(RFmodelName, isRegression=False):
-    '''
-    This function loads an SVM model either for classification or training.
-    ARGMUMENTS:
-        - SVMmodelName:     the path of the model to be loaded
-        - isRegression:     a flag indigating whereas this model is regression or not
-    '''
-    try:
-        fo = open(RFmodelName+"MEANS", "rb")
-    except IOError:
-            print("Load Random Forest Model: Didn't find file")
-            return
-    try:
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
-        if not isRegression:
-            classNames = cPickle.load(fo)
-        mtWin = cPickle.load(fo)
-        mtStep = cPickle.load(fo)
-        stWin = cPickle.load(fo)
-        stStep = cPickle.load(fo)
-        computeBEAT = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
-
-    MEAN = numpy.array(MEAN)
-    STD = numpy.array(STD)
-
-    COEFF = []
-    with open(RFmodelName, 'rb') as fid:
-        RF = cPickle.load(fid)    
-
-    if isRegression:
-        return(RF, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
-    else:
-        return(RF, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
-
-def loadGradientBoostingModel(GBModelName, isRegression=False):
-    '''
-    This function loads gradient boosting either for classification or training.
-    ARGMUMENTS:
-        - SVMmodelName:     the path of the model to be loaded
-        - isRegression:     a flag indigating whereas this model is regression or not
-    '''
-    try:
-        fo = open(GBModelName+"MEANS", "rb")
-    except IOError:
-            print("Load Random Forest Model: Didn't find file")
-            return
-    try:
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
-        if not isRegression:
-            classNames = cPickle.load(fo)
-        mtWin = cPickle.load(fo)
-        mtStep = cPickle.load(fo)
-        stWin = cPickle.load(fo)
-        stStep = cPickle.load(fo)
-        computeBEAT = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
-
-    MEAN = numpy.array(MEAN)
-    STD = numpy.array(STD)
-
-    COEFF = []
-    with open(GBModelName, 'rb') as fid:
-        GB = cPickle.load(fid)    
-
-    if isRegression:
-        return(GB, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
-    else:
-        return(GB, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
-
-def loadExtraTreesModel(ETmodelName, isRegression=False):
-    '''
-    This function loads extra trees either for classification or training.
-    ARGMUMENTS:
-        - SVMmodelName:     the path of the model to be loaded
-        - isRegression:     a flag indigating whereas this model is regression or not
-    '''
-    try:
-        fo = open(ETmodelName+"MEANS", "rb")
-    except IOError:
-            print("Load Random Forest Model: Didn't find file")
-            return
-    try:
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
-        if not isRegression:
-            classNames = cPickle.load(fo)
-        mtWin = cPickle.load(fo)
-        mtStep = cPickle.load(fo)
-        stWin = cPickle.load(fo)
-        stStep = cPickle.load(fo)
-        computeBEAT = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
-
-    MEAN = numpy.array(MEAN)
-    STD = numpy.array(STD)
-
-    COEFF = []
-    with open(ETmodelName, 'rb') as fid:
-        GB = cPickle.load(fid)    
-
-    if isRegression:
-        return(GB, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT)
-    else:
-        return(GB, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT)
 
 
 def evaluateClassifier(features, ClassNames, nExp, ClassifierName, Params, parameterMode, perTrain=0.90):
@@ -986,16 +874,12 @@ def fileClassification(inputFile, modelName, modelType):
         print("fileClassification: wav file not found!")
         return (-1, -1, -1)
 
-    if (modelType) == 'svm' or (modelType == 'svm_rbf'):
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(modelName)
-    elif modelType == 'knn':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadKNNModel(modelName)
-    elif modelType == 'randomforest':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(modelName)
-    elif modelType == 'gradientboosting':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadGradientBoostingModel(modelName)
-    elif modelType == 'extratrees':
-        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep, computeBEAT] = loadExtraTreesModel(modelName)
+    if modelType == 'knn':
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep,
+         computeBEAT] = load_model_knn(modelName)
+    else:
+        [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep,
+         computeBEAT] = load_model(modelName)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
@@ -1037,10 +921,8 @@ def fileRegression(inputFile, modelName, modelType):
 
     # FEATURE EXTRACTION
     # LOAD ONLY THE FIRST MODEL (for mtWin, etc)
-    if modelType == 'svm' or modelType == "svm_rbf":        
-        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(regressionModels[0], True)
-    elif modelType == 'randomforest':
-        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(regressionModels[0], True)
+    if modelType == 'svm' or modelType == "svm_rbf" or modelType == 'randomforest':
+        [_, _, _, mtWin, mtStep, stWin, stStep, computeBEAT] = load_model(regressionModels[0], True)
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
@@ -1058,10 +940,10 @@ def fileRegression(inputFile, modelName, modelType):
         if not os.path.isfile(r):
             print("fileClassification: input modelName not found!")
             return (-1, -1, -1)
-        if modelType == 'svm' or modelType == "svm_rbf":
-            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadSVModel(r, True)
-        elif modelType == 'randomforest':
-            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = loadRandomForestModel(r, True)
+        if modelType == 'svm' or modelType == "svm_rbf" \
+                or modelType == 'randomforest':
+            [Model, MEAN, STD, mtWin, mtStep, stWin, stStep, computeBEAT] = \
+                load_model(r, True)
         curFV = (MidTermFeatures - MEAN) / STD                  # normalization
         R.append(regressionWrapper(Model, modelType, curFV))    # classification
     return R, regressionNames
