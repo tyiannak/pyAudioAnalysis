@@ -334,7 +334,7 @@ def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
     flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)          # convert to fix-sized sequence of flags
 
     [Fs, x] = audioBasicIO.readAudioFile(wavFile)                                # read audio data
-    [F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))    # feature extraction
+    [F, _, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))    # feature extraction
     startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)                    # compute HMM statistics (priors, transition matrix, etc)
     
     hmm = hmmlearn.hmm.GaussianHMM(startprob.shape[0], "diag")            # hmm training
@@ -382,7 +382,7 @@ def trainHMM_fromDir(dirPath, hmmModelName, mtWin, mtStep):
             if c not in classesAll:
                 classesAll.append(c)
         [Fs, x] = audioBasicIO.readAudioFile(wavFile)                           # read audio data
-        [F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))     # feature extraction
+        [F, _, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))     # feature extraction
 
         lenF = F.shape[1]
         lenL = len(flags)
@@ -435,7 +435,7 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
         fo.close()
     fo.close()
 
-    [Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, 
+    [Features, _, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, 
                                            round(Fs * 0.050), round(Fs * 0.050))
     flagsInd = hmm.predict(Features.T)                            # apply model
     #for i in range(len(flagsInd)):
@@ -504,7 +504,7 @@ def mtFileClassification(inputFile, modelName, modelType, plotResults=False, gtF
     x = audioBasicIO.stereo2mono(x)                        # convert stereo (if) to mono
     Duration = len(x) / Fs
     # mid-term feature extraction:
-    [MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
+    [MidTermFeatures, _, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
     flags = []
     Ps = []
     flagsInd = []
@@ -701,7 +701,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     [Classifier1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
     [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
 
-    [MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs * stWin), round(Fs*stWin * 0.5))
+    [MidTermFeatures, ShortTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs * stWin), round(Fs*stWin * 0.5))
 
     MidTermFeatures2 = numpy.zeros((MidTermFeatures.shape[0] + len(classNames1) + len(classNames2), MidTermFeatures.shape[1]))
 
@@ -756,7 +756,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
 
     # LDA dimensionality reduction:
     if LDAdim > 0:
-        #[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
+        #[mtFeaturesToReduce, _, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
         # extract mid-term features with minimum step:
         mtWinRatio = int(round(mtSize / stWin))
         mtStepRatio = int(round(stWin / stWin))

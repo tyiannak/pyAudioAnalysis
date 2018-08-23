@@ -107,7 +107,7 @@ def recordAnalyzeAudio(duration, outputWavFile, midTermBufferSizeSec, modelName,
 		if len(midTermBuffer) == midTermBufferSize:
 			count += 1						
 			if Classifier!=None:
-				[mtFeatures, stFeatures] = aF.mtFeatureExtraction(midTermBuffer, Fs, 2.0*Fs, 2.0*Fs, 0.020*Fs, 0.020*Fs)
+				[mtFeatures, stFeatures, _] = aF.mtFeatureExtraction(midTermBuffer, Fs, 2.0*Fs, 2.0*Fs, 0.020*Fs, 0.020*Fs)
 				curFV = (mtFeatures[:,0] - MEAN) / STD;
 				[result, P] = aT.classifierWrapper(Classifier, modelType, curFV)
 				print classNames[int(result)]
