@@ -78,7 +78,7 @@ def readAudioFile(path):
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au':            
+        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au' or extension.lower() == '.ogg':            
             try:
                 audiofile = AudioSegment.from_file(path)
             #except pydub.exceptions.CouldntDecodeError:
