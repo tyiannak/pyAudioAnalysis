@@ -548,7 +548,19 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     numOfChromaFeatures = 13
     totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
 #    totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
-
+    feature_names = []
+    feature_names.append("zcr")
+    feature_names.append("energy")
+    feature_names.append("energy_entropy")
+    feature_names += ["spectral_centroid", "spectral_spread"]
+    feature_names.append("spectra_entropy")
+    feature_names.append("spectra_flux")
+    feature_names.append("spectra_rolloff")
+    feature_names += ["mfcc_{0:d}".format(mfcc_i) 
+                      for mfcc_i in range(1, nceps+1)]
+    feature_names += ["chroma_{0:d}".format(chroma_i) 
+                      for chroma_i in range(1, numOfChromaFeatures)]
+    feature_names.append("chroma_std")
     stFeatures = []
     while (curPos + Win - 1 < N):                        # for each short-term window until the end of signal
         countFrames += 1
@@ -568,7 +580,6 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         curFV[6] = stSpectralFlux(X, Xprev)              # spectral flux
         curFV[7] = stSpectralRollOff(X, 0.90, Fs)        # spectral rolloff
         curFV[numOfTimeSpectralFeatures:numOfTimeSpectralFeatures+nceps, 0] = stMFCC(X, fbank, nceps).copy()    # MFCCs
-
         chromaNames, chromaF = stChromaFeatures(X, Fs, nChroma, nFreqsPerChroma)
         curFV[numOfTimeSpectralFeatures + nceps: numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF
         curFV[numOfTimeSpectralFeatures + nceps + numOfChromaFeatures - 1] = chromaF.std()
@@ -587,7 +598,7 @@ def stFeatureExtraction(signal, Fs, Win, Step):
         Xprev = X.copy()
 
     stFeatures = numpy.concatenate(stFeatures, 1)
-    return stFeatures
+    return stFeatures, feature_names
 
 
 def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
@@ -600,7 +611,7 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
 
     mtFeatures = []
 
-    stFeatures = stFeatureExtraction(signal, Fs, stWin, stStep)
+    stFeatures, f_names = stFeatureExtraction(signal, Fs, stWin, stStep)
     numOfFeatures = len(stFeatures)
     numOfStatistics = 2
 
