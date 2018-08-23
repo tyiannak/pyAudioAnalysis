@@ -615,14 +615,18 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
     numOfFeatures = len(stFeatures)
     numOfStatistics = 2
 
-    mtFeatures = []
+    mtFeatures, mid_feature_names = [], []
     #for i in range(numOfStatistics * numOfFeatures + 1):
     for i in range(numOfStatistics * numOfFeatures):
         mtFeatures.append([])
+        mid_feature_names.append("")
 
     for i in range(numOfFeatures):        # for each of the short-term features:
         curPos = 0
         N = len(stFeatures[i])
+        mid_feature_names[i] = f_names[i] + "_" + "mean"
+        mid_feature_names[i + numOfFeatures] = f_names[i] + "_" + "std"
+
         while (curPos < N):
             N1 = curPos
             N2 = curPos + mtWinRatio
@@ -631,11 +635,10 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
             curStFeatures = stFeatures[i][N1:N2]
 
             mtFeatures[i].append(numpy.mean(curStFeatures))
-            mtFeatures[i+numOfFeatures].append(numpy.std(curStFeatures))
+            mtFeatures[i + numOfFeatures].append(numpy.std(curStFeatures))
             #mtFeatures[i+2*numOfFeatures].append(numpy.std(curStFeatures) / (numpy.mean(curStFeatures)+0.00000010))
             curPos += mtStepRatio
-
-    return numpy.array(mtFeatures), stFeatures
+    return numpy.array(mtFeatures), stFeatures, mid_feature_names
 
 
 # TODO
@@ -749,10 +752,10 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
             continue
         wavFilesList2.append(wavFile)
         if computeBEAT:                                          # mid-term feature extraction for current file
-            [MidTermFeatures, stFeatures] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
+            [MidTermFeatures, stFeatures, mt_feature_names] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
             [beat, beatConf] = beatExtraction(stFeatures, stStep)
         else:
-            [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
+            [MidTermFeatures, _, mt_feature_names] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))
 
         MidTermFeatures = numpy.transpose(MidTermFeatures)
         MidTermFeatures = MidTermFeatures.mean(axis=0)         # long term averaging of mid-term statistics
@@ -770,7 +773,7 @@ def dirWavFeatureExtraction(dirName, mtWin, mtStep, stWin, stStep, computeBEAT=F
     if len(processingTimes) > 0:
         print("Feature extraction complexity ratio: "
               "{0:.1f} x realtime".format((1.0 / numpy.mean(numpy.array(processingTimes)))))
-    return (allMtFeatures, wavFilesList2)
+    return (allMtFeatures, wavFilesList2, mt_feature_names)
 
 
 def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT=False):
@@ -790,7 +793,7 @@ def dirsWavFeatureExtraction(dirNames, mtWin, mtStep, stWin, stStep, computeBEAT
     classNames = []
     fileNames = []
     for i, d in enumerate(dirNames):
-        [f, fn] = dirWavFeatureExtraction(d, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
+        [f, fn, feature_names] = dirWavFeatureExtraction(d, mtWin, mtStep, stWin, stStep, computeBEAT=computeBEAT)
         if f.shape[0] > 0:       # if at least one audio file has been found in the provided folder:
             features.append(f)
             fileNames.append(fn)
@@ -832,7 +835,7 @@ def dirWavFeatureExtractionNoAveraging(dirName, mtWin, mtStep, stWin, stStep):
             continue        
         
         x = audioBasicIO.stereo2mono(x)                          # convert stereo to mono
-        [MidTermFeatures, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))  # mid-term feature
+        [MidTermFeatures, _, _] = mtFeatureExtraction(x, Fs, round(mtWin * Fs), round(mtStep * Fs), round(Fs * stWin), round(Fs * stStep))  # mid-term feature
 
         MidTermFeatures = numpy.transpose(MidTermFeatures)
 #        MidTermFeatures = MidTermFeatures.mean(axis=0)        # long term averaging of mid-term statistics
@@ -864,13 +867,13 @@ def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
     [Fs, x] = audioBasicIO.readAudioFile(fileName)
     x = audioBasicIO.stereo2mono(x)
     if storeStFeatures:
-        [mtF, stF] = mtFeatureExtraction(x, Fs,
+        [mtF, stF, _] = mtFeatureExtraction(x, Fs,
                                          round(Fs * midTermSize),
                                          round(Fs * midTermStep),
                                          round(Fs * shortTermSize),
                                          round(Fs * shortTermStep))
     else:
-        [mtF, _] = mtFeatureExtraction(x, Fs, round(Fs*midTermSize),
+        [mtF, _, _] = mtFeatureExtraction(x, Fs, round(Fs*midTermSize),
                                        round(Fs * midTermStep),
                                        round(Fs * shortTermSize),
                                        round(Fs * shortTermStep))

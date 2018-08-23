@@ -60,7 +60,7 @@ def classifierWrapper(classifier, classifierType, testSample):
         # load the classifier (here SVM, for kNN use load_model_knn instead):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.load_model(modelName)
         # mid-term feature extraction:
-        [MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
+        [MidTermFeatures, _, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
         # feature normalization:
         curFV = (MidTermFeatures[:, i] - MEAN) / STD;
         # classification
@@ -890,7 +890,7 @@ def fileClassification(inputFile, modelName, modelType):
         return (-1, -1, -1)
 
     # feature extraction:
-    [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
+    [MidTermFeatures, s, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
     MidTermFeatures = MidTermFeatures.mean(axis=1)        # long term averaging of mid-term statistics
     if computeBEAT:
         [beat, beatConf] = aF.beatExtraction(s, stStep)
@@ -927,7 +927,7 @@ def fileRegression(inputFile, modelName, modelType):
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
     # feature extraction:
-    [MidTermFeatures, s] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
+    [MidTermFeatures, s, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * stWin), round(Fs * stStep))
     MidTermFeatures = MidTermFeatures.mean(axis=1)        # long term averaging of mid-term statistics
     if computeBEAT:
         [beat, beatConf] = aF.beatExtraction(s, stStep)
