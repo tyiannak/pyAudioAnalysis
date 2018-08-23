@@ -334,7 +334,6 @@ def trainHMM_fromFile(wavFile, gtFile, hmmModelName, mtWin, mtStep):
     flags, classNames = segs2flags(segStart, segEnd, segLabels, mtStep)          # convert to fix-sized sequence of flags
 
     [Fs, x] = audioBasicIO.readAudioFile(wavFile)                                # read audio data
-    #F = aF.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
     [F, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))    # feature extraction
     startprob, transmat, means, cov = trainHMM_computeStatistics(F, flags)                    # compute HMM statistics (priors, transition matrix, etc)
     
@@ -436,8 +435,8 @@ def hmmSegmentation(wavFileName, hmmModelName, PLOT=False, gtFileName=""):
         fo.close()
     fo.close()
 
-    #Features = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);    # feature extraction
-    [Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs * 0.050), round(Fs * 0.050))
+    [Features, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, 
+                                           round(Fs * 0.050), round(Fs * 0.050))
     flagsInd = hmm.predict(Features.T)                            # apply model
     #for i in range(len(flagsInd)):
     #    if classesAll[flagsInd[i]]=="silence":
@@ -607,8 +606,9 @@ def silenceRemoval(x, Fs, stWin, stStep, smoothWindow=0.5, Weight=0.5, plot=Fals
         Weight = 0.01
 
     # Step 1: feature extraction
-    x = audioBasicIO.stereo2mono(x)                        # convert to mono
-    ShortTermFeatures = aF.stFeatureExtraction(x, Fs, stWin * Fs, stStep * Fs)        # extract short-term features
+    x = audioBasicIO.stereo2mono(x)
+    ShortTermFeatures, _ = aF.stFeatureExtraction(x, Fs, stWin * Fs, 
+                                                  stStep * Fs)
 
     # Step 2: train binary SVM classifier of low vs high energy frames
     EnergySt = ShortTermFeatures[1, :]                  # keep only the energy short-term sequence (2nd feature)
@@ -981,7 +981,8 @@ def musicThumbnailing(x, Fs, shortTermSize=1.0, shortTermStep=0.5, thumbnailSize
     '''
     x = audioBasicIO.stereo2mono(x);
     # feature extraction:
-    stFeatures = aF.stFeatureExtraction(x, Fs, Fs*shortTermSize, Fs*shortTermStep)
+    stFeatures, _ = aF.stFeatureExtraction(x, Fs, Fs*shortTermSize, 
+                                           Fs*shortTermStep)
 
     # self-similarity matrix
     S = selfSimilarityMatrix(stFeatures)

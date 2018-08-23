@@ -42,7 +42,7 @@ def beatExtractionWrapper(wavFileName, plot):
     if not os.path.isfile(wavFileName):
         raise Exception("Input audio file not found!")
     [Fs, x] = audioBasicIO.readAudioFile(wavFileName)
-    F = aF.stFeatureExtraction(x, Fs, 0.050 * Fs, 0.050 * Fs)
+    F, _ = aF.stFeatureExtraction(x, Fs, 0.050 * Fs, 0.050 * Fs)
     BPM, ratio = aF.beatExtraction(F, 0.050, plot)
     print("Beat: {0:d} bpm ".format(int(BPM)))
     print("Ratio: {0:.2f} ".format(ratio))
