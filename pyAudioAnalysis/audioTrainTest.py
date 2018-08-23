@@ -57,7 +57,7 @@ def classifierWrapper(classifier, classifierType, testSample):
     EXAMPLE (for some audio signal stored in array x):
         import audioFeatureExtraction as aF
         import audioTrainTest as aT
-        # load the classifier (here SVM, for kNN use loadKNNModel instead):
+        # load the classifier (here SVM, for kNN use load_model_knn instead):
         [Classifier, MEAN, STD, classNames, mtWin, mtStep, stWin, stStep] = aT.load_model(modelName)
         # mid-term feature extraction:
         [MidTermFeatures, _] = aF.mtFeatureExtraction(x, Fs, mtWin * Fs, mtStep * Fs, round(Fs*stWin), round(Fs*stStep));
