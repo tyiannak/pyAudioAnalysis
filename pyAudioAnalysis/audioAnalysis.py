@@ -84,13 +84,13 @@ def trainClassifierWrapper(method, beatFeatures, directories, modelName):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
     aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
-                       method.lower(), modelName, computeBEAT=beatFeatures)
+                       method.lower(), modelName, compute_beat=beatFeatures)
 
 
 def trainRegressionWrapper(method, beatFeatures, dirName, modelName):
     aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow,
                                  aT.shortTermStep, method.lower(), modelName,
-                                 computeBEAT=beatFeatures)
+                                 compute_beat=beatFeatures)
 
 
 def classifyFileWrapper(inputFile, modelType, modelName):
@@ -225,9 +225,9 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
 
 def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
     if useLDA:
-        aS.speakerDiarization(inputFile, numSpeakers, PLOT=True)
+        aS.speakerDiarization(inputFile, numSpeakers, plot_res=True)
     else:
-        aS.speakerDiarization(inputFile, numSpeakers, LDAdim=0, PLOT=True)
+        aS.speakerDiarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
 
 
 def thumbnailWrapper(inputFile, thumbnailWrapperSize):

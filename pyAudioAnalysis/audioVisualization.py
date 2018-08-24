@@ -132,7 +132,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         - priorKnowledge:    if this is set equal to "artist"
     '''
     if dimReductionMethod=="pca":
-        allMtFeatures, wavFilesList, _ = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, computeBEAT = True)
+        allMtFeatures, wavFilesList, _ = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, compute_beat = True)
         if allMtFeatures.shape[0]==0:
             print("Error: No data found! Check input folder")
             return

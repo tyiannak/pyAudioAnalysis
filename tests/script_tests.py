@@ -9,9 +9,9 @@ root_data_path = "/Users/tyiannak/ResearchData/Audio Dataset/pyAudioAnalysisData
 
 print("\n\n\n * * * TEST 1 * * * \n\n\n")
 [Fs, x] = audioBasicIO.readAudioFile(root_data_path + "pyAudioAnalysis/data/count.wav");
-F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.025*Fs);
-plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel('ZCR'); 
-plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel('Energy'); plt.show()
+F, f_names = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.025*Fs);
+plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[0]);
+plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[1]); plt.show()
 
 print("\n\n\n * * * TEST 2 * * * \n\n\n")
 [Fs, x] = audioBasicIO.readAudioFile(root_data_path + "pyAudioAnalysis/data/doremi.wav")
@@ -36,14 +36,14 @@ aS.hmmSegmentation(root_data_path + 'pyAudioAnalysis/data//scottish.wav', 'hmmTe
 aS.hmmSegmentation(root_data_path + 'pyAudioAnalysis/data//scottish.wav', 'hmmTemp2', True, root_data_path + 'pyAudioAnalysis/data//scottish.segments')				# test 2
 
 print("\n\n\n * * * TEST 7 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm_rbf", "temp.mod", computeBEAT=False)
+aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm_rbf", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion/01.wav", "temp.mod", "svm_rbf"))
 
 print("\n\n\n * * * TEST 8 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm", "temp.mod", computeBEAT=False)
+aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion/01.wav", "temp.mod", "svm"))
 
 print("\n\n\n * * * TEST 9 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "randomforest", "temp.mod", computeBEAT=False)
+aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "randomforest", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion/01.wav", "temp.mod", "randomforest"))
 
