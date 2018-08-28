@@ -50,7 +50,7 @@ def classifierWrapper(classifier, classifier_type, test_sample):
     '''
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
-        - classifier:        a classifier object of type sklearn.svm.SVC or kNN (defined in this library) or sklearn.ensemble.RandomForestclassifier or sklearn.ensemble.GradientBoostingclassifier  or sklearn.ensemble.ExtraTreesclassifier
+        - classifier:        a classifier object of type sklearn.svm.SVC or kNN (defined in this library) or sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.GradientBoostingClassifier  or sklearn.ensemble.ExtraTreesClassifier
         - classifier_type:    "svm" or "knn" or "randomforests" or "gradientboosting" or "extratrees"
         - test_sample:        a feature vector (numpy array)
     RETURNS:
@@ -211,7 +211,7 @@ def trainRandomForest(features, n_estimators):
     '''
 
     [X, Y] = listOfFeatures2Matrix(features)
-    rf = sklearn.ensemble.RandomForestclassifier(n_estimators = n_estimators)
+    rf = sklearn.ensemble.RandomForestClassifier(n_estimators = n_estimators)
     rf.fit(X,Y)
 
     return rf
@@ -233,7 +233,7 @@ def trainGradientBoosting(features, n_estimators):
     '''
 
     [X, Y] = listOfFeatures2Matrix(features)
-    rf = sklearn.ensemble.GradientBoostingclassifier(n_estimators = n_estimators)
+    rf = sklearn.ensemble.GradientBoostingClassifier(n_estimators = n_estimators)
     rf.fit(X,Y)
 
     return rf
@@ -255,7 +255,7 @@ def trainExtraTrees(features, n_estimators):
     '''
 
     [X, Y] = listOfFeatures2Matrix(features)
-    et = sklearn.ensemble.ExtraTreesclassifier(n_estimators = n_estimators)
+    et = sklearn.ensemble.ExtraTreesClassifier(n_estimators = n_estimators)
     et.fit(X,Y)
 
     return et
