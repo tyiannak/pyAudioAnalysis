@@ -216,6 +216,7 @@ def trainRandomForest(features, n_estimators):
 
     return rf
 
+
 def trainGradientBoosting(features, n_estimators):
     '''
     Train a gradient boosting classifier
@@ -237,6 +238,7 @@ def trainGradientBoosting(features, n_estimators):
     rf.fit(X,Y)
 
     return rf
+
 
 def trainExtraTrees(features, n_estimators):
     '''
@@ -365,7 +367,6 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
         classifier = trainGradientBoosting(featuresNew, bestParam)
     elif classifier_type == "extratrees":
         classifier = trainExtraTrees(featuresNew, bestParam)
-
 
     if classifier_type == "knn":
         [X, Y] = listOfFeatures2Matrix(featuresNew)
@@ -625,52 +626,55 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params, pa
         n_exp = 10
         print("Number of training experiments changed to 10 due to high number of samples")
 
-    for Ci, C in enumerate(Params):                # for each param value
-                cm = numpy.zeros((n_classes, n_classes))
-                for e in range(n_exp):              # for each cross-validation iteration:
-                    print("Param = {0:.5f} - classifier Evaluation Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
-                    # split features:
-                    f_train, f_test = randSplitFeatures(features_norm, perTrain)
-                    # train multi-class svms:
-                    if classifier_name == "svm":
-                        classifier = trainSVM(f_train, C)
-                    elif classifier_name == "svm_rbf":
-                        classifier = trainSVM_RBF(f_train, C)
-                    elif classifier_name == "knn":
-                        classifier = trainKNN(f_train, C)
-                    elif classifier_name == "randomforest":
-                        classifier = trainRandomForest(f_train, C)
-                    elif classifier_name == "gradientboosting":
-                        classifier = trainGradientBoosting(f_train, C)
-                    elif classifier_name == "extratrees":
-                        classifier = trainExtraTrees(f_train, C)
+    for Ci, C in enumerate(Params):
+        # for each param value
+        cm = numpy.zeros((n_classes, n_classes))
+        for e in range(n_exp):
+            # for each cross-validation iteration:
+            print("Param = {0:.5f} - classifier Evaluation "
+                  "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
+            # split features:
+            f_train, f_test = randSplitFeatures(features_norm, perTrain)
+            # train multi-class svms:
+            if classifier_name == "svm":
+                classifier = trainSVM(f_train, C)
+            elif classifier_name == "svm_rbf":
+                classifier = trainSVM_RBF(f_train, C)
+            elif classifier_name == "knn":
+                classifier = trainKNN(f_train, C)
+            elif classifier_name == "randomforest":
+                classifier = trainRandomForest(f_train, C)
+            elif classifier_name == "gradientboosting":
+                classifier = trainGradientBoosting(f_train, C)
+            elif classifier_name == "extratrees":
+                classifier = trainExtraTrees(f_train, C)
 
-                    cmt = numpy.zeros((n_classes, n_classes))
-                    for c1 in range(n_classes):
-                        n_test_samples = len(f_test[c1])
-                        res = numpy.zeros((n_test_samples, 1))
-                        for ss in range(n_test_samples):
-                            [res[ss], _] = classifierWrapper(classifier, 
-                                                             classifier_name,
-                                                             f_test[c1][ss])
-                        for c2 in range(n_classes):
-                            cmt[c1][c2] = float(len(numpy.nonzero(res == c2)[0]))
-                    cm = cm + cmt
-                cm = cm + 0.0000000010
-                rec = numpy.zeros((cm.shape[0], ))
-                pre = numpy.zeros((cm.shape[0], ))
+            cmt = numpy.zeros((n_classes, n_classes))
+            for c1 in range(n_classes):
+                n_test_samples = len(f_test[c1])
+                res = numpy.zeros((n_test_samples, 1))
+                for ss in range(n_test_samples):
+                    [res[ss], _] = classifierWrapper(classifier,
+                                                     classifier_name,
+                                                     f_test[c1][ss])
+                for c2 in range(n_classes):
+                    cmt[c1][c2] = float(len(numpy.nonzero(res == c2)[0]))
+            cm = cm + cmt
+        cm = cm + 0.0000000010
+        rec = numpy.zeros((cm.shape[0], ))
+        pre = numpy.zeros((cm.shape[0], ))
 
-                for ci in range(cm.shape[0]):
-                    rec[ci] = cm[ci, ci] / numpy.sum(cm[ci, :])
-                    pre[ci] = cm[ci, ci] / numpy.sum(cm[:, ci])
-                precision_classes_all.append(pre)
-                recall_classes_all.append(rec)
-                f1 = 2 * rec * pre / (rec + pre)
-                f1_classes_all.append(f1)
-                ac_all.append(numpy.sum(numpy.diagonal(cm)) / numpy.sum(cm))
+        for ci in range(cm.shape[0]):
+            rec[ci] = cm[ci, ci] / numpy.sum(cm[ci, :])
+            pre[ci] = cm[ci, ci] / numpy.sum(cm[:, ci])
+        precision_classes_all.append(pre)
+        recall_classes_all.append(rec)
+        f1 = 2 * rec * pre / (rec + pre)
+        f1_classes_all.append(f1)
+        ac_all.append(numpy.sum(numpy.diagonal(cm)) / numpy.sum(cm))
 
-                cms_all.append(cm)
-                f1_all.append(numpy.mean(f1))
+        cms_all.append(cm)
+        f1_all.append(numpy.mean(f1))
 
     print("\t\t, end=""")
     for i, c in enumerate(class_names):
