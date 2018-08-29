@@ -746,7 +746,7 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
         wav_file_list.extend(glob.glob(os.path.join(dirName, files)))
 
     wav_file_list = sorted(wav_file_list)    
-    wav_file_list2 = []
+    wav_file_list2, mt_feature_names = [], []
     for i, wavFile in enumerate(wav_file_list):        
         print("Analyzing file {0:d} of "
               "{1:d}: {2:s}".format(i+1,
