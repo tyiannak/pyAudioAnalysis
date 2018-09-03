@@ -562,9 +562,9 @@ def stFeatureExtraction(signal, fs, win, step):
     feature_names.append("energy")
     feature_names.append("energy_entropy")
     feature_names += ["spectral_centroid", "spectral_spread"]
-    feature_names.append("spectra_entropy")
-    feature_names.append("spectra_flux")
-    feature_names.append("spectra_rolloff")
+    feature_names.append("spectral_entropy")
+    feature_names.append("spectral_flux")
+    feature_names.append("spectral_rolloff")
     feature_names += ["mfcc_{0:d}".format(mfcc_i) 
                       for mfcc_i in range(1, n_mfcc_feats+1)]
     feature_names += ["chroma_{0:d}".format(chroma_i) 
