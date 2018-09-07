@@ -8,7 +8,7 @@ def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
     ARGUMENTS:
      - dirName:     the path of the folder where the MP3s are stored
      - Fs:          the sampling rate of the generated WAV files
-     - nC:          the number of channesl of the generated WAV files
+     - nC:          the number of channels of the generated WAV files
      - useMp3TagsAsName:    True if the WAV filename is generated on MP3 tags
     '''
 
