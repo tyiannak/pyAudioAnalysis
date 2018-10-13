@@ -233,8 +233,8 @@ def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
 
 
 def thumbnailWrapper(inputFile, thumbnailWrapperSize):
-    st_window = 1.0
-    st_step = 1.0
+    st_window = 0.5
+    st_step = 0.5
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
@@ -272,13 +272,13 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
                                     linewidth=3, fill=False)
     ax.add_patch(e1)
 
-    plt.plot([B1, Smatrix.shape[0]], [A1, A1], color="k",
+    plt.plot([B1/ st_step, Smatrix.shape[0]], [A1/ st_step, A1/ st_step], color="k",
              linestyle="--", linewidth=2)
-    plt.plot([B2, Smatrix.shape[0]], [A2, A2], color="k",
+    plt.plot([B2/ st_step, Smatrix.shape[0]], [A2/ st_step, A2/ st_step], color="k",
              linestyle="--", linewidth=2)
-    plt.plot([B1, B1], [A1, Smatrix.shape[0]], color="k",
+    plt.plot([B1/ st_step, B1/ st_step], [A1/ st_step, Smatrix.shape[0]], color="k",
              linestyle="--", linewidth=2)
-    plt.plot([B2, B2], [A2, Smatrix.shape[0]], color="k",
+    plt.plot([B2/ st_step, B2/ st_step], [A2/ st_step, Smatrix.shape[0]], color="k",
              linestyle="--", linewidth=2)
 
     plt.xlim([0, Smatrix.shape[0]])
