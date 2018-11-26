@@ -944,7 +944,12 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
 
     sil = sil_all[imax]
     class_names = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
-
+    
+    # Output analysis to terminal before plotting.
+    print('\n--- Analysis results ---\n')
+    print('class names:', class_names)
+    print('cls:',cls)
+    print(numpy.array(range(len(cls)))*mt_step+mt_step/2.0)
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
@@ -965,6 +970,10 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         ax1.plot(numpy.array(range(len(cls)))*mt_step+mt_step/2.0, cls)
 
     if os.path.isfile(gt_file):
+        # Output GT to terminal before plotting.
+        print('\n--- Ground truth ---\n')
+        print('flags_gt:', flags_gt)
+        print(numpy.array(range(len(flags_gt))) * mt_step + mt_step / 2.0)
         if plot_res:
             ax1.plot(numpy.array(range(len(flags_gt))) *
                      mt_step + mt_step / 2.0, flags_gt, 'r')
