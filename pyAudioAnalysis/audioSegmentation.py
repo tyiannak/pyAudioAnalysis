@@ -950,6 +950,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     print('class names:', class_names)
     print('cls:',cls)
     print(numpy.array(range(len(cls)))*mt_step+mt_step/2.0)
+    print(type(cls[0]))
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
@@ -974,6 +975,18 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         print('\n--- Ground truth ---\n')
         print('flags_gt:', flags_gt)
         print(numpy.array(range(len(flags_gt))) * mt_step + mt_step / 2.0)
+        print(type(flags_gt[0]))
+
+        # Evaluation of analysis.
+        num_correct = 0
+        for i in range(len(cls)):
+            if cls[i] == flags_gt[i]:
+                num_correct += 1
+
+        print('num_correct:',num_correct)
+        correct_ratio = num_correct / float(len(cls))
+        print('Correct ratio:', correct_ratio)
+
         if plot_res:
             ax1.plot(numpy.array(range(len(flags_gt))) *
                      mt_step + mt_step / 2.0, flags_gt, 'r')
