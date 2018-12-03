@@ -948,9 +948,30 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     # Output analysis to terminal before plotting.
     print('\n--- Analysis results ---\n')
     print('class names:', class_names)
-    print('cls:',cls)
-    print(numpy.array(range(len(cls)))*mt_step+mt_step/2.0)
-    print(type(cls[0]))
+    #print('cls:',cls)
+    #print(numpy.array(range(len(cls)))*mt_step+mt_step/2.0)
+    #print(type(cls[0]))
+
+    # Get speaking percentages.
+    # Create dictionary to keep track of each speaker's segment count.
+    cls_speaker_dict = {}
+    cls_percentages = {}
+    for i in range(nSpeakersFinal):
+        cls_speaker_dict[class_names[i]] = 0
+        cls_percentages[class_names[i]] = 0
+
+    print(cls_speaker_dict)
+    # Iterate through cls and increment dictionary count when each speaker tag is encountered.
+    for i in range(len(cls)):
+        cls_speaker_dict[class_names[int(cls[i])]] += 1
+
+    print(cls_speaker_dict)
+
+    print('Classified speaking time breakdown:')
+    for i in range(nSpeakersFinal):
+        cls_percentages[class_names[i]] = cls_speaker_dict[class_names[i]] / float(len(cls))
+        print(' ', class_names[i], ':', cls_percentages[class_names[i]])
+
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
@@ -973,19 +994,39 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     if os.path.isfile(gt_file):
         # Output GT to terminal before plotting.
         print('\n--- Ground truth ---\n')
-        print('flags_gt:', flags_gt)
-        print(numpy.array(range(len(flags_gt))) * mt_step + mt_step / 2.0)
-        print(type(flags_gt[0]))
+        #print('flags_gt:', flags_gt)
+        #print(numpy.array(range(len(flags_gt))) * mt_step + mt_step / 2.0)
+        #print(type(flags_gt[0]))
 
-        # Evaluation of analysis.
+        gt_speaker_dict = {}
+        gt_percentages = {}
+        for i in range(nSpeakersFinal):
+            gt_speaker_dict[class_names[i]] = 0
+            gt_percentages[class_names[i]] = 0
+
+        for i in range(len(flags_gt)):
+            gt_speaker_dict[class_names[int(flags_gt[i])]] += 1
+
+        print(gt_speaker_dict)
+        print('Ground truth speaking time breakdown:')
+        for i in range(nSpeakersFinal):
+            gt_percentages[class_names[i]] = gt_speaker_dict[class_names[i]] / float(len(flags_gt))
+            print(' ', class_names[i], ':', gt_percentages[class_names[i]])
+
+        print('\n--- Evaluation of analysis ---')
         num_correct = 0
         for i in range(len(cls)):
             if cls[i] == flags_gt[i]:
                 num_correct += 1
-
-        print('num_correct:',num_correct)
+        
+        print('Number of correctly classified segments:',num_correct)
+        print('Total segments:', len(cls))
         correct_ratio = num_correct / float(len(cls))
         print('Correct ratio:', correct_ratio)
+        print('Differences between speaking time calculations:')
+        for i in range(nSpeakersFinal):
+            print(' ', class_names[i],':', cls_percentages[class_names[i]] - gt_percentages[class_names[i]])
+
 
         if plot_res:
             ax1.plot(numpy.array(range(len(flags_gt))) *
