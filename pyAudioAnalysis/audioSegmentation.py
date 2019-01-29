@@ -7,6 +7,7 @@ from pyAudioAnalysis import audioFeatureExtraction as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioBasicIO
 from scipy.spatial import distance
+from collections import defaultdict
 import matplotlib.pyplot as plt
 import sklearn.discriminant_analysis
 import csv
@@ -16,6 +17,7 @@ import sklearn.cluster
 import hmmlearn.hmm
 import pickle as cPickle
 import glob
+
 
 """ General utility functions """
 
@@ -843,10 +845,6 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         #mt_feats_to_red += numpy.random.rand(mt_feats_to_red.shape[0], mt_feats_to_red.shape[1]) * 0.0000010
         (mt_feats_to_red, MEAN, STD) = aT.normalizeFeatures([mt_feats_to_red.T])
         mt_feats_to_red = mt_feats_to_red[0].T
-        #dist_all = numpy.sum(distance.squareform(distance.pdist(mt_feats_to_red.T)), axis=0)
-        #m_dist_all = numpy.mean(dist_all)
-        #iNonOutLiers2 = numpy.nonzero(dist_all < 3.0*m_dist_all)[0]
-        #mt_feats_to_red = mt_feats_to_red[:, iNonOutLiers2]
         Labels = numpy.zeros((mt_feats_to_red.shape[1], ));
         LDAstep = 1.0
         LDAstepRatio = LDAstep / st_win
@@ -979,6 +977,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
+    op_file = filename.replace('.wav','.csv')
     # if groundturh exists
     if os.path.isfile(gt_file):
         [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
@@ -1041,23 +1040,34 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
             plt.title("Cluster purity: {0:.1f}% - "
                       "Speaker purity: {1:.1f}%".format(100 * purity_cluster_m,
                           100 * purity_speaker_m))
-            dicts = cls_percentages, gt_percentages 
-            print(class_names)
-            for i in range(nSpeakersFinal):
-                csv_columns = ['speaker','AT','GT']
-                with open('%s.csv' % gt_file, 'w') as f:
-                    writer = csv.writer(f)
-                    writer.writerow(csv_columns)
-                    #writer.writerow(class_names)
-                    #writer.writerow(cls_percentages)
-                    #writer.writerow(gt_percentages)
-                    #keys = set(d.keys() for d in dicts)
-                    for key,value in cls_percentages.items():
-                        #meep = [class_names[i],cls_percentages[class_names[i]],gt_percentages[class_names[i]]
-                        writer.writerow([key,value])
-                    for key,value in gt_percentages.items():
-                        writer.writerow([key,value])
+            #dicts = cls_percentages, gt_percentages 
+            #dd = defaultdict(list)
+            #for d in (cls_percentages, gt_percentages):
+            #    for key,value in d.items():
+            #        dd[key].append(value)
             
+            #print(dd)
+            
+            for i in range(nSpeakersFinal):
+                csv_columns = ['speakerID','AT','GT']
+                with open('%s' % op_file, 'w') as f:
+                    writer = csv.writer(f,delimiter = ',')
+                    writer.writerow(csv_columns)
+                    for (k,v), (k2,v2) in zip(cls_percentages.items(),gt_percentages.items()): 
+                        writer.writerow([k,str(v),str(v2)])
+            
+            #        for key,value in gt_percentages.items():
+            #            writer.writerow([key,value])
+            #dicts = cls_percentages, gt_percentages
+            #with open('%s'%op_file, 'w') as output:
+            #    writer = csv.writer(output,delimiter = '\t')
+            #    csv_columns = ['speakerID','AT','GT']
+            #    writer.writerow(csv_columns)
+            #    for key in class_names.iterkeys():
+            #        writer.writerow([key] + [d[key] for d in dicts])
+            
+           
+
     if plot_res:
         plt.xlabel("time (seconds)")
         #print s_range, sil_all    
