@@ -517,7 +517,7 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
 def load_model_knn(kNNModelName, is_regression=False):
     try:
         fo = open(kNNModelName, "rb")
-    except IOerror:
+    except IOError:
         print("didn't find file")
         return
     try:
@@ -559,7 +559,7 @@ def load_model(model_name, is_regression=False):
     '''
     try:
         fo = open(model_name + "MEANS", "rb")
-    except IOerror:
+    except IOError:
             print("Load SVM model: Didn't find file")
             return
     try:
