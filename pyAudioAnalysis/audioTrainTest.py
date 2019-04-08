@@ -676,7 +676,7 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params, pa
         cms_all.append(cm)
         f1_all.append(numpy.mean(f1))
 
-    print("\t\t, end=""")
+    print("\t\t", end="")
     for i, c in enumerate(class_names):
         if i == len(class_names)-1:
             print("{0:s}\t\t".format(c), end="")
