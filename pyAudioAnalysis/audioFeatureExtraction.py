@@ -535,6 +535,10 @@ def stFeatureExtraction(signal, fs, win, step):
     win = int(win)
     step = int(step)
 
+    # Converting signal to Mono, since Stereo signal feature extraction is not supported
+    signal = audioBasicIO.stereo2mono(signal)
+
+
     # Signal normalization
     signal = numpy.double(signal)
 
