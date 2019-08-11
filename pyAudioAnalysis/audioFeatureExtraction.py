@@ -25,12 +25,12 @@ def stZCR(frame):
 
 def stEnergy(frame):
     """Computes signal energy of frame"""
-    return numpy.sum(frame ** 2) / numpy.float64(len(frame))
+    return numpy.sum(numpy.absolute(frame ** 2)) / numpy.float64(len(frame))
 
 
 def stEnergyEntropy(frame, n_short_blocks=10):
     """Computes entropy of energy"""
-    Eol = numpy.sum(frame ** 2)    # total frame energy
+    Eol = numpy.sum(numpy.absolute(frame ** 2))    # total frame energy
     L = len(frame)
     sub_win_len = int(numpy.floor(L / n_short_blocks))
     if L != sub_win_len * n_short_blocks:
@@ -74,14 +74,14 @@ def stSpectralCentroidAndSpread(X, fs):
 def stSpectralEntropy(X, n_short_blocks=10):
     """Computes the spectral entropy"""
     L = len(X)                         # number of frame samples
-    Eol = numpy.sum(X ** 2)            # total spectral energy
+    Eol = numpy.sum(numpy.absolute(X ** 2))            # total spectral energy
 
     sub_win_len = int(numpy.floor(L / n_short_blocks))   # length of sub-frame
     if L != sub_win_len * n_short_blocks:
         X = X[0:sub_win_len * n_short_blocks]
 
     sub_wins = X.reshape(sub_win_len, n_short_blocks, order='F').copy()  # define sub-frames (using matrix reshape)
-    s = numpy.sum(sub_wins ** 2, axis=0) / (Eol + eps)                      # compute spectral sub-energies
+    s = numpy.sum(numpy.absolute(sub_wins ** 2), axis=0) / (Eol + eps)                      # compute spectral sub-energies
     En = -numpy.sum(s*numpy.log2(s + eps))                                    # compute spectral entropy
 
     return En
@@ -97,19 +97,19 @@ def stSpectralFlux(X, X_prev):
     # compute the spectral flux as the sum of square distances:
     sumX = numpy.sum(X + eps)
     sumPrevX = numpy.sum(X_prev + eps)
-    F = numpy.sum((X / sumX - X_prev/sumPrevX) ** 2)
+    F = numpy.sum(numpy.absolute((X / sumX - X_prev/sumPrevX) ** 2))
 
     return F
 
 
 def stSpectralRollOff(X, c, fs):
     """Computes spectral roll-off"""
-    totalEnergy = numpy.sum(X ** 2)
+    totalEnergy = numpy.sum(numpy.absolute(X ** 2))
     fftLength = len(X)
     Thres = c*totalEnergy
-    # Ffind the spectral rolloff as the frequency position 
+    # Ffind the spectral rolloff as the frequency position
     # where the respective spectral energy is equal to c*totalEnergy
-    CumSum = numpy.cumsum(X ** 2) + eps
+    CumSum = numpy.cumsum(numpy.absolute(X ** 2)) + eps
     [a, ] = numpy.nonzero(CumSum > Thres)
     if len(a) > 0:
         mC = numpy.float64(a[0]) / (float(fftLength))
@@ -139,7 +139,7 @@ def stHarmonic(frame, fs):
         M = len(R) - 1
 
     Gamma = numpy.zeros((M), dtype=numpy.float64)
-    CSum = numpy.cumsum(frame ** 2)
+    CSum = numpy.cumsum(numpy.absolute(frame ** 2))
     Gamma[m0:M] = R[m0:M] / (numpy.sqrt((g * CSum[M:m0:-1])) + eps)
 
     ZCR = stZCR(Gamma)
@@ -168,7 +168,7 @@ def stHarmonic(frame, fs):
 
 def mfccInitFilterBanks(fs, nfft):
     """
-    Computes the triangular filterbank for MFCC computation 
+    Computes the triangular filterbank for MFCC computation
     (used in the stFeatureExtraction function before the stMFCC function call)
     This function is taken from the scikits.talkbox library (MIT Licence):
     https://pypi.python.org/pypi/scikits.talkbox
@@ -202,12 +202,12 @@ def mfccInitFilterBanks(fs, nfft):
         cenTrFreq = freqs[i+1]
         highTrFreq = freqs[i+2]
 
-        lid = numpy.arange(numpy.floor(lowTrFreq * nfft / fs) + 1, 
-                           numpy.floor(cenTrFreq * nfft / fs) + 1,  
+        lid = numpy.arange(numpy.floor(lowTrFreq * nfft / fs) + 1,
+                           numpy.floor(cenTrFreq * nfft / fs) + 1,
                                        dtype=numpy.int)
         lslope = heights[i] / (cenTrFreq - lowTrFreq)
-        rid = numpy.arange(numpy.floor(cenTrFreq * nfft / fs) + 1, 
-                                       numpy.floor(highTrFreq * nfft / fs) + 1, 
+        rid = numpy.arange(numpy.floor(cenTrFreq * nfft / fs) + 1,
+                                       numpy.floor(highTrFreq * nfft / fs) + 1,
                                        dtype=numpy.int)
         rslope = heights[i] / (highTrFreq - cenTrFreq)
         fbank[i][lid] = lslope * (nfreqs[lid] - lowTrFreq)
@@ -226,9 +226,9 @@ def stMFCC(X, fbank, n_mfcc_feats):
     RETURN
         ceps:     MFCCs (13 element vector)
 
-    Note:    MFCC calculation is, in general, taken from the 
+    Note:    MFCC calculation is, in general, taken from the
              scikits.talkbox library (MIT Licence),
-    #    with a small number of modifications to make it more 
+    #    with a small number of modifications to make it more
          compact and suitable for the pyAudioAnalysis Lib
     """
 
@@ -241,8 +241,8 @@ def stChromaFeaturesInit(nfft, fs):
     """
     This function initializes the chroma matrices used in the calculation of the chroma features
     """
-    freqs = numpy.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])    
-    Cp = 27.50    
+    freqs = numpy.array([((f + 1) * fs) / (2 * nfft) for f in range(nfft)])
+    Cp = 27.50
     nChroma = numpy.round(12.0 * numpy.log2(freqs / Cp)).astype(int)
 
     nFreqsPerChroma = numpy.zeros((nChroma.shape[0], ))
@@ -251,7 +251,7 @@ def stChromaFeaturesInit(nfft, fs):
     for u in uChroma:
         idx = numpy.nonzero(nChroma == u)
         nFreqsPerChroma[idx] = idx[0].shape
-    
+
     return nChroma, nFreqsPerChroma
 
 
@@ -259,17 +259,17 @@ def stChromaFeatures(X, fs, nChroma, nFreqsPerChroma):
     #TODO: 1 complexity
     #TODO: 2 bug with large windows
 
-    chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D', 
+    chromaNames = ['A', 'A#', 'B', 'C', 'C#', 'D',
                    'D#', 'E', 'F', 'F#', 'G', 'G#']
-    spec = X**2    
-    if nChroma.max()<nChroma.shape[0]:        
+    spec = X**2
+    if nChroma.max()<nChroma.shape[0]:
         C = numpy.zeros((nChroma.shape[0],))
         C[nChroma] = spec
         C /= nFreqsPerChroma[nChroma]
-    else:        
-        I = numpy.nonzero(nChroma>nChroma.shape[0])[0][0]        
+    else:
+        I = numpy.nonzero(nChroma>nChroma.shape[0])[0][0]
         C = numpy.zeros((nChroma.shape[0],))
-        C[nChroma[0:I-1]] = spec            
+        C[nChroma[0:I-1]] = spec
         C /= nFreqsPerChroma
     finalC = numpy.zeros((12, 1))
     newD = int(numpy.ceil(C.shape[0] / 12.0) * 12)
@@ -370,12 +370,12 @@ def phormants(x, fs):
     w = numpy.hamming(N)
 
     # Apply window and high pass filter.
-    x1 = x * w   
+    x1 = x * w
     x1 = lfilter([1], [1., 0.63], x1)
-    
-    # Get LPC.    
+
+    # Get LPC.
     ncoeff = 2 + fs / 1000
-    A, e, k = lpc(x1, ncoeff)    
+    A, e, k = lpc(x1, ncoeff)
     #A, e, k = lpc(x1, 8)
 
     # Get roots.
@@ -385,7 +385,7 @@ def phormants(x, fs):
     # Get angles.
     angz = numpy.arctan2(numpy.imag(rts), numpy.real(rts))
 
-    # Get frequencies.    
+    # Get frequencies.
     frqs = sorted(angz * (fs / (2 * math.pi)))
 
     return frqs
@@ -408,7 +408,7 @@ def beatExtraction(st_features, win_len, PLOT=False):
     for ii, i in enumerate(toWatch):                                        # for each feature
         DifThres = 2.0 * (numpy.abs(st_features[i, 0:-1] - st_features[i, 1::])).mean()    # dif threshold (3 x Mean of Difs)
         if DifThres<=0:
-            DifThres = 0.0000000000000001        
+            DifThres = 0.0000000000000001
         [pos1, _] = utilities.peakdet(st_features[i, :], DifThres)           # detect local maxima
         posDifs = []                                                        # compute histograms of local maxima changes
         for j in range(len(pos1)-1):
@@ -565,9 +565,9 @@ def stFeatureExtraction(signal, fs, win, step):
     feature_names.append("spectral_entropy")
     feature_names.append("spectral_flux")
     feature_names.append("spectral_rolloff")
-    feature_names += ["mfcc_{0:d}".format(mfcc_i) 
+    feature_names += ["mfcc_{0:d}".format(mfcc_i)
                       for mfcc_i in range(1, n_mfcc_feats+1)]
-    feature_names += ["chroma_{0:d}".format(chroma_i) 
+    feature_names += ["chroma_{0:d}".format(chroma_i)
                       for chroma_i in range(1, n_chroma_feats)]
     feature_names.append("chroma_std")
     st_features = []
@@ -601,11 +601,11 @@ def stFeatureExtraction(signal, fs, win, step):
         '''
         if count_fr>1:
             delta = curFV - prevFV
-            curFVFinal = numpy.concatenate((curFV, delta))            
+            curFVFinal = numpy.concatenate((curFV, delta))
         else:
             curFVFinal = numpy.concatenate((curFV, curFV))
         prevFV = curFV
-        st_features.append(curFVFinal)        
+        st_features.append(curFVFinal)
         '''
         # end of delta
         X_prev = X.copy()
@@ -745,21 +745,21 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
     for files in types:
         wav_file_list.extend(glob.glob(os.path.join(dirName, files)))
 
-    wav_file_list = sorted(wav_file_list)    
+    wav_file_list = sorted(wav_file_list)
     wav_file_list2, mt_feature_names = [], []
-    for i, wavFile in enumerate(wav_file_list):        
+    for i, wavFile in enumerate(wav_file_list):
         print("Analyzing file {0:d} of "
               "{1:d}: {2:s}".format(i+1,
                                     len(wav_file_list),
                                     wavFile))
         if os.stat(wavFile).st_size == 0:
             print("   (EMPTY FILE -- SKIPPING)")
-            continue        
+            continue
         [fs, x] = audioBasicIO.readAudioFile(wavFile)
         if isinstance(x, int):
-            continue        
+            continue
 
-        t1 = time.clock()        
+        t1 = time.clock()
         x = audioBasicIO.stereo2mono(x)
         if x.shape[0]<float(fs)/5:
             print("  (AUDIO FILE TOO SMALL - SKIPPING)")
@@ -860,8 +860,8 @@ def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step
     for i, wavFile in enumerate(wav_file_list):
         [fs, x] = audioBasicIO.readAudioFile(wavFile)
         if isinstance(x, int):
-            continue        
-        
+            continue
+
         x = audioBasicIO.stereo2mono(x)
         [mt_term_feats, _, _] = mtFeatureExtraction(x, fs, round(mt_win * fs),
                                                     round(mt_step * fs),
