@@ -25,12 +25,12 @@ def stZCR(frame):
 
 def stEnergy(frame):
     """Computes signal energy of frame"""
-    return numpy.sum(frame ** 2) / numpy.float64(len(frame))
+    return numpy.sum(np.square(frame, dtype='int64')) / numpy.float64(len(frame))
 
 
 def stEnergyEntropy(frame, n_short_blocks=10):
     """Computes entropy of energy"""
-    Eol = numpy.sum(frame ** 2)    # total frame energy
+    Eol = numpy.sum(np.square(frame, dtype='int64'))    # total frame energy
     L = len(frame)
     sub_win_len = int(numpy.floor(L / n_short_blocks))
     if L != sub_win_len * n_short_blocks:
@@ -139,7 +139,7 @@ def stHarmonic(frame, fs):
         M = len(R) - 1
 
     Gamma = numpy.zeros((M), dtype=numpy.float64)
-    CSum = numpy.cumsum(frame ** 2)
+    CSum = numpy.cumsum(np.square(frame, dtype='int64'))
     Gamma[m0:M] = R[m0:M] / (numpy.sqrt((g * CSum[M:m0:-1])) + eps)
 
     ZCR = stZCR(Gamma)
