@@ -2,6 +2,13 @@ from __future__ import print_function
 import aifc, os, glob, eyed3, ntpath, shutil, numpy
 from pydub import AudioSegment
 
+# Attempt to import the soundfile module for FLAC importing.
+try:
+    import soundfile
+    has_soundfile = True
+except:
+    has_soundfile = False
+
 def convertDirMP3ToWav(dirName, Fs, nC, useMp3TagsAsName = False):
     '''
     This function converts the MP3 files stored in a folder to WAV. If required, the output names of the WAV files are based on MP3 tags, otherwise the same names are used.
@@ -78,6 +85,7 @@ def readAudioFile(path):
             strsig = s.readframes(nframes)
             x = numpy.fromstring(strsig, numpy.short).byteswap()
             Fs = s.getframerate()
+            
         elif extension.lower() == '.mp3' or extension.lower() == '.wav' or extension.lower() == '.au' or extension.lower() == '.ogg':            
             try:
                 audiofile = AudioSegment.from_file(path)
@@ -98,6 +106,18 @@ def readAudioFile(path):
             for chn in list(range(audiofile.channels)):
                 x.append(data[chn::audiofile.channels])
             x = numpy.array(x).T
+            
+        elif extension.lower() == '.flac':
+            if has_soundfile:
+                try:
+                    audiofile, Fs = soundfile.read(path, dtype='int32')
+                    x = audiofile
+                except:
+                    print("Error: file not found or other PySoundFile error. "
+                      "(DECODING FAILED)")
+                    return (-1,-1)      
+            else:
+                print("Error: PySoundFile not available, required for FLAC support.")
         else:
             print("Error in readAudioFile(): Unknown file type!")
             return (-1,-1)
