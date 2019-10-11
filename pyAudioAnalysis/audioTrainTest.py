@@ -943,13 +943,8 @@ def fileClassification(inputFile, model_name, model_type):
     return bufferClassification(x, Fs, model_name, model_type)
 
 
-def fileRegression(inputFile, model_name, model_type):
+def bufferRegression(audioBuffer, sampleRate, model_name, model_type):
     # Load classifier:
-
-    if not os.path.isfile(inputFile):
-        print("fileClassification: wav file not found!")
-        return (-1, -1, -1)
-
     regression_models = glob.glob(model_name + "_*")
     regression_models2 = []
     for r in regression_models:
@@ -965,8 +960,8 @@ def fileRegression(inputFile, model_name, model_type):
     if model_type == 'svm' or model_type == "svm_rbf" or model_type == 'randomforest':
         [_, _, _, mt_win, mt_step, st_win, st_step, compute_beat] = load_model(regression_models[0], True)
 
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
-    x = audioBasicIO.stereo2mono(x)
+    Fs = sampleRate
+    x = audioBuffer
 
     # feature extraction:
     [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs, mt_step * Fs, round(Fs * st_win), round(Fs * st_step))
@@ -989,6 +984,19 @@ def fileRegression(inputFile, model_name, model_type):
         curFV = (mt_features - MEAN) / STD                  # normalization
         R.append(regressionWrapper(model, model_type, curFV))    # classification
     return R, regression_names
+
+
+
+def fileRegression(inputFile, model_name, model_type):
+
+    if not os.path.isfile(inputFile):
+        print("fileClassification: wav file not found!")
+        return (-1, -1, -1)
+
+    [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
+    x = audioBasicIO.stereo2mono(x)
+
+    return bufferRegression(x, Fs, model_name, model_type)
 
 
 def lda(data, labels, redDim):
