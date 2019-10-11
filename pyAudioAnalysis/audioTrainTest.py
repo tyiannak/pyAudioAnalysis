@@ -295,6 +295,7 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
         st_win, st_step:        short-term window and step
         classifier_type:        "svm" or "knn" or "randomforest" or "gradientboosting" or "extratrees"
         model_name:        name of the model to be saved
+        compute_beat:       include beat computation in classifier
     RETURNS:
         None. Resulting classifier along with the respective model parameters are saved on files.
     '''
@@ -908,8 +909,10 @@ def bufferClassification(audioBuffer, sampleRate, model_name, model_type):
          compute_beat] = load_model(model_name)
 
     if isinstance(audioBuffer, int):                  # audio buffer format problem
+        print("bufferClassification: bad audio format!")
         return (-1, -1, -1)
     if audioBuffer.shape[0] / float(sampleRate) <= mt_win:
+        print("bufferClassification: too little audio to analyze with medium term window", mt_win)
         return (-1, -1, -1)
 
     # feature extraction:
@@ -964,6 +967,7 @@ def fileRegression(inputFile, model_name, model_type):
 
     [Fs, x] = audioBasicIO.readAudioFile(inputFile)        # read audio file and convert to mono
     x = audioBasicIO.stereo2mono(x)
+
     # feature extraction:
     [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs, mt_step * Fs, round(Fs * st_win), round(Fs * st_step))
     mt_features = mt_features.mean(axis=1)        # long term averaging of mid-term statistics
