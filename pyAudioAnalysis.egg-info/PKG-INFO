@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pyAudioAnalysis
+Version: 0.2.5
+Summary: Python Audio Analysis Library: Feature Extraction, Classification, Segmentation and Applications
+Home-page: https://github.com/tyiannak/pyAudioAnalysis
+Author: Theodoros Giannakopoulos
+Author-email: tyiannak@gmail.com
+License: Apache License, Version 2.0
+Description: UNKNOWN
+Platform: UNKNOWN
