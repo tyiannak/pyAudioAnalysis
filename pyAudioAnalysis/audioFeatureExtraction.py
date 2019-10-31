@@ -166,20 +166,18 @@ def stHarmonic(frame, fs):
     return (HR, f0)
 
 
-def mfccInitFilterBanks(fs, nfft):
+def mfccInitFilterBanks(fs, nfft, 
+        lowfreq=133.33, 
+        linc=200/3, 
+        logdc=1.0711703, 
+        numLinFiltTotal=13, 
+        numLogFilt=27):
     """
     Computes the triangular filterbank for MFCC computation 
     (used in the stFeatureExtraction function before the stMFCC function call)
     This function is taken from the scikits.talkbox library (MIT Licence):
     https://pypi.python.org/pypi/scikits.talkbox
     """
-
-    # filter bank params:
-    lowfreq = 133.33
-    linsc = 200/3.
-    logsc = 1.0711703
-    numLinFiltTotal = 13
-    numLogFilt = 27
 
     if fs < 8000:
         nlogfil = 5
