@@ -747,6 +747,7 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
             plt.axvline(x=s[0])
             plt.axvline(x=s[1])
         plt.subplot(2, 1, 2)
+        prob_on_set = np.insert(prob_on_set, 0, 0)
         plt.plot(np.arange(0, prob_on_set.shape[0] * st_step, st_step), 
                  prob_on_set)
         plt.title('Signal')
