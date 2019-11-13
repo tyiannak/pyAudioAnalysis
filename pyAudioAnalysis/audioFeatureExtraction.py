@@ -353,7 +353,8 @@ def stChromagram(signal, fs, win, step, PLOT=False):
         ax.set_yticklabels(FreqAxis[::-1])
         t_step = int(count_fr / 3)
         time_ticks = range(0, count_fr, t_step)
-        time_ticks_labels = ['%.2f' % (float(t * step) / fs) for t in time_ticks]
+        time_ticks_labels = ['%.2f' % (float(t * step) / fs)
+                             for t in time_ticks]
         ax.set_xticks(time_ticks)
         ax.set_xticklabels(time_ticks_labels)
         ax.set_xlabel('time (secs)')
@@ -419,10 +420,8 @@ def beatExtraction(st_features, win_len, PLOT=False):
         # compute histograms of local maxima changes
         for j in range(len(pos1)-1):
             posDifs.append(pos1[j+1]-pos1[j])
-        [hist_times, HistEdges] = np.histogram(posDifs,
-                                                  np.arange(0.5,
-                                                               max_beat_time +
-                                                               1.5))
+        [hist_times, HistEdges] = \
+            np.histogram(posDifs, np.arange(0.5, max_beat_time + 1.5))
         hist_centers = (HistEdges[0:-1] + HistEdges[1::]) / 2.0
         hist_times = hist_times.astype(float) / st_features.shape[1]
         hist_all += hist_times
@@ -514,7 +513,8 @@ def stSpectogram(signal, fs, win, step, PLOT=False):
         ax.set_yticklabels(FreqTicksLabels)
         t_step = int(count_fr/3)
         time_ticks = range(0, count_fr, t_step)
-        time_ticks_labels = ['%.2f' % (float(t * step) / fs) for t in time_ticks]
+        time_ticks_labels = \
+            ['%.2f' % (float(t * step) / fs) for t in time_ticks]
         ax.set_xticks(time_ticks)
         ax.set_xticklabels(time_ticks_labels)
         ax.set_xlabel('time (secs)')
@@ -550,11 +550,11 @@ def short_term_feature_extraction(signal, sampling_rate, window, step):
     # signal normalization
     signal = np.double(signal)
     signal = signal / (2.0 ** 15)
-    DC = signal.mean()
-    MAX = (np.abs(signal)).max()
-    signal = (signal - DC) / (MAX + 0.0000000001)
+    dc_offset = signal.mean()
+    signal_max = (np.abs(signal)).max()
+    signal = (signal - dc_offset) / (signal_max + 0.0000000001)
 
-    N = len(signal) # total number of samples
+    number_of_samples = len(signal)  # total number of samples
     cur_p = 0
     count_fr = 0
     nFFT = int(window / 2)
@@ -585,7 +585,7 @@ def short_term_feature_extraction(signal, sampling_rate, window, step):
     feature_names.append("chroma_std")
     st_features = []
     # for each short-term window to end of signal
-    while (cur_p + window - 1 < N):
+    while (cur_p + window - 1 < number_of_samples):
         count_fr += 1
         x = signal[cur_p:cur_p + window]  # get current window
         cur_p = cur_p + step   # update window position
@@ -614,7 +614,7 @@ def short_term_feature_extraction(signal, sampling_rate, window, step):
             chromaF.std()
         st_features.append(curFV)
         # delta features
-        '''
+        """
         if count_fr>1:
             delta = curFV - prevFV
             curFVFinal = np.concatenate((curFV, delta))            
@@ -622,7 +622,7 @@ def short_term_feature_extraction(signal, sampling_rate, window, step):
             curFVFinal = np.concatenate((curFV, curFV))
         prevFV = curFV
         st_features.append(curFVFinal)        
-        '''
+        """
         # end of delta
         X_prev = X.copy()
 
@@ -651,7 +651,8 @@ def mid_term_feature_extraction(signal, sampling_rate, mid_term_window,
         mt_features.append([])
         mid_feature_names.append("")
 
-    for i in range(n_feats):        # for each of the short-term features:
+    # for each of the short-term features:
+    for i in range(n_feats):
         cur_position = 0
         num_st_features = len(st_features[i])
         mid_feature_names[i] = f_names[i] + "_" + "mean"
@@ -726,7 +727,8 @@ def stFeatureSpeed(signal, fs, win, step):
 #        st_features.append(Ex / El)
 #        st_features.append(np.argmax(X))
 #        if curFV[n_time_spectral_feats+n_mfcc_feats+1]>0:
-#            print curFV[n_time_spectral_feats+n_mfcc_feats], curFV[n_time_spectral_feats+n_mfcc_feats+1]
+#            print curFV[n_time_spectral_feats+n_mfcc_feats], curFV[n_time_
+    #            spectral_feats+n_mfcc_feats+1]
     return np.array(st_features)
 
 
@@ -743,9 +745,11 @@ def stFeatureSpeed(signal, fs, win, step):
 def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
                             compute_beat=False):
     """
-    This function extracts the mid-term features of the WAVE files of a particular folder.
+    This function extracts the mid-term features of the WAVE files of a 
+    particular folder.
 
-    The resulting feature vector is extracted by long-term averaging the mid-term features.
+    The resulting feature vector is extracted by long-term averaging the
+    mid-term features.
     Therefore ONE FEATURE VECTOR is extracted for each WAV file.
 
     ARGUMENTS:
@@ -786,13 +790,15 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
             [mt_term_feats, st_features, mt_feature_names] = \
                 mid_term_feature_extraction(x, fs, round(mt_win * fs),
                                             round(mt_step * fs),
-                                            round(fs * st_win), round(fs * st_step))
+                                            round(fs * st_win), 
+                                            round(fs * st_step))
             [beat, beat_conf] = beatExtraction(st_features, st_step)
         else:
             [mt_term_feats, _, mt_feature_names] = \
                 mid_term_feature_extraction(x, fs, round(mt_win * fs),
                                             round(mt_step * fs),
-                                            round(fs * st_win), round(fs * st_step))
+                                            round(fs * st_win), 
+                                            round(fs * st_step))
 
         mt_term_feats = np.transpose(mt_term_feats)
         mt_term_feats = mt_term_feats.mean(axis=0)
@@ -812,31 +818,37 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
             process_times.append((t2 - t1) / duration)
     if len(process_times) > 0:
         print("Feature extraction complexity ratio: "
-              "{0:.1f} x realtime".format((1.0 / np.mean(np.array(process_times)))))
+              "{0:.1f} x realtime".format((1.0 / 
+                                           np.mean(np.array(process_times)))))
     return (all_mt_feats, wav_file_list2, mt_feature_names)
 
 
-def dirsWavFeatureExtraction(dirNames, mt_win, mt_step, st_win, st_step, compute_beat=False):
-    '''
+def dirsWavFeatureExtraction(dirNames, mt_win, mt_step, st_win, st_step, 
+                             compute_beat=False):
+    """
     Same as dirWavFeatureExtraction, but instead of a single dir it
     takes a list of paths as input and returns a list of feature matrices.
     EXAMPLE:
     [features, classNames] =
-           a.dirsWavFeatureExtraction(['audioData/classSegmentsRec/noise','audioData/classSegmentsRec/speech',
-                                       'audioData/classSegmentsRec/brush-teeth','audioData/classSegmentsRec/shower'], 1, 1, 0.02, 0.02);
+           a.dirsWavFeatureExtraction(['audioData/classSegmentsRec/noise',
+                                       'audioData/classSegmentsRec/speech',
+                                       'audioData/classSegmentsRec/brush-teeth',
+                                       'audioData/classSegmentsRec/shower'], 1, 
+                                       1, 0.02, 0.02);
 
     It can be used during the training process of a classification model ,
-    in order to get feature matrices from various audio classes (each stored in a seperate path)
-    '''
+    in order to get feature matrices from various audio classes (each stored in
+    a separate path)
+    """
 
     # feature extraction for each class:
     features = []
     classNames = []
     fileNames = []
     for i, d in enumerate(dirNames):
-        [f, fn, feature_names] = dirWavFeatureExtraction(d, mt_win, mt_step,
-                                                         st_win, st_step,
-                                                         compute_beat=compute_beat)
+        [f, fn, feature_names] = \
+            dirWavFeatureExtraction(d, mt_win, mt_step, st_win, st_step,
+                                    compute_beat=compute_beat)
         if f.shape[0] > 0:
             # if at least one audio file has been found in the provided folder:
             features.append(f)
@@ -848,7 +860,8 @@ def dirsWavFeatureExtraction(dirNames, mt_win, mt_step, st_win, st_step, compute
     return features, classNames, fileNames
 
 
-def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step):
+def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win,
+                                       st_step):
     """
     This function extracts the mid-term features of the WAVE
     files of a particular folder without averaging each file.
@@ -880,10 +893,11 @@ def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step
             continue        
         
         x = audioBasicIO.stereo_to_mono(x)
-        [mt_term_feats, _, _] = mid_term_feature_extraction(x, fs, round(mt_win * fs),
-                                                            round(mt_step * fs),
-                                                            round(fs * st_win),
-                                                            round(fs * st_step))
+        [mt_term_feats, _, _] = \
+            mid_term_feature_extraction(x, fs, round(mt_win * fs),
+                                        round(mt_step * fs),
+                                        round(fs * st_win),
+                                        round(fs * st_step))
 
         mt_term_feats = np.transpose(mt_term_feats)
         if len(all_mt_feats) == 0:                # append feature vector
@@ -891,20 +905,24 @@ def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step
             signal_idx = np.zeros((mt_term_feats.shape[0], ))
         else:
             all_mt_feats = np.vstack((all_mt_feats, mt_term_feats))
-            signal_idx = np.append(signal_idx, i * np.ones((mt_term_feats.shape[0], )))
+            signal_idx = np.append(signal_idx, i *
+                                   np.ones((mt_term_feats.shape[0], )))
 
     return (all_mt_feats, signal_idx, wav_file_list)
 
 
-# The following two feature extraction wrappers extract features for given audio files, however
-# NO LONG-TERM AVERAGING is performed. Therefore, the output for each audio file is NOT A SINGLE FEATURE VECTOR
-# but a whole feature matrix.
+# The following two feature extraction wrappers extract features for given audio
+# files, however  NO LONG-TERM AVERAGING is performed. Therefore, the output for
+# each audio file is NOT A SINGLE FEATURE VECTOR but a whole feature matrix.
 #
-# Also, another difference between the following two wrappers and the previous is that they NO LONG-TERM AVERAGING IS PERFORMED.
-# In other words, the WAV files in these functions are not used as uniform samples that need to be averaged but as sequences
+# Also, another difference between the following two wrappers and the previous
+# is that they NO LONG-TERM AVERAGING IS PERFORMED. In other words, the WAV
+# files in these functions are not used as uniform samples that need to be
+# averaged but as sequences
 
-def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize, shortTermStep, outPutFile,
-                              storeStFeatures=False, storeToCSV=False, PLOT=False):
+def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
+                              shortTermStep, outPutFile, storeStFeatures=False,
+                              storeToCSV=False, PLOT=False):
     """
     This function is used as a wrapper to:
     a) read the content of a WAV file
@@ -920,7 +938,8 @@ def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
                                                     round(fs * shortTermSize),
                                                     round(fs * shortTermStep))
     else:
-        [mtF, _, _] = mid_term_feature_extraction(x, fs, round(fs * midTermSize),
+        [mtF, _, _] = mid_term_feature_extraction(x, fs,
+                                                  round(fs * midTermSize),
                                                   round(fs * midTermStep),
                                                   round(fs * shortTermSize),
                                                   round(fs * shortTermStep))
