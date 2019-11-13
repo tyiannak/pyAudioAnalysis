@@ -18,15 +18,15 @@ def dirMp3toWavWrapper(directory, samplerate, channels):
         raise Exception("Input path not found!")
 
     useMp3TagsAsNames = True
-    audioBasicIO.convertDirMP3ToWav(directory, samplerate, channels,
-                                    useMp3TagsAsNames)
+    audioBasicIO.convert_dir_mp3_to_wav(directory, samplerate, channels,
+                                        useMp3TagsAsNames)
 
 
 def dirWAVChangeFs(directory, samplerate, channels):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
 
-    audioBasicIO.convertFsDirWavToWav(directory, samplerate, channels)
+    audioBasicIO.convert_dir_fs_wav_to_wav(directory, samplerate, channels)
 
 
 def featureExtractionFileWrapper(wav_file, out_file, mt_win, mt_step,
