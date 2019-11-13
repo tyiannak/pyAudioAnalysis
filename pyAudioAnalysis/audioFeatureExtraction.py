@@ -1,49 +1,50 @@
 from __future__ import print_function
-import time
 import os
+import time
 import glob
-import numpy as np
 import math
+import numpy as np
 from scipy.fftpack import fft
-from scipy.fftpack.realtransforms import dct
 import matplotlib.pyplot as plt
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import utilities
 from scipy.signal import lfilter
+from pyAudioAnalysis import utilities
+from pyAudioAnalysis import audioBasicIO
+from scipy.fftpack.realtransforms import dct
 
 eps = 0.00000001
 
 """ Time-domain audio features """
 
 
-def stZCR(frame):
+def short_term_zero_crossing_rate(frame):
     """Computes zero crossing rate of frame"""
     count = len(frame)
-    countZ = np.sum(np.abs(np.diff(np.sign(frame)))) / 2
-    return (np.float64(countZ) / np.float64(count-1.0))
+    count_zero = np.sum(np.abs(np.diff(np.sign(frame)))) / 2
+    return np.float64(count_zero) / np.float64(count - 1.0)
 
 
-def stEnergy(frame):
+def short_term_energy(frame):
     """Computes signal energy of frame"""
     return np.sum(frame ** 2) / np.float64(len(frame))
 
 
-def stEnergyEntropy(frame, n_short_blocks=10):
+def short_term_energy_entropy(frame, n_short_blocks=10):
     """Computes entropy of energy"""
-    Eol = np.sum(frame ** 2)    # total frame energy
-    L = len(frame)
-    sub_win_len = int(np.floor(L / n_short_blocks))
-    if L != sub_win_len * n_short_blocks:
-            frame = frame[0:sub_win_len * n_short_blocks]
+    frame_energy = np.sum(frame ** 2)    # total frame energy
+    frame_length = len(frame)
+    sub_win_len = int(np.floor(frame_length / n_short_blocks))
+    if frame_length != sub_win_len * n_short_blocks:
+        frame = frame[0:sub_win_len * n_short_blocks]
+
     # sub_wins is of size [n_short_blocks x L]
     sub_wins = frame.reshape(sub_win_len, n_short_blocks, order='F').copy()
 
     # Compute normalized sub-frame energies:
-    s = np.sum(sub_wins ** 2, axis=0) / (Eol + eps)
+    s = np.sum(sub_wins ** 2, axis=0) / (frame_energy + eps)
 
     # Compute entropy of the normalized sub-frame energies:
-    Entropy = -np.sum(s * np.log2(s + eps))
-    return Entropy
+    entropy = -np.sum(s * np.log2(s + eps))
+    return entropy
 
 
 """ Frequency-domain audio features """
@@ -145,7 +146,7 @@ def stHarmonic(frame, fs):
     CSum = np.cumsum(frame ** 2)
     Gamma[m0:M] = R[m0:M] / (np.sqrt((g * CSum[M:m0:-1])) + eps)
 
-    ZCR = stZCR(Gamma)
+    ZCR = short_term_zero_crossing_rate(Gamma)
 
     if ZCR > 0.15:
         HR = 0.0
@@ -595,9 +596,9 @@ def short_term_feature_extraction(signal, sampling_rate, window, step):
         if count_fr == 1:
             X_prev = X.copy()  # keep previous fft mag (used in spectral flux)
         curFV = np.zeros((n_total_feats, 1))
-        curFV[0] = stZCR(x)  # zero crossing rate
-        curFV[1] = stEnergy(x)  # short-term energy
-        curFV[2] = stEnergyEntropy(x)  # short-term entropy of energy
+        curFV[0] = short_term_zero_crossing_rate(x)  # zero crossing rate
+        curFV[1] = short_term_energy(x)  # short-term energy
+        curFV[2] = short_term_energy_entropy(x)  # short-term entropy of energy
         # sp centroid/spread
         [curFV[3], curFV[4]] = stSpectralCentroidAndSpread(X, sampling_rate)
         curFV[5] = stSpectralEntropy(X)   # spectral entropy
