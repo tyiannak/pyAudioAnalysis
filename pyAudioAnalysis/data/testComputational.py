@@ -14,7 +14,7 @@ def main(argv):
 			[Fs, x] = audioBasicIO.read_audio_file("diarizationExample.wav");
 			duration = x.shape[0] / float(Fs)
 			t1 = time.clock()
-			F = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.050*Fs);
+			F = audioFeatureExtraction.short_term_feature_extraction(x, Fs, 0.050 * Fs, 0.050 * Fs);
 			t2 = time.clock()
 			perTime1 =  duration / (t2-t1); print "short-term feature extraction: {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-classifyFile":

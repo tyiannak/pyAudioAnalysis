@@ -9,7 +9,7 @@ root_data_path = "/Users/tyiannak/ResearchData/Audio Dataset/pyAudioAnalysisData
 
 print("\n\n\n * * * TEST 1 * * * \n\n\n")
 [Fs, x] = audioBasicIO.read_audio_file(root_data_path + "pyAudioAnalysis/data/count.wav");
-F, f_names = audioFeatureExtraction.stFeatureExtraction(x, Fs, 0.050*Fs, 0.025*Fs);
+F, f_names = audioFeatureExtraction.short_term_feature_extraction(x, Fs, 0.050 * Fs, 0.025 * Fs);
 plt.subplot(2,1,1); plt.plot(F[0,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[0]);
 plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names[1]); plt.show()
 

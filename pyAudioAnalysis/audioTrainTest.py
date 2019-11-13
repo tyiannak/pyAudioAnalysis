@@ -1009,10 +1009,10 @@ def fileClassification(inputFile, model_name, model_type):
         return -1, -1, -1
 
     # feature extraction:
-    [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs,
-                                                 mt_step * Fs,
-                                                 round(Fs * st_win),
-                                                 round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs, mt_win * Fs,
+                                                         mt_step * Fs,
+                                                         round(Fs * st_win),
+                                                         round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
@@ -1054,11 +1054,11 @@ def fileRegression(inputFile, model_name, model_type):
     [Fs, x] = audioBasicIO.read_audio_file(inputFile)
     x = audioBasicIO.stereo_to_mono(x)
     # feature extraction:
-    [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs,
-                                                 mt_win * Fs,
-                                                 mt_step * Fs,
-                                                 round(Fs * st_win),
-                                                 round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs,
+                                                         mt_win * Fs,
+                                                         mt_step * Fs,
+                                                         round(Fs * st_win),
+                                                         round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:

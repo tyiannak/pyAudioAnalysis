@@ -360,8 +360,8 @@ def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
     flags, class_names = segs2flags(seg_start, seg_end, seg_labs, mt_step)
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    [F, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs, mt_step * fs,
-                                       round(fs * 0.050), round(fs * 0.050))
+    [F, _, _] = aF.mid_term_feature_extraction(x, fs, mt_win * fs, mt_step * fs,
+                                               round(fs * 0.050), round(fs * 0.050))
     start_prob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
     hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
 
@@ -412,9 +412,9 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
             if c not in classes_all:
                 classes_all.append(c)
         [fs, x] = audioBasicIO.read_audio_file(wav_file)
-        [F, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs,
-                                           mt_step * fs, round(fs * 0.050),
-                                           round(fs * 0.050))
+        [F, _, _] = aF.mid_term_feature_extraction(x, fs, mt_win * fs,
+                                                   mt_step * fs, round(fs * 0.050),
+                                                   round(fs * 0.050))
 
         lenF = F.shape[1]
         lenL = len(flags)
@@ -471,9 +471,10 @@ def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
         fo.close()
     fo.close()
 
-    [Features, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs, mt_step * fs, 
-                                              round(fs * 0.050),
-                                              round(fs * 0.050))
+    [Features, _, _] = aF.mid_term_feature_extraction(x, fs, mt_win * fs,
+                                                      mt_step * fs,
+                                                      round(fs * 0.050),
+                                                      round(fs * 0.050))
     flags_ind = hmm.predict(Features.T)  # apply model
     if os.path.isfile(gt_file_name):
         [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file_name)
@@ -528,26 +529,26 @@ def mtFileClassification(input_file, model_name, model_type,
         return (-1, -1, -1, -1)
     # Load classifier:
     if model_type == "knn":
-        [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step, compute_beat] = \
-            aT.load_model_knn(model_name)
+        [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
+         compute_beat] = aT.load_model_knn(model_name)
     else:
         [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
          compute_beat] = aT.load_model(model_name)
 
     if compute_beat:
         print("Model " + model_name + " contains long-term music features "
-                                     "(beat etc) and cannot be used in "
-                                     "segmentation")
+                                      "(beat etc) and cannot be used in "
+                                      "segmentation")
         return (-1, -1, -1, -1)
     [fs, x] = audioBasicIO.read_audio_file(input_file) # load input file
     if fs == -1:  # could not read file
         return (-1, -1, -1, -1)
     x = audioBasicIO.stereo_to_mono(x)  # convert stereo (if) to mono
     # mid-term feature extraction:
-    [mt_feats, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs,
-                                                     mt_step * fs,
-                                                     round(fs * st_win),
-                                                     round(fs * st_step))
+    [mt_feats, _, _] = aF.mid_term_feature_extraction(x, fs, mt_win * fs,
+                                                      mt_step * fs,
+                                                      round(fs * st_win),
+                                                      round(fs * st_step))
     flags = []
     Ps = []
     flags_ind = []
@@ -665,8 +666,8 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
 
     # Step 1: feature extraction
     x = audioBasicIO.stereo_to_mono(x)
-    st_feats, _ = aF.stFeatureExtraction(x, fs, st_win * fs, 
-                                                  st_step * fs)
+    st_feats, _ = aF.short_term_feature_extraction(x, fs, st_win * fs,
+                                                   st_step * fs)
 
     # Step 2: train binary svm classifier of low vs high energy frames
     # keep only the energy short-term sequence (2nd feature)
@@ -779,10 +780,10 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
     [classifier_2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
 
-    [mt_feats, st_feats, _] = aF.mtFeatureExtraction(x, fs, mt_size * fs,
-                                                     mt_step * fs,
-                                                     round(fs * st_win),
-                                                     round(fs*st_win * 0.5))
+    [mt_feats, st_feats, _] = aF.mid_term_feature_extraction(x, fs, mt_size * fs,
+                                                             mt_step * fs,
+                                                             round(fs * st_win),
+                                                             round(fs*st_win * 0.5))
 
     MidTermFeatures2 = np.zeros((mt_feats.shape[0] + len(classNames1) +
                                     len(classNames2), mt_feats.shape[1]))
@@ -1087,8 +1088,8 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     """
     x = audioBasicIO.stereo_to_mono(x);
     # feature extraction:
-    st_feats, _ = aF.stFeatureExtraction(x, fs, fs * short_term_size, 
-                                         fs * short_term_step)
+    st_feats, _ = aF.short_term_feature_extraction(x, fs, fs * short_term_size,
+                                                   fs * short_term_step)
 
     # self-similarity matrix
     S = selfSimilarityMatrix(st_feats)
