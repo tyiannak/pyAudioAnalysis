@@ -770,7 +770,7 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
         if os.stat(wavFile).st_size == 0:
             print("   (EMPTY FILE -- SKIPPING)")
             continue        
-        [fs, x] = audioBasicIO.readAudioFile(wavFile)
+        [fs, x] = audioBasicIO.read_audio_file(wavFile)
         if isinstance(x, int):
             continue        
 
@@ -873,7 +873,7 @@ def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step
     wav_file_list = sorted(wav_file_list)
 
     for i, wavFile in enumerate(wav_file_list):
-        [fs, x] = audioBasicIO.readAudioFile(wavFile)
+        [fs, x] = audioBasicIO.read_audio_file(wavFile)
         if isinstance(x, int):
             continue        
         
@@ -909,7 +909,7 @@ def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
     b) perform mid-term feature extraction on that signal
     c) write the mid-term feature sequences to a np file
     """
-    [fs, x] = audioBasicIO.readAudioFile(fileName)
+    [fs, x] = audioBasicIO.read_audio_file(fileName)
     x = audioBasicIO.stereo2mono(x)
     if storeStFeatures:
         [mtF, stF, _] = mtFeatureExtraction(x, fs,

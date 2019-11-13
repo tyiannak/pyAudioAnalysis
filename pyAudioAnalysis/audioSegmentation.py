@@ -359,7 +359,7 @@ def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
 
     [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
     flags, class_names = segs2flags(seg_start, seg_end, seg_labs, mt_step)
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
     [F, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs, mt_step * fs,
                                        round(fs * 0.050), round(fs * 0.050))
     start_prob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
@@ -411,7 +411,7 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
             # update class names:
             if c not in classes_all:
                 classes_all.append(c)
-        [fs, x] = audioBasicIO.readAudioFile(wav_file)
+        [fs, x] = audioBasicIO.read_audio_file(wav_file)
         [F, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs,
                                            mt_step * fs, round(fs * 0.050),
                                            round(fs * 0.050))
@@ -455,7 +455,7 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
 
 def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
                     gt_file_name=""):
-    [fs, x] = audioBasicIO.readAudioFile(wav_file_name)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file_name)
     try:
         fo = open(hmm_model_name, "rb")
     except IOError:
@@ -539,7 +539,7 @@ def mtFileClassification(input_file, model_name, model_type,
                                      "(beat etc) and cannot be used in "
                                      "segmentation")
         return (-1, -1, -1, -1)
-    [fs, x] = audioBasicIO.readAudioFile(input_file) # load input file
+    [fs, x] = audioBasicIO.read_audio_file(input_file) # load input file
     if fs == -1:  # could not read file
         return (-1, -1, -1, -1)
     x = audioBasicIO.stereo2mono(x)  # convert stereo (if) to mono
@@ -772,7 +772,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         - lda_dim (opt     LDA dimension (0 for no LDA)
         - plot_res         (opt)   0 for not plotting the results 1 for plotting
     """
-    [fs, x] = audioBasicIO.readAudioFile(filename)
+    [fs, x] = audioBasicIO.read_audio_file(filename)
     x = audioBasicIO.stereo2mono(x)
     duration = len(x) / fs
 

@@ -6,6 +6,7 @@ import numpy
 import eyed3
 import ntpath
 import shutil
+import numpy as np
 from pydub import AudioSegment
 
 
@@ -79,52 +80,62 @@ def convertFsDirWavToWav(dirName, Fs, nC):
         os.system(command)
 
 
-def readAudioFile(path):
+def read_audio_file(path):
     """
     This function returns a numpy array that stores the audio samples of a
     specified WAV of AIFF file
     """
-    extension = os.path.splitext(path)[1]
 
+    sampling_rate = -1
+    signal = np.array([])
+    extension = os.path.splitext(path)[1].lower()
+    if extension in ['.aif', '.aiff']:
+        sampling_rate, signal = read_aif(path)
+    elif extension in [".mp3", ".wav", ".au", ".ogg"]:
+        sampling_rate, signal = read_audio_generic(path)
+    else:
+        print(f"Error: unknown file type {extension}")
+
+    if signal.ndim == 2 and signal.shape[1] == 1:
+        signal = signal.flatten()
+
+    return sampling_rate, signal
+
+
+def read_aif(path):
+    sampling_rate = -1
+    signal = np.array([])
     try:
-        if extension.lower() == '.aif' or extension.lower() == '.aiff':
-            s = aifc.open(path, 'r')
+        with aifc.open(path, 'r') as s:
             nframes = s.getnframes()
             strsig = s.readframes(nframes)
-            x = numpy.fromstring(strsig, numpy.short).byteswap()
-            Fs = s.getframerate()
-        elif extension.lower() == '.mp3' or extension.lower() == '.wav' or \
-                extension.lower() == '.au' or extension.lower() == '.ogg':
-            try:
-                audiofile = AudioSegment.from_file(path)
-            except:
-                print("Error: file not found or other I/O error. "
-                      "(DECODING FAILED)")
-                return -1, -1
+            signal = numpy.fromstring(strsig, numpy.short).byteswap()
+            sampling_rate = s.getframerate()
+    except:
+        print("Error: read aif file. (DECODING FAILED)")
+    return sampling_rate, signal
 
-            if audiofile.sample_width == 2:
-                data = numpy.fromstring(audiofile._data, numpy.int16)
-            elif audiofile.sample_width == 4:
-                data = numpy.fromstring(audiofile._data, numpy.int32)
-            else:
-                return -1, -1
-            Fs = audiofile.frame_rate
-            x = []
+
+def read_audio_generic(path):
+    sampling_rate = -1
+    signal = np.array([])
+    try:
+        audiofile = AudioSegment.from_file(path)
+        data = np.array([])
+        if audiofile.sample_width == 2:
+            data = numpy.fromstring(audiofile._data, numpy.int16)
+        elif audiofile.sample_width == 4:
+            data = numpy.fromstring(audiofile._data, numpy.int32)
+
+        if data.size > 0:
+            sampling_rate = audiofile.frame_rate
+            temp_signal = []
             for chn in list(range(audiofile.channels)):
-                x.append(data[chn::audiofile.channels])
-            x = numpy.array(x).T
-        else:
-            print("Error in readAudioFile(): Unknown file type!")
-            return -1, -1
-    except IOError: 
-        print("Error: file not found or other I/O error.")
-        return -1, -1
-
-    if x.ndim == 2:
-        if x.shape[1] == 1:
-            x = x.flatten()
-
-    return Fs, x
+                temp_signal.append(data[chn::audiofile.channels])
+            signal = numpy.array(temp_signal).T
+    except:
+        print("Error: file not found or other I/O error. (DECODING FAILED)")
+    return sampling_rate, signal
 
 
 def stereo2mono(x):

@@ -41,7 +41,7 @@ def featureExtractionFileWrapper(wav_file, out_file, mt_win, mt_step,
 def beatExtractionWrapper(wav_file, plot):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
     F, _ = aF.stFeatureExtraction(x, fs, 0.050 * fs, 0.050 * fs)
     bpm, ratio = aF.beatExtraction(F, 0.050, plot)
     print("Beat: {0:d} bpm ".format(int(bpm)))
@@ -65,7 +65,7 @@ def featureVisualizationDirWrapper(directory):
 def fileSpectrogramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
     x = audioBasicIO.stereo2mono(x)
     specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, fs, round(fs * 0.040),
                                                    round(fs * 0.040), True)
@@ -74,7 +74,7 @@ def fileSpectrogramWrapper(wav_file):
 def fileChromagramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
     x = audioBasicIO.stereo2mono(x)
     specgram, TimeAxis, FreqAxis = aF.stChromagram(x, fs, round(fs * 0.040),
                                                    round(fs * 0.040), True)
@@ -217,7 +217,7 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [fs, x] = audioBasicIO.read_audio_file(inputFile)
     segmentLimits = aS.silenceRemoval(x, fs, 0.05, 0.05,
                                       smoothingWindow, weight, True)
     for i, s in enumerate(segmentLimits):
@@ -238,7 +238,7 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [fs, x] = audioBasicIO.read_audio_file(inputFile)
     if fs == -1:    # could not read file
         return
 

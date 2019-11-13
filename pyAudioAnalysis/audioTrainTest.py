@@ -999,7 +999,7 @@ def fileClassification(inputFile, model_name, model_type):
          compute_beat] = load_model(model_name)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
     x = audioBasicIO.stereo2mono(x)
 
     if isinstance(x, int):
@@ -1051,7 +1051,7 @@ def fileRegression(inputFile, model_name, model_type):
             load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
     x = audioBasicIO.stereo2mono(x)
     # feature extraction:
     [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs,
