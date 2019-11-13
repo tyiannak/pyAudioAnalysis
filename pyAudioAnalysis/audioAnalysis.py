@@ -66,7 +66,7 @@ def fileSpectrogramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    x = audioBasicIO.stereo2mono(x)
+    x = audioBasicIO.stereo_to_mono(x)
     specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, fs, round(fs * 0.040),
                                                    round(fs * 0.040), True)
 
@@ -75,7 +75,7 @@ def fileChromagramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    x = audioBasicIO.stereo2mono(x)
+    x = audioBasicIO.stereo_to_mono(x)
     specgram, TimeAxis, FreqAxis = aF.stChromagram(x, fs, round(fs * 0.040),
                                                    round(fs * 0.040), True)
 

@@ -775,7 +775,7 @@ def dirWavFeatureExtraction(dirName, mt_win, mt_step, st_win, st_step,
             continue        
 
         t1 = time.clock()        
-        x = audioBasicIO.stereo2mono(x)
+        x = audioBasicIO.stereo_to_mono(x)
         if x.shape[0]<float(fs)/5:
             print("  (AUDIO FILE TOO SMALL - SKIPPING)")
             continue
@@ -877,7 +877,7 @@ def dirWavFeatureExtractionNoAveraging(dirName, mt_win, mt_step, st_win, st_step
         if isinstance(x, int):
             continue        
         
-        x = audioBasicIO.stereo2mono(x)
+        x = audioBasicIO.stereo_to_mono(x)
         [mt_term_feats, _, _] = mtFeatureExtraction(x, fs, round(mt_win * fs),
                                                     round(mt_step * fs),
                                                     round(fs * st_win),
@@ -910,7 +910,7 @@ def mtFeatureExtractionToFile(fileName, midTermSize, midTermStep, shortTermSize,
     c) write the mid-term feature sequences to a np file
     """
     [fs, x] = audioBasicIO.read_audio_file(fileName)
-    x = audioBasicIO.stereo2mono(x)
+    x = audioBasicIO.stereo_to_mono(x)
     if storeStFeatures:
         [mtF, stF, _] = mtFeatureExtraction(x, fs,
                                          round(fs * midTermSize),

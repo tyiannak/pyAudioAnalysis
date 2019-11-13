@@ -542,7 +542,7 @@ def mtFileClassification(input_file, model_name, model_type,
     [fs, x] = audioBasicIO.read_audio_file(input_file) # load input file
     if fs == -1:  # could not read file
         return (-1, -1, -1, -1)
-    x = audioBasicIO.stereo2mono(x)  # convert stereo (if) to mono
+    x = audioBasicIO.stereo_to_mono(x)  # convert stereo (if) to mono
     # mid-term feature extraction:
     [mt_feats, _, _] = aF.mtFeatureExtraction(x, fs, mt_win * fs,
                                                      mt_step * fs,
@@ -664,7 +664,7 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
         weight = 0.01
 
     # Step 1: feature extraction
-    x = audioBasicIO.stereo2mono(x)
+    x = audioBasicIO.stereo_to_mono(x)
     st_feats, _ = aF.stFeatureExtraction(x, fs, st_win * fs, 
                                                   st_step * fs)
 
@@ -773,7 +773,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         - plot_res         (opt)   0 for not plotting the results 1 for plotting
     """
     [fs, x] = audioBasicIO.read_audio_file(filename)
-    x = audioBasicIO.stereo2mono(x)
+    x = audioBasicIO.stereo_to_mono(x)
     duration = len(x) / fs
 
     [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
@@ -1085,7 +1085,7 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     of popular music using chroma-based representations.
     Multimedia, IEEE Transactions on, 7(1), 96-104.
     """
-    x = audioBasicIO.stereo2mono(x);
+    x = audioBasicIO.stereo_to_mono(x);
     # feature extraction:
     st_feats, _ = aF.stFeatureExtraction(x, fs, fs * short_term_size, 
                                          fs * short_term_step)

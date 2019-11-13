@@ -148,7 +148,7 @@ def read_audio_generic(path):
     return sampling_rate, signal
 
 
-def stereo2mono(signal):
+def stereo_to_mono(signal):
     """
     This function converts the input signal
     (stored in a numpy array) to MONO (if it is STEREO)
