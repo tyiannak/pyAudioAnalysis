@@ -1054,7 +1054,7 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     audio features is used instead of chroma features.
     In particular the following steps are followed:
      - Extract short-term audio features. Typical short-term window size: 1 second
-     - Compute the self-silimarity matrix, i.e. all pairwise similarities
+     - Compute the self-similarity matrix, i.e. all pairwise similarities
        between feature vectors
      - Apply a diagonal mask is as a moving average filter on the values of the
        self-similarty matrix.
