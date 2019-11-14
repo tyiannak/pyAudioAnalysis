@@ -999,8 +999,8 @@ def fileClassification(inputFile, model_name, model_type):
          compute_beat] = load_model(model_name)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)
-    x = audioBasicIO.stereo2mono(x)
+    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
+    x = audioBasicIO.stereo_to_mono(x)
 
     if isinstance(x, int):
         # audio file IO problem
@@ -1009,10 +1009,10 @@ def fileClassification(inputFile, model_name, model_type):
         return -1, -1, -1
 
     # feature extraction:
-    [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs,
-                                                 mt_step * Fs,
-                                                 round(Fs * st_win),
-                                                 round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs, mt_win * Fs,
+                                                         mt_step * Fs,
+                                                         round(Fs * st_win),
+                                                         round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
@@ -1051,14 +1051,14 @@ def fileRegression(inputFile, model_name, model_type):
             load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.readAudioFile(inputFile)
-    x = audioBasicIO.stereo2mono(x)
+    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
+    x = audioBasicIO.stereo_to_mono(x)
     # feature extraction:
-    [mt_features, s, _] = aF.mtFeatureExtraction(x, Fs,
-                                                 mt_win * Fs,
-                                                 mt_step * Fs,
-                                                 round(Fs * st_win),
-                                                 round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs,
+                                                         mt_win * Fs,
+                                                         mt_step * Fs,
+                                                         round(Fs * st_win),
+                                                         round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
