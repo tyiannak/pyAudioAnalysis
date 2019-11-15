@@ -4,7 +4,7 @@ import os
 import numpy
 import glob
 import matplotlib.pyplot as plt
-from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatureExtraction as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
 from pyAudioAnalysis import audioVisualization as aV
@@ -34,8 +34,8 @@ def featureExtractionFileWrapper(wav_file, out_file, mt_win, mt_step,
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
 
-    aF.mtFeatureExtractionToFile(wav_file, mt_win, mt_step, st_win,
-                                 st_step, out_file, True, True, True)
+    aF.mid_feature_extraction_to_file(wav_file, mt_win, mt_step, st_win,
+                                      st_step, out_file, True, True, True)
 
 
 def beatExtractionWrapper(wav_file, plot):
@@ -51,8 +51,8 @@ def beatExtractionWrapper(wav_file, plot):
 def featureExtractionDirWrapper(directory, mt_win, mt_step, st_win, st_step):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
-    aF.mtFeatureExtractionToFileDir(directory, mt_win, mt_step, st_win,
-                                    st_step, True, True, True)
+    aF.mid_feature_extraction_file_dir(directory, mt_win, mt_step, st_win,
+                                       st_step, True, True, True)
 
 
 def featureVisualizationDirWrapper(directory):

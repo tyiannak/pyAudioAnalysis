@@ -7,7 +7,7 @@ import pickle as cPickle
 import signal
 import csv
 import ntpath
-from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatureExtraction as aF
 from pyAudioAnalysis import audioBasicIO
 from scipy import linalg as la
 from scipy.spatial import distance
@@ -340,12 +340,12 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
     """
 
     # STEP A: Feature Extraction:
-    [features, classNames, _] = aF.dirsWavFeatureExtraction(list_of_dirs, 
-                                                            mt_win, 
-                                                            mt_step, 
-                                                            st_win, 
-                                                            st_step, 
-                                                            compute_beat=
+    [features, classNames, _] = aF.multiple_directory_feature_extraction(list_of_dirs,
+                                                                         mt_win,
+                                                                         mt_step,
+                                                                         st_win,
+                                                                         st_step,
+                                                                         compute_beat=
                                                             compute_beat)
 
     if len(features) == 0:
@@ -463,12 +463,12 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
         model parameters are saved on files.
     """
     # STEP A: Feature Extraction:
-    [features, _, filenames] = aF.dirsWavFeatureExtraction([dir_name],
-                                                           mt_win,
-                                                           mt_step,
-                                                           st_win,
-                                                           st_step,
-                                                           compute_beat=
+    [features, _, filenames] = aF.multiple_directory_feature_extraction([dir_name],
+                                                                        mt_win,
+                                                                        mt_step,
+                                                                        st_win,
+                                                                        st_step,
+                                                                        compute_beat=
                                                            compute_beat)
     features = features[0]
     filenames = [ntpath.basename(f) for f in filenames[0]]
@@ -1002,17 +1002,17 @@ def fileClassification(inputFile, model_name, model_type):
     [Fs, x] = audioBasicIO.read_audio_file(inputFile)
     x = audioBasicIO.stereo_to_mono(x)
 
-    if isinstance(x, int):
+    if Fs == 0:
         # audio file IO problem
         return -1, -1, -1
     if x.shape[0] / float(Fs) <= mt_win:
         return -1, -1, -1
 
     # feature extraction:
-    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs, mt_win * Fs,
-                                                         mt_step * Fs,
-                                                         round(Fs * st_win),
-                                                         round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_feature_extraction(x, Fs, mt_win * Fs,
+                                                    mt_step * Fs,
+                                                    round(Fs * st_win),
+                                                    round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
@@ -1054,11 +1054,11 @@ def fileRegression(inputFile, model_name, model_type):
     [Fs, x] = audioBasicIO.read_audio_file(inputFile)
     x = audioBasicIO.stereo_to_mono(x)
     # feature extraction:
-    [mt_features, s, _] = aF.mid_term_feature_extraction(x, Fs,
-                                                         mt_win * Fs,
-                                                         mt_step * Fs,
-                                                         round(Fs * st_win),
-                                                         round(Fs * st_step))
+    [mt_features, s, _] = aF.mid_feature_extraction(x, Fs,
+                                                    mt_win * Fs,
+                                                    mt_step * Fs,
+                                                    round(Fs * st_win),
+                                                    round(Fs * st_step))
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
