@@ -4,6 +4,7 @@ import os
 import numpy
 import glob
 import matplotlib.pyplot as plt
+from pyAudioAnalysis import ShortTermFeatures as sF
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
@@ -42,7 +43,7 @@ def beatExtractionWrapper(wav_file, plot):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    F, _ = aF.short_term_feature_extraction(x, fs, 0.050 * fs, 0.050 * fs)
+    F, _ = sF.feature_extraction(x, fs, 0.050 * fs, 0.050 * fs)
     bpm, ratio = aF.beat_extraction(F, 0.050, plot)
     print("Beat: {0:d} bpm ".format(int(bpm)))
     print("Ratio: {0:.2f} ".format(ratio))
@@ -67,8 +68,8 @@ def fileSpectrogramWrapper(wav_file):
         raise Exception("Input audio file not found!")
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
     x = audioBasicIO.stereo_to_mono(x)
-    specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, fs, round(fs * 0.040),
-                                                   round(fs * 0.040), True)
+    specgram, TimeAxis, FreqAxis = sF.spectrogram(x, fs, round(fs * 0.040),
+                                                  round(fs * 0.040), True)
 
 
 def fileChromagramWrapper(wav_file):
@@ -76,8 +77,8 @@ def fileChromagramWrapper(wav_file):
         raise Exception("Input audio file not found!")
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
     x = audioBasicIO.stereo_to_mono(x)
-    specgram, TimeAxis, FreqAxis = aF.stChromagram(x, fs, round(fs * 0.040),
-                                                   round(fs * 0.040), True)
+    specgram, TimeAxis, FreqAxis = sF.chromogram(x, fs, round(fs * 0.040),
+                                                 round(fs * 0.040), True)
 
 
 def trainClassifierWrapper(method, beat_feats, directories, model_name):
