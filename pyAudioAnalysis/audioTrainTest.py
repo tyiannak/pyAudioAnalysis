@@ -1016,7 +1016,7 @@ def fileClassification(inputFile, model_name, model_type):
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
-        [beat, beatConf] = aF.beatExtraction(s, st_step)
+        [beat, beatConf] = aF.beat_extraction(s, st_step)
         mt_features = np.append(mt_features, beat)
         mt_features = np.append(mt_features, beatConf)
     curFV = (mt_features - MEAN) / STD    # normalization
@@ -1062,7 +1062,7 @@ def fileRegression(inputFile, model_name, model_type):
     # long term averaging of mid-term statistics
     mt_features = mt_features.mean(axis=1)
     if compute_beat:
-        [beat, beatConf] = aF.beatExtraction(s, st_step)
+        [beat, beatConf] = aF.beat_extraction(s, st_step)
         mt_features = np.append(mt_features, beat)
         mt_features = np.append(mt_features, beatConf)
 

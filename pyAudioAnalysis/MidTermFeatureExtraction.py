@@ -2,10 +2,8 @@ from __future__ import print_function
 import os
 import time
 import glob
-import math
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import lfilter
 from pyAudioAnalysis import utilities
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import ShortTermFeatures
@@ -14,33 +12,7 @@ eps = 0.00000001
 """ Time-domain audio features """
 
 
-def phormants(x, sampling_rate):
-    N = len(x)
-    w = np.hamming(N)
-
-    # Apply window and high pass filter.
-    x1 = x * w   
-    x1 = lfilter([1], [1., 0.63], x1)
-    
-    # Get LPC.    
-    ncoeff = 2 + sampling_rate / 1000
-    A, e, k = lpc(x1, ncoeff)    
-    #A, e, k = lpc(x1, 8)
-
-    # Get roots.
-    rts = np.roots(A)
-    rts = [r for r in rts if np.imag(r) >= 0]
-
-    # Get angles.
-    angz = np.arctan2(np.imag(rts), np.real(rts))
-
-    # Get frequencies.    
-    frqs = sorted(angz * (sampling_rate / (2 * math.pi)))
-
-    return frqs
-
-
-def beatExtraction(short_features, window_size, plot=False):
+def beat_extraction(short_features, window_size, plot=False):
     """
     This function extracts an estimate of the beat rate for a musical signal.
     ARGUMENTS:
@@ -209,7 +181,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
                                        round(mid_step * sampling_rate),
                                        round(sampling_rate * short_window),
                                        round(sampling_rate * short_step))
-            beat, beat_conf = beatExtraction(short_features, short_step)
+            beat, beat_conf = beat_extraction(short_features, short_step)
         else:
             mid_features, _, mid_feature_names = \
                 mid_feature_extraction(signal, sampling_rate,

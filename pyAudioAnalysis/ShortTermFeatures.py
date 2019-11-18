@@ -1,7 +1,9 @@
 from __future__ import print_function
+import math
 import numpy as np
 from scipy.fftpack import fft
 import matplotlib.pyplot as plt
+from scipy.signal import lfilter
 from scipy.fftpack.realtransforms import dct
 
 eps = 0.00000001
@@ -499,6 +501,32 @@ def speed_feature(signal, sampling_rate, window, step):
     #            curFV[n_time_
     #            spectral_feats+n_mfcc_feats+1]
     return np.array(st_features)
+
+
+def phormants(x, sampling_rate):
+    N = len(x)
+    w = np.hamming(N)
+
+    # Apply window and high pass filter.
+    x1 = x * w
+    x1 = lfilter([1], [1., 0.63], x1)
+
+    # Get LPC.
+    ncoeff = 2 + sampling_rate / 1000
+    A, e, k = lpc(x1, ncoeff)
+    # A, e, k = lpc(x1, 8)
+
+    # Get roots.
+    rts = np.roots(A)
+    rts = [r for r in rts if np.imag(r) >= 0]
+
+    # Get angles.
+    angz = np.arctan2(np.imag(rts), np.real(rts))
+
+    # Get frequencies.
+    frqs = sorted(angz * (sampling_rate / (2 * math.pi)))
+
+    return frqs
 
 
 """ Windowing and feature extraction """
