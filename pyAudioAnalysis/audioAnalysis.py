@@ -4,7 +4,7 @@ import os
 import numpy
 import glob
 import matplotlib.pyplot as plt
-from pyAudioAnalysis import MidTermFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
 from pyAudioAnalysis import audioVisualization as aV

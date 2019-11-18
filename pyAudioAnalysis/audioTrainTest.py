@@ -7,7 +7,7 @@ import pickle as cPickle
 import signal
 import csv
 import ntpath
-from pyAudioAnalysis import MidTermFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioBasicIO
 from scipy import linalg as la
 from scipy.spatial import distance

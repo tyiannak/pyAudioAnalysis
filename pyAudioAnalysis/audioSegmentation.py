@@ -3,7 +3,7 @@ import numpy as np
 import sklearn.cluster
 import scipy
 import os
-from pyAudioAnalysis import MidTermFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioBasicIO
 from scipy.spatial import distance

@@ -1,6 +1,6 @@
 from __future__ import print_function
 from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import MidTermFeatureExtraction
+from pyAudioAnalysis import MidTermFeatures
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
 import matplotlib.pyplot as plt
