@@ -3,6 +3,7 @@ import numpy as np
 import sklearn.cluster
 import scipy
 import os
+from pyAudioAnalysis import ShortTermFeatures as sF
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioBasicIO
@@ -665,8 +666,7 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
 
     # Step 1: feature extraction
     x = audioBasicIO.stereo_to_mono(x)
-    st_feats, _ = aF.short_term_feature_extraction(x, fs, st_win * fs,
-                                                   st_step * fs)
+    st_feats, _ = sF.feature_extraction(x, fs, st_win * fs, st_step * fs)
 
     # Step 2: train binary svm classifier of low vs high energy frames
     # keep only the energy short-term sequence (2nd feature)
@@ -1087,8 +1087,8 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     """
     x = audioBasicIO.stereo_to_mono(x);
     # feature extraction:
-    st_feats, _ = aF.short_term_feature_extraction(x, fs, fs * short_term_size,
-                                                   fs * short_term_step)
+    st_feats, _ = sF.feature_extraction(x, fs, fs * short_term_size,
+                                        fs * short_term_step)
 
     # self-similarity matrix
     S = selfSimilarityMatrix(st_feats)
