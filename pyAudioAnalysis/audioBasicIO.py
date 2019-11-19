@@ -89,7 +89,7 @@ def read_audio_file(path):
     specified WAV of AIFF file
     """
 
-    sampling_rate = -1
+    sampling_rate = 0
     signal = np.array([])
     extension = os.path.splitext(path)[1].lower()
     if extension in ['.aif', '.aiff']:
