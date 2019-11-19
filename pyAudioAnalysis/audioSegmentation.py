@@ -1,61 +1,58 @@
 from __future__ import print_function
-import numpy as np
-import sklearn.cluster
-import scipy
 import os
-from pyAudioAnalysis import ShortTermFeatures as sF
-from pyAudioAnalysis import MidTermFeatures as aF
-from pyAudioAnalysis import audioTrainTest as aT
-from pyAudioAnalysis import audioBasicIO
-from scipy.spatial import distance
-import matplotlib.pyplot as plt
-import sklearn.discriminant_analysis
 import csv
-import os.path
-import sklearn
-import sklearn.cluster
-import hmmlearn.hmm
-import pickle as cPickle
 import glob
+import scipy
+import sklearn
+import numpy as np
+import hmmlearn.hmm
+import sklearn.cluster
+import pickle as cPickle
+import matplotlib.pyplot as plt
+from scipy.spatial import distance
+import sklearn.discriminant_analysis
+from pyAudioAnalysis import audioBasicIO
+from pyAudioAnalysis import audioTrainTest as at
+from pyAudioAnalysis import MidTermFeatures as mtf
+from pyAudioAnalysis import ShortTermFeatures as stf
 
 """ General utility functions """
 
 
-def smoothMovingAvg(inputSignal, windowLen=11):
-    windowLen = int(windowLen)
-    if inputSignal.ndim != 1:
+def smooth_moving_avg(signal, window=11):
+    window = int(window)
+    if signal.ndim != 1:
         raise ValueError("")
-    if inputSignal.size < windowLen:
+    if signal.size < window:
         raise ValueError("Input vector needs to be bigger than window size.")
-    if windowLen < 3:
-        return inputSignal
-    s = np.r_[2*inputSignal[0] - inputSignal[windowLen-1::-1],
-                 inputSignal, 2*inputSignal[-1]-inputSignal[-1:-windowLen:-1]]
-    w = np.ones(windowLen, 'd')
+    if window < 3:
+        return signal
+    s = np.r_[2 * signal[0] - signal[window - 1::-1],
+              signal, 2 * signal[-1] - signal[-1:-window:-1]]
+    w = np.ones(window, 'd')
     y = np.convolve(w/w.sum(), s, mode='same')
-    return y[windowLen:-windowLen+1]
+    return y[window:-window + 1]
 
 
-def selfSimilarityMatrix(featureVectors):
+def self_similarity_matrix(feature_vectors):
     """
     This function computes the self-similarity matrix for a sequence
     of feature vectors.
     ARGUMENTS:
-     - featureVectors:     a np matrix (nDims x nVectors) whose i-th column
+     - feature_vectors:    a np matrix (nDims x nVectors) whose i-th column
                            corresponds to the i-th feature vector
 
     RETURNS:
-     - S:                  the self-similarity matrix (nVectors x nVectors)
+     - sim_matrix:         the self-similarity matrix (nVectors x nVectors)
     """
+    norm_feature_vectors, mean, std = at.normalizeFeatures([feature_vectors.T])
+    norm_feature_vectors = norm_feature_vectors[0].T
+    sim_matrix = 1.0 - distance.squareform(
+        distance.pdist(norm_feature_vectors.T, 'cosine'))
+    return sim_matrix
 
-    [nDims, nVectors] = featureVectors.shape
-    [featureVectors2, MEAN, STD] = aT.normalizeFeatures([featureVectors.T])
-    featureVectors2 = featureVectors2[0].T
-    S = 1.0 - distance.squareform(distance.pdist(featureVectors2.T, 'cosine'))
-    return S
 
-
-def flags2segs(flags, window):
+def flags_to_segs(flags, window):
     """
     ARGUMENTS:
      - flags:      a sequence of class flags (per time window)
@@ -68,34 +65,30 @@ def flags2segs(flags, window):
                    the i-th segment
     """
 
-    preFlag = 0
-    cur_flag = 0
     n_segs = 0
-
-    cur_val = flags[cur_flag]
-    segsList = []
+    cur_flag = 0
     classes = []
-    while (cur_flag < len(flags) - 1):
+    segment_list = []
+    cur_val = flags[cur_flag]
+    while cur_flag < len(flags) - 1:
         stop = 0
-        preFlag = cur_flag
-        preVal = cur_val
-        while (stop == 0):
+        previous_value = cur_val
+        while stop == 0:
             cur_flag = cur_flag + 1
-            tempVal = flags[cur_flag]
-            if ((tempVal != cur_val) | (cur_flag == len(flags) - 1)):  # stop
+            temp_value = flags[cur_flag]
+            if (temp_value != cur_val) | (cur_flag == len(flags) - 1):  # stop
                 n_segs = n_segs + 1
                 stop = 1
-                cur_seg = cur_val
                 cur_val = flags[cur_flag]
-                segsList.append((cur_flag * window))
-                classes.append(preVal)
-    segs = np.zeros((len(segsList), 2))
+                segment_list.append((cur_flag * window))
+                classes.append(previous_value)
+    segs = np.zeros((len(segment_list), 2))
 
-    for i in range(len(segsList)):
+    for i in range(len(segment_list)):
         if i > 0:
-            segs[i, 0] = segsList[i-1]
-        segs[i, 1] = segsList[i]
-    return (segs, classes)
+            segs[i, 0] = segment_list[i-1]
+        segs[i, 1] = segment_list[i]
+    return segs, classes
 
 
 def segs2flags(seg_start, seg_end, seg_label, win_size):
@@ -181,7 +174,7 @@ def plotSegmentationResults(flags_ind, flags_ind_gt, class_names, mt_step, ONLY_
     """
     
     flags = [class_names[int(f)] for f in flags_ind]
-    (segs, classes) = flags2segs(flags, mt_step)    
+    (segs, classes) = flags_to_segs(flags, mt_step)
     min_len = min(flags_ind.shape[0], flags_ind_gt.shape[0])    
     if min_len > 0:
         accuracy = np.sum(flags_ind[0:min_len] == 
@@ -361,8 +354,8 @@ def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
     flags, class_names = segs2flags(seg_start, seg_end, seg_labs, mt_step)
     [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    [F, _, _] = aF.mid_feature_extraction(x, fs, mt_win * fs, mt_step * fs,
-                                          round(fs * 0.050), round(fs * 0.050))
+    [F, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs, mt_step * fs,
+                                           round(fs * 0.050), round(fs * 0.050))
     start_prob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
     hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
 
@@ -413,9 +406,9 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
             if c not in classes_all:
                 classes_all.append(c)
         [fs, x] = audioBasicIO.read_audio_file(wav_file)
-        [F, _, _] = aF.mid_feature_extraction(x, fs, mt_win * fs,
-                                              mt_step * fs, round(fs * 0.050),
-                                              round(fs * 0.050))
+        [F, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
+                                               mt_step * fs, round(fs * 0.050),
+                                               round(fs * 0.050))
 
         lenF = F.shape[1]
         lenL = len(flags)
@@ -472,10 +465,10 @@ def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
         fo.close()
     fo.close()
 
-    [Features, _, _] = aF.mid_feature_extraction(x, fs, mt_win * fs,
-                                                 mt_step * fs,
-                                                 round(fs * 0.050),
-                                                 round(fs * 0.050))
+    [Features, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
+                                                  mt_step * fs,
+                                                  round(fs * 0.050),
+                                                  round(fs * 0.050))
     flags_ind = hmm.predict(Features.T)  # apply model
     if os.path.isfile(gt_file_name):
         [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file_name)
@@ -530,10 +523,10 @@ def mtFileClassification(input_file, model_name, model_type,
     # Load classifier:
     if model_type == "knn":
         [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
-         compute_beat] = aT.load_model_knn(model_name)
+         compute_beat] = at.load_model_knn(model_name)
     else:
         [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
-         compute_beat] = aT.load_model(model_name)
+         compute_beat] = at.load_model(model_name)
 
     if compute_beat:
         print("Model " + model_name + " contains long-term music features "
@@ -545,10 +538,10 @@ def mtFileClassification(input_file, model_name, model_type,
         return (-1, -1, -1, -1)
     x = audioBasicIO.stereo_to_mono(x)  # convert stereo (if) to mono
     # mid-term feature extraction:
-    [mt_feats, _, _] = aF.mid_feature_extraction(x, fs, mt_win * fs,
-                                                 mt_step * fs,
-                                                 round(fs * st_win),
-                                                 round(fs * st_step))
+    [mt_feats, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
+                                                  mt_step * fs,
+                                                  round(fs * st_win),
+                                                  round(fs * st_step))
     flags = []
     Ps = []
     flags_ind = []
@@ -556,7 +549,7 @@ def mtFileClassification(input_file, model_name, model_type,
     for i in range(mt_feats.shape[1]):
         cur_fv = (mt_feats[:, i] - MEAN) / STD  # normalize current feature v
         # classify vector:
-        [res, P] = aT.classifierWrapper(classifier, model_type, cur_fv)
+        [res, P] = at.classifierWrapper(classifier, model_type, cur_fv)
         flags_ind.append(res)
         flags.append(class_names[int(res)])  # update class label matrix
         Ps.append(np.max(P))   # update probability matrix
@@ -567,7 +560,7 @@ def mtFileClassification(input_file, model_name, model_type,
         if flags_ind[i-1] == flags_ind[i + 1]:
             flags_ind[i] = flags_ind[i + 1]
     # convert fix-sized flags to segments and classes
-    (segs, classes) = flags2segs(flags, mt_step)
+    (segs, classes) = flags_to_segs(flags, mt_step)
     segs[-1] = len(x) / float(fs)
 
     # Load grount-truth:        
@@ -666,7 +659,7 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
 
     # Step 1: feature extraction
     x = audioBasicIO.stereo_to_mono(x)
-    st_feats, _ = sF.feature_extraction(x, fs, st_win * fs, st_step * fs)
+    st_feats, _ = stf.feature_extraction(x, fs, st_win * fs, st_step * fs)
 
     # Step 2: train binary svm classifier of low vs high energy frames
     # keep only the energy short-term sequence (2nd feature)
@@ -686,8 +679,8 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
     faets_s = [class1.T, class2.T]
     # normalize and train the respective svm probabilistic model
     # (ONSET vs SILENCE)
-    [faets_s_norm, means_s, stds_s] = aT.normalizeFeatures(faets_s)
-    svm = aT.trainSVM(faets_s_norm, 1.0)
+    [faets_s_norm, means_s, stds_s] = at.normalizeFeatures(faets_s)
+    svm = at.trainSVM(faets_s_norm, 1.0)
 
     # Step 3: compute onset probability based on the trained svm
     prob_on_set = []
@@ -698,7 +691,7 @@ def silenceRemoval(x, fs, st_win, st_step, smoothWindow=0.5, weight=0.5, plot=Fa
         prob_on_set.append(svm.predict_proba(cur_fv.reshape(1,-1))[0][1])
     prob_on_set = np.array(prob_on_set)
     # smooth probability:
-    prob_on_set = smoothMovingAvg(prob_on_set, smoothWindow / st_step)
+    prob_on_set = smooth_moving_avg(prob_on_set, smoothWindow / st_step)
 
     # Step 4A: detect onset frame indices:
     prog_on_set_sort = np.sort(prob_on_set)
@@ -776,13 +769,13 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     x = audioBasicIO.stereo_to_mono(x)
     duration = len(x) / fs
 
-    [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
-    [classifier_2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
+    [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = at.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
+    [classifier_2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = at.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
 
-    [mt_feats, st_feats, _] = aF.mid_feature_extraction(x, fs, mt_size * fs,
-                                                        mt_step * fs,
-                                                        round(fs * st_win),
-                                                        round(fs*st_win * 0.5))
+    [mt_feats, st_feats, _] = mtf.mid_feature_extraction(x, fs, mt_size * fs,
+                                                         mt_step * fs,
+                                                         round(fs * st_win),
+                                                         round(fs*st_win * 0.5))
 
     MidTermFeatures2 = np.zeros((mt_feats.shape[0] + len(classNames1) +
                                     len(classNames2), mt_feats.shape[1]))
@@ -790,8 +783,8 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     for i in range(mt_feats.shape[1]):
         cur_f1 = (mt_feats[:, i] - MEAN1) / STD1
         cur_f2 = (mt_feats[:, i] - MEAN2) / STD2
-        [res, P1] = aT.classifierWrapper(classifier_1, "knn", cur_f1)
-        [res, P2] = aT.classifierWrapper(classifier_2, "knn", cur_f2)
+        [res, P1] = at.classifierWrapper(classifier_1, "knn", cur_f1)
+        [res, P2] = at.classifierWrapper(classifier_2, "knn", cur_f2)
         MidTermFeatures2[0:mt_feats.shape[0], i] = mt_feats[:, i]
         MidTermFeatures2[mt_feats.shape[0]:mt_feats.shape[0]+len(classNames1), i] = P1 + 0.0001
         MidTermFeatures2[mt_feats.shape[0] + len(classNames1)::, i] = P2 + 0.0001
@@ -802,7 +795,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
 
     mt_feats = mt_feats[iFeaturesSelect, :]
 
-    (mt_feats_norm, MEAN, STD) = aT.normalizeFeatures([mt_feats.T])
+    (mt_feats_norm, MEAN, STD) = at.normalizeFeatures([mt_feats.T])
     mt_feats_norm = mt_feats_norm[0].T
     n_wins = mt_feats.shape[1]
 
@@ -856,15 +849,15 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         for i in range(mt_feats_to_red.shape[1]):
             cur_f1 = (mt_feats_to_red[:, i] - MEAN1) / STD1
             cur_f2 = (mt_feats_to_red[:, i] - MEAN2) / STD2
-            [res, P1] = aT.classifierWrapper(classifier_1, "knn", cur_f1)
-            [res, P2] = aT.classifierWrapper(classifier_2, "knn", cur_f2)
+            [res, P1] = at.classifierWrapper(classifier_1, "knn", cur_f1)
+            [res, P2] = at.classifierWrapper(classifier_2, "knn", cur_f2)
             mt_feats_to_red_2[0:mt_feats_to_red.shape[0], i] = mt_feats_to_red[:, i]
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:mt_feats_to_red.shape[0] + len(classNames1), i] = P1 + 0.0001
             mt_feats_to_red_2[mt_feats_to_red.shape[0]+len(classNames1)::, i] = P2 + 0.0001
         mt_feats_to_red = mt_feats_to_red_2
         mt_feats_to_red = mt_feats_to_red[iFeaturesSelect, :]
         #mt_feats_to_red += np.random.rand(mt_feats_to_red.shape[0], mt_feats_to_red.shape[1]) * 0.0000010
-        (mt_feats_to_red, MEAN, STD) = aT.normalizeFeatures([mt_feats_to_red.T])
+        (mt_feats_to_red, MEAN, STD) = at.normalizeFeatures([mt_feats_to_red.T])
         mt_feats_to_red = mt_feats_to_red[0].T
         #dist_all = np.sum(distance.squareform(distance.pdist(mt_feats_to_red.T)), axis=0)
         #m_dist_all = np.mean(dist_all)
@@ -1087,11 +1080,11 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     """
     x = audioBasicIO.stereo_to_mono(x);
     # feature extraction:
-    st_feats, _ = sF.feature_extraction(x, fs, fs * short_term_size,
-                                        fs * short_term_step)
+    st_feats, _ = stf.feature_extraction(x, fs, fs * short_term_size,
+                                         fs * short_term_step)
 
     # self-similarity matrix
-    S = selfSimilarityMatrix(st_feats)
+    S = self_similarity_matrix(st_feats)
 
     # moving filter:
     M = int(round(thumb_size / short_term_step))
