@@ -301,7 +301,7 @@ def chroma_features(signal, sampling_rate, num_fft):
     return chroma_names, final_matrix
 
 
-def chromogram(signal, sampling_rate, window, step, plot=False):
+def chromagram(signal, sampling_rate, window, step, plot=False):
     """
     Short-term FFT mag for spectogram estimation:
     Returns:
