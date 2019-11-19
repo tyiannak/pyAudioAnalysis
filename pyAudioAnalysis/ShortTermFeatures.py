@@ -117,7 +117,7 @@ def spectral_rolloff(signal, c):
     # Ffind the spectral rolloff as the frequency position 
     # where the respective spectral energy is equal to c*totalEnergy
     cumulative_sum = np.cumsum(signal ** 2) + eps
-    a, _ = np.nonzero(cumulative_sum > threshold)
+    a = np.nonzero(cumulative_sum > threshold)
     if len(a) > 0:
         sp_rolloff = np.float64(a[0]) / (float(fft_length))
     else:
