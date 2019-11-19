@@ -4,11 +4,12 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * Checkout the tutorial library for the course ["Multimodal Information Processing & Analysis" of the MSc in Data Science in NCSR Demokritos](https://github.com/tyiannak/multimodalAnalysis)
+ * pyAudioAnalysis master [2018-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
+ * Check the tutorial for the course ["Multimodal Information Processing & Analysis" of the MSc in Data Science in NCSR Demokritos](https://github.com/tyiannak/multimodalAnalysis)
  * [PLOS-One Paper regarding pyAudioAnalysis](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610) *(please cite!)*
- * Check out [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a python script for visualization of mp3 tags and lyrics
+ * Check [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a Python script to visualize mp3 tags and lyrics
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
-  * Latest pyAudioAnalysis update [2018-08-12] now compatible with Python 3
+  * pyAudioAnalysis [2018-08-12] now compatible with Python 3
 
 
 ## General
