@@ -7,7 +7,7 @@ import sklearn
 import numpy as np
 import hmmlearn.hmm
 import sklearn.cluster
-import pickle as cPickle
+import pickle as cpickle
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import sklearn.discriminant_analysis
@@ -65,30 +65,29 @@ def flags_to_segs(flags, window):
                    the i-th segment
     """
 
-    n_segs = 0
-    cur_flag = 0
+    num_segs = 0
+    index = 0
     classes = []
     segment_list = []
-    cur_val = flags[cur_flag]
-    while cur_flag < len(flags) - 1:
-        stop = 0
-        previous_value = cur_val
-        while stop == 0:
-            cur_flag = cur_flag + 1
-            temp_value = flags[cur_flag]
-            if (temp_value != cur_val) | (cur_flag == len(flags) - 1):  # stop
-                n_segs = n_segs + 1
-                stop = 1
-                cur_val = flags[cur_flag]
-                segment_list.append((cur_flag * window))
+    cur_flag = flags[index]
+    while index < len(flags) - 1:
+        previous_value = cur_flag
+        while True:
+            index += 1
+            compare_flag = flags[index]
+            if (compare_flag != cur_flag) | (index == len(flags) - 1):
+                num_segs += 1
+                cur_flag = flags[index]
+                segment_list.append((index * window))
                 classes.append(previous_value)
-    segs = np.zeros((len(segment_list), 2))
+                break
+    segments = np.zeros((len(segment_list), 2))
 
     for i in range(len(segment_list)):
         if i > 0:
-            segs[i, 0] = segment_list[i-1]
-        segs[i, 1] = segment_list[i]
-    return segs, classes
+            segments[i, 0] = segment_list[i-1]
+        segments[i, 1] = segment_list[i]
+    return segments, classes
 
 
 def segs2flags(seg_start, seg_end, seg_label, win_size):
@@ -365,10 +364,10 @@ def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     hmm.covars_ = cov
     
     fo = open(hmm_model_name, "wb")
-    cPickle.dump(hmm, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(class_names, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(mt_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(mt_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+    cpickle.dump(hmm, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(class_names, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(mt_win, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(mt_step, fo, protocol=cpickle.HIGHEST_PROTOCOL)
     fo.close()
 
     return hmm, class_names
@@ -438,10 +437,10 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
     hmm.covars_ = cov
 
     fo = open(hmm_model_name, "wb")   # save HMM model
-    cPickle.dump(hmm, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(classes_all, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(mt_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-    cPickle.dump(mt_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+    cpickle.dump(hmm, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(classes_all, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(mt_win, fo, protocol=cpickle.HIGHEST_PROTOCOL)
+    cpickle.dump(mt_step, fo, protocol=cpickle.HIGHEST_PROTOCOL)
     fo.close()
 
     return hmm, classes_all
@@ -457,10 +456,10 @@ def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
         return
 
     try:
-        hmm = cPickle.load(fo)
-        classes_all = cPickle.load(fo)
-        mt_win = cPickle.load(fo)
-        mt_step = cPickle.load(fo)
+        hmm = cpickle.load(fo)
+        classes_all = cpickle.load(fo)
+        mt_win = cpickle.load(fo)
+        mt_step = cpickle.load(fo)
     except:
         fo.close()
     fo.close()
