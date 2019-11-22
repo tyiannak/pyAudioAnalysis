@@ -182,13 +182,13 @@ def trainHMMsegmenter_fromfile(wavFile, gtFile, hmmModelName, mt_win, mt_step):
         print("Error: groundtruth does not exist!")
         return
 
-    aS.trainHMM_fromFile(wavFile, gtFile, hmmModelName, mt_win, mt_step)
+    aS.train_hmm_from_file(wavFile, gtFile, hmmModelName, mt_win, mt_step)
 
 
 def trainHMMsegmenter_fromdir(directory, hmmModelName, mt_win, mt_step):
     if not os.path.isdir(directory):
         raise Exception("Input folder not found!")
-    aS.trainHMM_fromDir(directory, hmmModelName, mt_win, mt_step)
+    aS.train_hmm_from_directory(directory, hmmModelName, mt_win, mt_step)
 
 
 def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):

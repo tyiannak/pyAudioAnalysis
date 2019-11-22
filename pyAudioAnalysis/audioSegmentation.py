@@ -59,7 +59,7 @@ def flags_to_segs(flags, window):
      - window:     window duration (in seconds)
 
     RETURNS:
-     - segs:       a sequence of segment's limits: segs[i,0] is start and
+     - segments:   a sequence of segment's limits: segs[i,0] is start and
                    segs[i,1] are start and end point of segment i
      - classes:    a sequence of class flags: class[i] is the class ID of
                    the i-th segment
@@ -90,51 +90,55 @@ def flags_to_segs(flags, window):
     return segments, classes
 
 
-def segs2flags(seg_start, seg_end, seg_label, win_size):
+def segs_to_flags(start_times, end_times, labels, window):
     """
     This function converts segment endpoints and respective segment
     labels to fix-sized class labels.
     ARGUMENTS:
-     - seg_start:    segment start points (in seconds)
-     - seg_end:    segment endpoints (in seconds)
-     - seg_label:    segment labels
-      - win_size:    fix-sized window (in seconds)
+     - start_times:  segment start points (in seconds)
+     - end_times:    segment endpoints (in seconds)
+     - labels:       segment labels
+     - window:      fix-sized window (in seconds)
     RETURNS:
      - flags:    np array of class indices
      - class_names:    list of classnames (strings)
     """
     flags = []
-    class_names = list(set(seg_label))
-    curPos = win_size / 2.0
-    while curPos < seg_end[-1]:
-        for i in range(len(seg_start)):
-            if curPos > seg_start[i] and curPos <= seg_end[i]:
+    class_names = list(set(labels))
+    index = window / 2.0
+    while index < end_times[-1]:
+        for i in range(len(start_times)):
+            if start_times[i] < index <= end_times[i]:
                 break
-        flags.append(class_names.index(seg_label[i]))
-        curPos += win_size
+        flags.append(class_names.index(labels[i]))
+        index += window
     return np.array(flags), class_names
 
-def computePreRec(cm, class_names):
+
+def compute_metrics(confusion_matrix, class_names):
     """
     This function computes the precision, recall and f1 measures,
     given a confusion matrix
     """
-    n_classes = cm.shape[0]
+    f1 = []
+    recall = []
+    precision = []
+    n_classes = confusion_matrix.shape[0]
     if len(class_names) != n_classes:
         print("Error in computePreRec! Confusion matrix and class_names "
               "list must be of the same size!")
-        return
-    precision = []
-    recall = []
-    f1 = []    
-    for i, c in enumerate(class_names):
-        precision.append(cm[i,i] / np.sum(cm[:,i]))
-        recall.append(cm[i,i] / np.sum(cm[i,:]))
-        f1.append( 2 * precision[-1] * recall[-1] / (precision[-1] + recall[-1]))
+    else:
+        for i, c in enumerate(class_names):
+            precision.append(confusion_matrix[i, i] /
+                             np.sum(confusion_matrix[:, i]))
+            recall.append(confusion_matrix[i, i] /
+                          np.sum(confusion_matrix[i, :]))
+            f1.append(2 * precision[-1] * recall[-1] /
+                      (precision[-1] + recall[-1]))
     return recall, precision, f1
 
 
-def readSegmentGT(gt_file):
+def read_segmentation_gt(gt_file):
     """
     This function reads a segmentation ground truth file,
     following a simple CSV format with the following columns:
@@ -147,24 +151,21 @@ def readSegmentGT(gt_file):
      - seg_end:       a np array of segments' ending positions
      - seg_label:     a list of respective class labels (strings)
     """
-    f = open(gt_file, 'rt')
-    reader = csv.reader(f, delimiter=',')
-    seg_start = []
-    seg_end = []
-    seg_label = []
-    for row in reader:
-        if len(row) == 3:
-            seg_start.append(float(row[0]))
-            seg_end.append(float(row[1]))
-            #if row[2]!="other":
-            #    seg_label.append((row[2]))
-            #else:
-            #    seg_label.append("silence")
-            seg_label.append((row[2]))
-    return np.array(seg_start), np.array(seg_end), seg_label
+    with open(gt_file, 'rt') as f_handle:
+        reader = csv.reader(f_handle, delimiter=',')
+        start_times = []
+        end_times = []
+        labels = []
+        for row in reader:
+            if len(row) == 3:
+                start_times.append(float(row[0]))
+                end_times.append(float(row[1]))
+                labels.append((row[2]))
+    return np.array(start_times), np.array(end_times), labels
 
 
-def plotSegmentationResults(flags_ind, flags_ind_gt, class_names, mt_step, ONLY_EVALUATE=False):
+def plot_segmentation_results(flags_ind, flags_ind_gt, class_names, mt_step,
+                              evaluate_only=False):
     """
     This function plots statistics on the classification-segmentation results 
     produced either by the fix-sized supervised method or the HMM method.
@@ -173,29 +174,29 @@ def plotSegmentationResults(flags_ind, flags_ind_gt, class_names, mt_step, ONLY_
     """
     
     flags = [class_names[int(f)] for f in flags_ind]
-    (segs, classes) = flags_to_segs(flags, mt_step)
+    segments, classes = flags_to_segs(flags, mt_step)
     min_len = min(flags_ind.shape[0], flags_ind_gt.shape[0])    
     if min_len > 0:
-        accuracy = np.sum(flags_ind[0:min_len] == 
-                             flags_ind_gt[0:min_len]) / float(min_len)
+        accuracy = np.sum(flags_ind[0:min_len] ==
+                          flags_ind_gt[0:min_len]) / float(min_len)
     else:
         accuracy = -1
 
-    if not ONLY_EVALUATE:
-        duration = segs[-1, 1]
+    if not evaluate_only:
+        duration = segments[-1, 1]
         s_percentages = np.zeros((len(class_names), ))
         percentages = np.zeros((len(class_names), ))
         av_durations = np.zeros((len(class_names), ))
 
-        for iSeg in range(segs.shape[0]):
-            s_percentages[class_names.index(classes[iSeg])] += \
-                (segs[iSeg, 1]-segs[iSeg, 0])
+        for i_seg in range(segments.shape[0]):
+            s_percentages[class_names.index(classes[i_seg])] += \
+                (segments[i_seg, 1]-segments[i_seg, 0])
 
         for i in range(s_percentages.shape[0]):
             percentages[i] = 100.0 * s_percentages[i] / duration
-            S = sum(1 for c in classes if c == class_names[i])
-            if S > 0:
-                av_durations[i] = s_percentages[i] / S
+            class_sum = sum(1 for c in classes if c == class_names[i])
+            if class_sum > 0:
+                av_durations[i] = s_percentages[i] / class_sum
             else:
                 av_durations[i] = 0.0
 
@@ -238,58 +239,60 @@ def plotSegmentationResults(flags_ind, flags_ind_gt, class_names, mt_step, ONLY_
     return accuracy
 
 
-def evaluateSpeakerDiarization(flags, flags_gt):
+def evaluate_speaker_diarization(flags, flags_gt):
 
     min_len = min(flags.shape[0], flags_gt.shape[0])
     flags = flags[0:min_len]
     flags_gt = flags_gt[0:min_len]
 
-    u_flags = np.unique(flags)
-    u_flags_gt = np.unique(flags_gt)
+    unique_flags = np.unique(flags)
+    unique_flags_gt = np.unique(flags_gt)
 
     # compute contigency table:
-    c_matrix = np.zeros((u_flags.shape[0], u_flags_gt.shape[0]))
+    contigency_matrix = np.zeros((unique_flags.shape[0],
+                                  unique_flags_gt.shape[0]))
     for i in range(min_len):
-        c_matrix[int(np.nonzero(u_flags == flags[i])[0]),
-                int(np.nonzero(u_flags_gt == flags_gt[i])[0])] += 1.0
+        contigency_matrix[int(np.nonzero(unique_flags == flags[i])[0]),
+                int(np.nonzero(unique_flags_gt == flags_gt[i])[0])] += 1.0
 
-    Nc, Ns = c_matrix.shape
-    N_s = np.sum(c_matrix, axis=0)
-    N_c = np.sum(c_matrix, axis=1)
-    N = np.sum(c_matrix)
+    columns, rows = contigency_matrix.shape
+    row_sum = np.sum(contigency_matrix, axis=0)
+    column_sum = np.sum(contigency_matrix, axis=1)
+    matrix_sum = np.sum(contigency_matrix)
 
-    purity_clust = np.zeros((Nc, ))
-    purity_speak = np.zeros((Ns, ))
+    purity_clust = np.zeros((columns, ))
+    purity_speak = np.zeros((rows, ))
     # compute cluster purity:
-    for i in range(Nc):
-        purity_clust[i] = np.max((c_matrix[i, :])) / (N_c[i])
+    for i in range(columns):
+        purity_clust[i] = np.max((contigency_matrix[i, :])) / (column_sum[i])
 
-    for j in range(Ns):
-        purity_speak[j] = np.max((c_matrix[:, j])) / (N_s[j])
+    for j in range(rows):
+        purity_speak[j] = np.max((contigency_matrix[:, j])) / (row_sum[j])
 
-    purity_cluster_m = np.sum(purity_clust * N_c) / N
-    purity_speaker_m = np.sum(purity_speak * N_s) / N
+    purity_cluster_m = np.sum(purity_clust * column_sum) / matrix_sum
+    purity_speaker_m = np.sum(purity_speak * row_sum) / matrix_sum
 
     return purity_cluster_m, purity_speaker_m
 
 
-def trainHMM_computeStatistics(features, labels):
+def train_hmm_compute_statistics(features, labels):
     """
     This function computes the statistics used to train
     an HMM joint segmentation-classification model
     using a sequence of sequential features and respective labels
 
     ARGUMENTS:
-     - features:    a np matrix of feature vectors (numOfDimensions x n_wins)
+     - features:  a np matrix of feature vectors (numOfDimensions x n_wins)
      - labels:    a np array of class indices (n_wins x 1)
     RETURNS:
-     - start_prob:    matrix of prior class probabilities (n_classes x 1)
-     - transmat:    transition matrix (n_classes x n_classes)
-     - means:    means matrix (numOfDimensions x 1)
-     - cov:        deviation matrix (numOfDimensions x 1)
+     - class_priors:            matrix of prior class probabilities
+                                (n_classes x 1)
+     - transmutation_matrix:    transition matrix (n_classes x n_classes)
+     - means:                   means matrix (numOfDimensions x 1)
+     - cov:                     deviation matrix (numOfDimensions x 1)
     """
-    u_labels = np.unique(labels)
-    n_comps = len(u_labels)
+    unique_labels = np.unique(labels)
+    n_comps = len(unique_labels)
 
     n_feats = features.shape[0]
 
@@ -299,38 +302,40 @@ def trainHMM_computeStatistics(features, labels):
         labels = labels[0:features.shape[1]]
 
     # compute prior probabilities:
-    start_prob = np.zeros((n_comps,))
-    for i, u in enumerate(u_labels):
-        start_prob[i] = np.count_nonzero(labels == u)
+    class_priors = np.zeros((n_comps,))
+    for i, u_label in enumerate(unique_labels):
+        class_priors[i] = np.count_nonzero(labels == u_label)
     # normalize prior probabilities
-    start_prob = start_prob / start_prob.sum()
+    class_priors = class_priors / class_priors.sum()
 
     # compute transition matrix:
-    transmat = np.zeros((n_comps, n_comps))
+    transmutation_matrix = np.zeros((n_comps, n_comps))
     for i in range(labels.shape[0]-1):
-        transmat[int(labels[i]), int(labels[i + 1])] += 1
+        transmutation_matrix[int(labels[i]), int(labels[i + 1])] += 1
     # normalize rows of transition matrix:
     for i in range(n_comps):
-        transmat[i, :] /= transmat[i, :].sum()
+        transmutation_matrix[i, :] /= transmutation_matrix[i, :].sum()
 
     means = np.zeros((n_comps, n_feats))
     for i in range(n_comps):
-        means[i, :] = np.matrix(features[:, 
-                                   np.nonzero(labels == 
-                                                 u_labels[i])[0]].mean(axis=1))
+        means[i, :] = \
+            np.array(features[:,
+                     np.nonzero(labels == unique_labels[i])[0]].mean(axis=1))
 
     cov = np.zeros((n_comps, n_feats))
     for i in range(n_comps):
-        #cov[i,:,:] = np.cov(features[:,np.nonzero(labels==u_labels[i])[0]])
+        """
+        cov[i, :, :] = np.cov(features[:, np.nonzero(labels == u_labels[i])[0]])
+        """
         # use line above if HMM using full gaussian distributions are to be used
-        cov[i, :] = np.std(features[:, np.nonzero(labels == 
-                                                        u_labels[i])[0]], 
-                              axis=1)
+        cov[i, :] = np.std(features[:,
+                           np.nonzero(labels == unique_labels[i])[0]],
+                           axis=1)
 
-    return start_prob, transmat, means, cov
+    return class_priors, transmutation_matrix, means, cov
 
 
-def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
+def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     """
     This function trains a HMM model for segmentation-classification
     using a single annotated audio file
@@ -350,30 +355,34 @@ def trainHMM_fromFile(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     values are stored in the hmm_model_name file
     """
 
-    [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
-    flags, class_names = segs2flags(seg_start, seg_end, seg_labs, mt_step)
-    [fs, x] = audioBasicIO.read_audio_file(wav_file)
-    [F, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs, mt_step * fs,
-                                           round(fs * 0.050), round(fs * 0.050))
-    start_prob, transmat, means, cov = trainHMM_computeStatistics(F, flags)
-    hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
+    seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+    flags, class_names = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
+    sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
+    features, _, _ = \
+        mtf.mid_feature_extraction(signal, sampling_rate,
+                                   mt_win * sampling_rate,
+                                   mt_step * sampling_rate,
+                                   round(sampling_rate * 0.050),
+                                   round(sampling_rate * 0.050))
+    class_priors, transumation_matrix, means, cov = \
+        train_hmm_compute_statistics(features, flags)
+    hmm = hmmlearn.hmm.GaussianHMM(class_priors.shape[0], "diag")
 
-    hmm.startprob_ = start_prob
-    hmm.transmat_ = transmat    
-    hmm.means_ = means
     hmm.covars_ = cov
-    
-    fo = open(hmm_model_name, "wb")
-    cpickle.dump(hmm, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(class_names, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(mt_win, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(mt_step, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    fo.close()
+    hmm.means_ = means
+    hmm.startprob_ = class_priors
+    hmm.transmat_ = transumation_matrix
+
+    with open(hmm_model_name, "wb") as f_handle:
+        cpickle.dump(hmm, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(class_names, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mt_win, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mt_step, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
 
     return hmm, class_names
 
 
-def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
+def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
     """
     This function trains a HMM model for segmentation-classification using
     a where WAV files and .segment (ground-truth files) are stored
@@ -392,56 +401,60 @@ def trainHMM_fromDir(dirPath, hmm_model_name, mt_win, mt_step):
 
     flags_all = np.array([])
     classes_all = []
-    for i, f in enumerate(glob.glob(dirPath + os.sep + '*.wav')):
+    for i, f in enumerate(glob.glob(folder_path + os.sep + '*.wav')):
         # for each WAV file
         wav_file = f
         gt_file = f.replace('.wav', '.segments')
         if not os.path.isfile(gt_file):
             continue
-        [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
-        flags, class_names = segs2flags(seg_start, seg_end, seg_labs, mt_step)
+        seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+        flags, class_names = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
         for c in class_names:
             # update class names:
             if c not in classes_all:
                 classes_all.append(c)
-        [fs, x] = audioBasicIO.read_audio_file(wav_file)
-        [F, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
-                                               mt_step * fs, round(fs * 0.050),
-                                               round(fs * 0.050))
+        sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
+        feature_vector, _, _ = \
+            mtf.mid_feature_extraction(signal, sampling_rate,
+                                       mt_win * sampling_rate,
+                                       mt_step * sampling_rate,
+                                       round(sampling_rate * 0.050),
+                                       round(sampling_rate * 0.050))
 
-        lenF = F.shape[1]
-        lenL = len(flags)
-        min_sm = min(lenF, lenL)
-        F = F[:, 0:min_sm]
+        feat_cols = feature_vector.shape[1]
+        flag_len = len(flags)
+        min_sm = min(feat_cols, flag_len)
+        feature_vector = feature_vector[:, 0:min_sm]
         flags = flags[0:min_sm]
 
-        flagsNew = []
-        for j, fl in enumerate(flags):      # append features and labels
-            flagsNew.append(classes_all.index(class_names[flags[j]]))
+        flags_new = []
+        # append features and labels
+        for j, fl in enumerate(flags):
+            flags_new.append(classes_all.index(class_names[flags[j]]))
 
-        flags_all = np.append(flags_all, np.array(flagsNew))
+        flags_all = np.append(flags_all, np.array(flags_new))
 
         if i == 0:
-            f_all = F
+            f_all = feature_vector
         else:
-            f_all = np.concatenate((f_all, F), axis=1)
+            f_all = np.concatenate((f_all, feature_vector), axis=1)
 
     # compute HMM statistics
-    start_prob, transmat, means, cov = trainHMM_computeStatistics(f_all,
-                                                                  flags_all)
+    class_priors, transmutation_matrix, means, cov = \
+        train_hmm_compute_statistics(f_all, flags_all)
     # train the HMM
-    hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
-    hmm.startprob_ = start_prob
-    hmm.transmat_ = transmat        
+    hmm = hmmlearn.hmm.GaussianHMM(class_priors.shape[0], "diag")
+    hmm.startprob_ = class_priors
+    hmm.transmat_ = transmutation_matrix
     hmm.means_ = means
     hmm.covars_ = cov
 
-    fo = open(hmm_model_name, "wb")   # save HMM model
-    cpickle.dump(hmm, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(classes_all, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(mt_win, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    cpickle.dump(mt_step, fo, protocol=cpickle.HIGHEST_PROTOCOL)
-    fo.close()
+    # save HMM model
+    with open(hmm_model_name, "wb") as f_handle:
+        cpickle.dump(hmm, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(classes_all, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mt_win, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mt_step, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
 
     return hmm, classes_all
 
@@ -470,9 +483,9 @@ def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
                                                   round(fs * 0.050))
     flags_ind = hmm.predict(Features.T)  # apply model
     if os.path.isfile(gt_file_name):
-        [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file_name)
-        flags_gt, class_names_gt = segs2flags(seg_start, seg_end, seg_labs,
-                                              mt_step)
+        [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file_name)
+        flags_gt, class_names_gt = segs_to_flags(seg_start, seg_end, seg_labs,
+                                                 mt_step)
         flagsGTNew = []
         for j, fl in enumerate(flags_gt):
             # "align" labels with GT
@@ -487,8 +500,8 @@ def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
             cm[int(flags_ind_gt[i]),int(flags_ind[i])] += 1
     else:
         flags_ind_gt = np.array([])    
-    acc = plotSegmentationResults(flags_ind, flags_ind_gt, classes_all,
-                                  mt_step, not plot_res)
+    acc = plot_segmentation_results(flags_ind, flags_ind_gt, classes_all,
+                                    mt_step, not plot_res)
     if acc >= 0:
         print("Overall Accuracy: {0:.2f}".format(acc))
         return (flags_ind, class_names_gt, acc, cm)
@@ -564,9 +577,9 @@ def mtFileClassification(input_file, model_name, model_type,
 
     # Load grount-truth:        
     if os.path.isfile(gt_file):
-        [seg_start_gt, seg_end_gt, seg_l_gt] = readSegmentGT(gt_file)
-        flags_gt, class_names_gt = segs2flags(seg_start_gt, seg_end_gt,
-                                              seg_l_gt, mt_step)
+        [seg_start_gt, seg_end_gt, seg_l_gt] = read_segmentation_gt(gt_file)
+        flags_gt, class_names_gt = segs_to_flags(seg_start_gt, seg_end_gt,
+                                                 seg_l_gt, mt_step)
         flags_ind_gt = []
         for j, fl in enumerate(flags_gt):
             # "align" labels with GT
@@ -582,8 +595,8 @@ def mtFileClassification(input_file, model_name, model_type,
     else:
         cm = []
         flags_ind_gt = np.array([])
-    acc = plotSegmentationResults(flags_ind, flags_ind_gt,
-                                  class_names, mt_step, not plot_results)
+    acc = plot_segmentation_results(flags_ind, flags_ind_gt,
+                                    class_names, mt_step, not plot_results)
     if acc >= 0:
         print("Overall Accuracy: {0:.3f}".format(acc)  )
         return (flags_ind, class_names_gt, acc, cm)
@@ -618,10 +631,10 @@ def evaluateSegmentationClassificationDir(dir_name, model_name, method_name):
             accuracies.append(acc)
             print(cm_t, class_names)
             print(cm)
-            [rec, pre, f1] = computePreRec(cm_t, class_names)
+            [rec, pre, f1] = compute_metrics(cm_t, class_names)
 
     cm = cm / np.sum(cm)
-    [rec, pre, f1] = computePreRec(cm, class_names)
+    [rec, pre, f1] = compute_metrics(cm, class_names)
 
     print(" - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ")
     print("Average Accuracy: {0:.1f}".format(100.0*np.array(accuracies).mean()))
@@ -946,7 +959,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     for i in range(1):
         # hmm training
         start_prob, transmat, means, cov = \
-            trainHMM_computeStatistics(mt_feats_norm_or, cls)
+            train_hmm_compute_statistics(mt_feats_norm_or, cls)
         hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
         hmm.startprob_ = start_prob
         hmm.transmat_ = transmat            
@@ -965,8 +978,8 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     gt_file = filename.replace('.wav', '.segments')
     # if groundturh exists
     if os.path.isfile(gt_file):
-        [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
-        flags_gt, class_names_gt = segs2flags(seg_start, seg_end, seg_labs, mt_step)
+        [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file)
+        flags_gt, class_names_gt = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
 
     if plot_res:
         fig = plt.figure()    
@@ -984,7 +997,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
             ax1.plot(np.array(range(len(flags_gt))) *
                      mt_step + mt_step / 2.0, flags_gt, 'r')
         purity_cluster_m, purity_speaker_m = \
-            evaluateSpeakerDiarization(cls, flags_gt)
+            evaluate_speaker_diarization(cls, flags_gt)
         print("{0:.1f}\t{1:.1f}".format(100 * purity_cluster_m,
                                         100 * purity_speaker_m))
         if plot_res:
@@ -1025,7 +1038,7 @@ def speakerDiarizationEvaluateScript(folder_name, ldas):
     for wav_file in wavFilesList:        
         gt_file = wav_file.replace('.wav', '.segments');
         if os.path.isfile(gt_file):
-            [seg_start, seg_end, seg_labs] = readSegmentGT(gt_file)
+            [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file)
             N.append(len(list(set(seg_labs))))
         else:
             N.append(-1)
