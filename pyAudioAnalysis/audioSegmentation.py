@@ -52,10 +52,10 @@ def self_similarity_matrix(feature_vectors):
     return sim_matrix
 
 
-def flags_to_segs(flags, window):
+def labels_to_segments(labels, window):
     """
     ARGUMENTS:
-     - flags:      a sequence of class flags (per time window)
+     - labels:     a sequence of class labels (per time window)
      - window:     window duration (in seconds)
 
     RETURNS:
@@ -69,15 +69,15 @@ def flags_to_segs(flags, window):
     index = 0
     classes = []
     segment_list = []
-    cur_flag = flags[index]
-    while index < len(flags) - 1:
-        previous_value = cur_flag
+    cur_label = labels[index]
+    while index < len(labels) - 1:
+        previous_value = cur_label
         while True:
             index += 1
-            compare_flag = flags[index]
-            if (compare_flag != cur_flag) | (index == len(flags) - 1):
+            compare_flag = labels[index]
+            if (compare_flag != cur_label) | (index == len(labels) - 1):
                 num_segs += 1
-                cur_flag = flags[index]
+                cur_label = labels[index]
                 segment_list.append((index * window))
                 classes.append(previous_value)
                 break
@@ -90,7 +90,7 @@ def flags_to_segs(flags, window):
     return segments, classes
 
 
-def segs_to_flags(start_times, end_times, labels, window):
+def segments_to_labels(start_times, end_times, labels, window):
     """
     This function converts segment endpoints and respective segment
     labels to fix-sized class labels.
@@ -174,7 +174,7 @@ def plot_segmentation_results(flags_ind, flags_ind_gt, class_names, mt_step,
     """
     
     flags = [class_names[int(f)] for f in flags_ind]
-    segments, classes = flags_to_segs(flags, mt_step)
+    segments, classes = labels_to_segments(flags, mt_step)
     min_len = min(flags_ind.shape[0], flags_ind_gt.shape[0])    
     if min_len > 0:
         accuracy = np.sum(flags_ind[0:min_len] ==
@@ -239,21 +239,21 @@ def plot_segmentation_results(flags_ind, flags_ind_gt, class_names, mt_step,
     return accuracy
 
 
-def evaluate_speaker_diarization(flags, flags_gt):
+def evaluate_speaker_diarization(labels, labels_gt):
 
-    min_len = min(flags.shape[0], flags_gt.shape[0])
-    flags = flags[0:min_len]
-    flags_gt = flags_gt[0:min_len]
+    min_len = min(labels.shape[0], labels_gt.shape[0])
+    labels = labels[0:min_len]
+    labels_gt = labels_gt[0:min_len]
 
-    unique_flags = np.unique(flags)
-    unique_flags_gt = np.unique(flags_gt)
+    unique_flags = np.unique(labels)
+    unique_flags_gt = np.unique(labels_gt)
 
     # compute contigency table:
     contigency_matrix = np.zeros((unique_flags.shape[0],
                                   unique_flags_gt.shape[0]))
     for i in range(min_len):
-        contigency_matrix[int(np.nonzero(unique_flags == flags[i])[0]),
-                int(np.nonzero(unique_flags_gt == flags_gt[i])[0])] += 1.0
+        contigency_matrix[int(np.nonzero(unique_flags == labels[i])[0]),
+                int(np.nonzero(unique_flags_gt == labels_gt[i])[0])] += 1.0
 
     columns, rows = contigency_matrix.shape
     row_sum = np.sum(contigency_matrix, axis=0)
@@ -356,7 +356,7 @@ def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     """
 
     seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
-    flags, class_names = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
+    flags, class_names = segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
     sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
     features, _, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,
@@ -387,13 +387,13 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
     This function trains a HMM model for segmentation-classification using
     a where WAV files and .segment (ground-truth files) are stored
     ARGUMENTS:
-     - dirPath:        the path of the data diretory
-     - hmm_model_name:    the name of the HMM model to be stored
-     - mt_win:        mid-term window size
-     - mt_step:        mid-term window step
+     - folder_path:     the path of the data diretory
+     - hmm_model_name:  the name of the HMM model to be stored
+     - mt_win:          mid-term window size
+     - mt_step:         mid-term window step
     RETURNS:
      - hmm:            an object to the resulting HMM
-     - class_names:        a list of class_names
+     - class_names:    a list of class_names
 
     After training, hmm, class_names, along with the mt_win
     and mt_step values are stored in the hmm_model_name file
@@ -405,49 +405,49 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
         # for each WAV file
         wav_file = f
         gt_file = f.replace('.wav', '.segments')
-        if not os.path.isfile(gt_file):
-            continue
-        seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
-        flags, class_names = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
-        for c in class_names:
-            # update class names:
-            if c not in classes_all:
-                classes_all.append(c)
-        sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
-        feature_vector, _, _ = \
-            mtf.mid_feature_extraction(signal, sampling_rate,
-                                       mt_win * sampling_rate,
-                                       mt_step * sampling_rate,
-                                       round(sampling_rate * 0.050),
-                                       round(sampling_rate * 0.050))
+        if os.path.isfile(gt_file):
+            seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+            flags, class_names = \
+                segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
+            for c in class_names:
+                # update class names:
+                if c not in classes_all:
+                    classes_all.append(c)
+            sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
+            feature_vector, _, _ = \
+                mtf.mid_feature_extraction(signal, sampling_rate,
+                                           mt_win * sampling_rate,
+                                           mt_step * sampling_rate,
+                                           round(sampling_rate * 0.050),
+                                           round(sampling_rate * 0.050))
 
-        feat_cols = feature_vector.shape[1]
-        flag_len = len(flags)
-        min_sm = min(feat_cols, flag_len)
-        feature_vector = feature_vector[:, 0:min_sm]
-        flags = flags[0:min_sm]
+            flag_len = len(flags)
+            feat_cols = feature_vector.shape[1]
+            min_sm = min(feat_cols, flag_len)
+            feature_vector = feature_vector[:, 0:min_sm]
+            flags = flags[0:min_sm]
 
-        flags_new = []
-        # append features and labels
-        for j, fl in enumerate(flags):
-            flags_new.append(classes_all.index(class_names[flags[j]]))
+            flags_new = []
+            # append features and labels
+            for j, fl in enumerate(flags):
+                flags_new.append(classes_all.index(class_names[flags[j]]))
 
-        flags_all = np.append(flags_all, np.array(flags_new))
+            flags_all = np.append(flags_all, np.array(flags_new))
 
-        if i == 0:
-            f_all = feature_vector
-        else:
-            f_all = np.concatenate((f_all, feature_vector), axis=1)
+            if i == 0:
+                f_all = feature_vector
+            else:
+                f_all = np.concatenate((f_all, feature_vector), axis=1)
 
     # compute HMM statistics
     class_priors, transmutation_matrix, means, cov = \
         train_hmm_compute_statistics(f_all, flags_all)
     # train the HMM
     hmm = hmmlearn.hmm.GaussianHMM(class_priors.shape[0], "diag")
+    hmm.covars_ = cov
+    hmm.means_ = means
     hmm.startprob_ = class_priors
     hmm.transmat_ = transmutation_matrix
-    hmm.means_ = means
-    hmm.covars_ = cov
 
     # save HMM model
     with open(hmm_model_name, "wb") as f_handle:
@@ -459,58 +459,57 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
     return hmm, classes_all
 
 
-def hmmSegmentation(wav_file_name, hmm_model_name, plot_res=False,
-                    gt_file_name=""):
-    [fs, x] = audioBasicIO.read_audio_file(wav_file_name)
-    try:
-        fo = open(hmm_model_name, "rb")
-    except IOError:
-        print("didn't find file")
-        return
+def hmm_segmentation(audio_file, hmm_model_name, plot_res=False, gt_file=""):
+    sampling_rate, signal = audioBasicIO.read_audio_file(audio_file)
 
-    try:
-        hmm = cpickle.load(fo)
-        classes_all = cpickle.load(fo)
-        mt_win = cpickle.load(fo)
-        mt_step = cpickle.load(fo)
-    except:
-        fo.close()
-    fo.close()
+    with open(hmm_model_name, "rb") as f_handle:
+        hmm = cpickle.load(f_handle)
+        classes = cpickle.load(f_handle)
+        mt_win = cpickle.load(f_handle)
+        mt_step = cpickle.load(f_handle)
 
-    [Features, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
-                                                  mt_step * fs,
-                                                  round(fs * 0.050),
-                                                  round(fs * 0.050))
-    flags_ind = hmm.predict(Features.T)  # apply model
-    if os.path.isfile(gt_file_name):
-        [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file_name)
-        flags_gt, class_names_gt = segs_to_flags(seg_start, seg_end, seg_labs,
-                                                 mt_step)
-        flagsGTNew = []
-        for j, fl in enumerate(flags_gt):
-            # "align" labels with GT
-            if class_names_gt[flags_gt[j]] in classes_all:
-                flagsGTNew.append(classes_all.index(class_names_gt[
-                                                        flags_gt[j]]))
-            else:
-                flagsGTNew.append(-1)
-        cm = np.zeros((len(classes_all), len(classes_all)))
-        flags_ind_gt = np.array(flagsGTNew)
-        for i in range(min(flags_ind.shape[0], flags_ind_gt.shape[0])):
-            cm[int(flags_ind_gt[i]),int(flags_ind[i])] += 1
-    else:
-        flags_ind_gt = np.array([])    
-    acc = plot_segmentation_results(flags_ind, flags_ind_gt, classes_all,
+    features, _, _ = \
+        mtf.mid_feature_extraction(signal, sampling_rate,
+                                   mt_win * sampling_rate,
+                                   mt_step * sampling_rate,
+                                   round(sampling_rate * 0.050),
+                                   round(sampling_rate * 0.050))
+    cm = -1
+    labels_gt = np.array([])
+    # apply model
+    predictions = hmm.predict(features.T)
+    if os.path.isfile(gt_file):
+        labels_gt, classes_gt = load_ground_truth(gt_file, mt_step)
+        classes = classes_gt
+        cm = np.zeros((len(classes), len(classes)))
+        for i in range(min(predictions.shape[0], labels_gt.shape[0])):
+            cm[int(labels_gt[i]), int(predictions[i])] += 1
+
+    acc = plot_segmentation_results(predictions, labels_gt, classes,
                                     mt_step, not plot_res)
     if acc >= 0:
         print("Overall Accuracy: {0:.2f}".format(acc))
-        return (flags_ind, class_names_gt, acc, cm)
-    else:
-        return (flags_ind, classes_all, -1, -1)
+    return predictions, classes, acc, cm
 
 
-def mtFileClassification(input_file, model_name, model_type,
-                         plot_results=False, gt_file=""):
+def load_ground_truth(gt_file, mt_step):
+    seg_start, seg_end, seg_labels = read_segmentation_gt(gt_file)
+    labels_gt, class_names_gt = segments_to_labels(seg_start, seg_end,
+                                                   seg_labels, mt_step)
+    labels_temp = []
+    for index, label in enumerate(labels_gt):
+        # "align" labels with GT
+        if class_names_gt[labels_gt[index]] in class_names_gt:
+            labels_temp.append(class_names_gt.index(class_names_gt[
+                                                     labels_gt[index]]))
+        else:
+            labels_temp.append(-1)
+    labels_gt = np.array(labels_temp)
+    return labels_gt, class_names_gt
+
+
+def mid_term_file_classification(input_file, model_name, model_type,
+                                 plot_results=False, gt_file=""):
     """
     This function performs mid-term classification of an audio stream.
     Towards this end, supervised knowledge is used,
@@ -529,79 +528,84 @@ def mtFileClassification(input_file, model_name, model_type,
                             class ID of the i-th segment
     """
 
-    if not os.path.isfile(model_name):
+    if os.path.isfile(model_name):
+        # Load classifier:
+        if model_type == "knn":
+            classifier, mean, std, class_names, mt_win, mt_step, st_win, \
+            st_step, compute_beat = at.load_model_knn(model_name)
+        else:
+            classifier, mean, std, class_names, mt_win, mt_step, st_win, \
+            st_step, compute_beat = at.load_model(model_name)
+
+        if compute_beat:
+            print("Model " + model_name + " contains long-term music features "
+                                          "(beat etc) and cannot be used in "
+                                          "segmentation")
+            return -1, -1, -1, -1
+        # load input file
+        sampling_rate, signal = audioBasicIO.read_audio_file(input_file)
+
+        # could not read file
+        if sampling_rate == 0:
+            return -1, -1, -1, -1
+
+        # convert stereo (if) to mono
+        signal = audioBasicIO.stereo_to_mono(signal)
+
+        # mid-term feature extraction:
+        mt_feats, _, _ = \
+            mtf.mid_feature_extraction(signal, sampling_rate,
+                                       mt_win * sampling_rate,
+                                       mt_step * sampling_rate,
+                                       round(sampling_rate * st_win),
+                                       round(sampling_rate * st_step))
+        posterior_matrix = []
+        labels = []
+        labels_gt = []
+        # for each feature vector (i.e. for each fix-sized segment):
+        for col_index in range(mt_feats.shape[1]):
+            # normalize current feature v
+            feature_vector = (mt_feats[:, col_index] - mean) / std
+
+            # classify vector:
+            label_predicted, posterior = \
+                at.classifierWrapper(classifier, model_type, feature_vector)
+            labels_gt.append(label_predicted)
+
+            # update class label matrix
+            labels.append(class_names[int(label_predicted)])
+
+            # update probability matrix
+            posterior_matrix.append(np.max(posterior))
+        labels_gt = np.array(labels_gt)
+
+        # 1-window smoothing
+        for col_index in range(1, len(labels_gt) - 1):
+            if labels_gt[col_index-1] == labels_gt[col_index + 1]:
+                labels_gt[col_index] = labels_gt[col_index + 1]
+
+        # convert fix-sized flags to segments and classes
+        segs, classes = labels_to_segments(labels, mt_step)
+        segs[-1] = len(signal) / float(sampling_rate)
+
+        # Load grount-truth:
+        if os.path.isfile(gt_file):
+            labels_gt, classes = load_ground_truth(gt_file, mt_step)
+            cm = np.zeros((len(classes), len(classes)))
+            for col_index in range(min(labels_gt.shape[0], labels_gt.shape[0])):
+                cm[int(labels_gt[col_index]), int(labels_gt[col_index])] += 1
+        else:
+            cm = []
+            labels_gt = np.array([])
+        acc = plot_segmentation_results(labels_gt, labels_gt,
+                                        class_names, mt_step, not plot_results)
+    else:
         print("mtFileClassificationError: input model_type not found!")
-        return (-1, -1, -1, -1)
-    # Load classifier:
-    if model_type == "knn":
-        [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
-         compute_beat] = at.load_model_knn(model_name)
-    else:
-        [classifier, MEAN, STD, class_names, mt_win, mt_step, st_win, st_step,
-         compute_beat] = at.load_model(model_name)
-
-    if compute_beat:
-        print("Model " + model_name + " contains long-term music features "
-                                      "(beat etc) and cannot be used in "
-                                      "segmentation")
-        return (-1, -1, -1, -1)
-    [fs, x] = audioBasicIO.read_audio_file(input_file) # load input file
-    if fs == -1:  # could not read file
-        return (-1, -1, -1, -1)
-    x = audioBasicIO.stereo_to_mono(x)  # convert stereo (if) to mono
-    # mid-term feature extraction:
-    [mt_feats, _, _] = mtf.mid_feature_extraction(x, fs, mt_win * fs,
-                                                  mt_step * fs,
-                                                  round(fs * st_win),
-                                                  round(fs * st_step))
-    flags = []
-    Ps = []
-    flags_ind = []
-    # for each feature vector (i.e. for each fix-sized segment):
-    for i in range(mt_feats.shape[1]):
-        cur_fv = (mt_feats[:, i] - MEAN) / STD  # normalize current feature v
-        # classify vector:
-        [res, P] = at.classifierWrapper(classifier, model_type, cur_fv)
-        flags_ind.append(res)
-        flags.append(class_names[int(res)])  # update class label matrix
-        Ps.append(np.max(P))   # update probability matrix
-    flags_ind = np.array(flags_ind)
-
-    # 1-window smoothing
-    for i in range(1, len(flags_ind) - 1):
-        if flags_ind[i-1] == flags_ind[i + 1]:
-            flags_ind[i] = flags_ind[i + 1]
-    # convert fix-sized flags to segments and classes
-    (segs, classes) = flags_to_segs(flags, mt_step)
-    segs[-1] = len(x) / float(fs)
-
-    # Load grount-truth:        
-    if os.path.isfile(gt_file):
-        [seg_start_gt, seg_end_gt, seg_l_gt] = read_segmentation_gt(gt_file)
-        flags_gt, class_names_gt = segs_to_flags(seg_start_gt, seg_end_gt,
-                                                 seg_l_gt, mt_step)
-        flags_ind_gt = []
-        for j, fl in enumerate(flags_gt):
-            # "align" labels with GT
-            if class_names_gt[flags_gt[j]] in class_names:
-                flags_ind_gt.append(class_names.index(class_names_gt[
-                                                          flags_gt[j]]))
-            else:
-                flags_ind_gt.append(-1)
-        flags_ind_gt = np.array(flags_ind_gt)        
-        cm = np.zeros((len(class_names_gt), len(class_names_gt)))
-        for i in range(min(flags_ind.shape[0], flags_ind_gt.shape[0])):
-            cm[int(flags_ind_gt[i]),int(flags_ind[i])] += 1        
-    else:
-        cm = []
-        flags_ind_gt = np.array([])
-    acc = plot_segmentation_results(flags_ind, flags_ind_gt,
-                                    class_names, mt_step, not plot_results)
     if acc >= 0:
-        print("Overall Accuracy: {0:.3f}".format(acc)  )
-        return (flags_ind, class_names_gt, acc, cm)
+        print("Overall Accuracy: {0:.3f}".format(acc))
+        return labels_gt, classes, acc, cm
     else:
-        return (flags_ind, class_names, acc, cm)
+        return labels_gt, class_names, acc, cm
 
 
 def evaluateSegmentationClassificationDir(dir_name, model_name, method_name):
@@ -617,12 +621,12 @@ def evaluateSegmentationClassificationDir(dir_name, model_name, method_name):
                                    "randomforest","gradientboosting",
                                    "extratrees"]:
             flags_ind, class_names, acc, cm_t = \
-                mtFileClassification(wav_file, model_name, method_name,
-                                     False, gt_file)
+                mid_term_file_classification(wav_file, model_name, method_name,
+                                             False, gt_file)
         else:
-            flags_ind, class_names, acc, cm_t = hmmSegmentation(wav_file,
-                                                               model_name,
-                                                               False, gt_file)
+            flags_ind, class_names, acc, cm_t = hmm_segmentation(wav_file,
+                                                                 model_name,
+                                                                 False, gt_file)
         if acc > -1:
             if i==0:
                 cm = np.copy(cm_t)
@@ -979,7 +983,7 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     # if groundturh exists
     if os.path.isfile(gt_file):
         [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file)
-        flags_gt, class_names_gt = segs_to_flags(seg_start, seg_end, seg_labs, mt_step)
+        flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
 
     if plot_res:
         fig = plt.figure()    

@@ -30,7 +30,7 @@ def main(argv):
 			[Fs, x] = audioBasicIO.read_audio_file("diarizationExample.wav");
 			duration = x.shape[0] / float(Fs)		
 			t1 = time.clock()
-			[flagsInd, classesAll, acc] = aS.mtFileClassification("diarizationExample.wav", "svmSM", "svm", False, '')
+			[flagsInd, classesAll, acc] = aS.mid_term_file_classification("diarizationExample.wav", "svmSM", "svm", False, '')
 			t2 = time.clock()
 			perTime1 =  duration / (t2-t1); print "Fix-sized classification - segmentation \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-hmmSegmentation":
@@ -38,7 +38,7 @@ def main(argv):
 			[Fs, x] = audioBasicIO.read_audio_file("diarizationExample.wav");
 			duration = x.shape[0] / float(Fs)		
 			t1 = time.clock()
-			aS.hmmSegmentation('diarizationExample.wav', 'hmmRadioSM', False, '')             
+			aS.hmm_segmentation('diarizationExample.wav', 'hmmRadioSM', False, '')             
 			t2 = time.clock()
 			perTime1 =  duration / (t2-t1); print "HMM-based classification - segmentation \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-silenceRemoval":

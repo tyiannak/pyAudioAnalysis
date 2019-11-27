@@ -201,13 +201,13 @@ def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):
         gtFile = inputWavFile.replace(".wav", ".segments")
     if inputWavFile[-4::]==".mp3":
         gtFile = inputWavFile.replace(".mp3", ".segments")
-    aS.mtFileClassification(inputWavFile, model_name, model_type, True, gtFile)
+    aS.mid_term_file_classification(inputWavFile, model_name, model_type, True, gtFile)
 
 
 def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
     gtFile = wavFile.replace(".wav", ".segments")
-    aS.hmmSegmentation(wavFile, hmmModelName, plot_res=True,
-                       gt_file_name=gtFile)
+    aS.hmm_segmentation(wavFile, hmmModelName, plot_res=True,
+                        gt_file=gtFile)
 
 
 def segmentationEvaluation(dirName, model_name, methodName):
