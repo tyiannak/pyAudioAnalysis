@@ -3,7 +3,7 @@ import shutil, struct, simplejson
 from scipy.spatial import distance
 from pylab import *
 import ntpath
-from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 import sklearn
 import sklearn.discriminant_analysis
@@ -132,7 +132,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         - priorKnowledge:    if this is set equal to "artist"
     '''
     if dimReductionMethod=="pca":
-        allMtFeatures, wavFilesList, _ = aF.dirWavFeatureExtraction(folder, 30.0, 30.0, 0.050, 0.050, compute_beat = True)
+        allMtFeatures, wavFilesList, _ = aF.directory_feature_extraction(folder, 30.0, 30.0, 0.050, 0.050, compute_beat = True)
         if allMtFeatures.shape[0]==0:
             print("Error: No data found! Check input folder")
             return
@@ -158,7 +158,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         finalDims = pca1.transform(F)
         finalDims2 = pca2.transform(F)
     else:    
-        allMtFeatures, Ys, wavFilesList = aF.dirWavFeatureExtractionNoAveraging(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
+        allMtFeatures, Ys, wavFilesList = aF.directory_feature_extraction_no_avg(folder, 20.0, 5.0, 0.040, 0.040) # long-term statistics cannot be applied in this context (LDA needs mid-term features)
         if allMtFeatures.shape[0]==0:
             print("Error: No data found! Check input folder")
             return

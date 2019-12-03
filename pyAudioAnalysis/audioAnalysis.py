@@ -4,7 +4,8 @@ import os
 import numpy
 import glob
 import matplotlib.pyplot as plt
-from pyAudioAnalysis import audioFeatureExtraction as aF
+from pyAudioAnalysis import ShortTermFeatures as sF
+from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
 from pyAudioAnalysis import audioVisualization as aV
@@ -18,15 +19,15 @@ def dirMp3toWavWrapper(directory, samplerate, channels):
         raise Exception("Input path not found!")
 
     useMp3TagsAsNames = True
-    audioBasicIO.convertDirMP3ToWav(directory, samplerate, channels,
-                                    useMp3TagsAsNames)
+    audioBasicIO.convert_dir_mp3_to_wav(directory, samplerate, channels,
+                                        useMp3TagsAsNames)
 
 
 def dirWAVChangeFs(directory, samplerate, channels):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
 
-    audioBasicIO.convertFsDirWavToWav(directory, samplerate, channels)
+    audioBasicIO.convert_dir_fs_wav_to_wav(directory, samplerate, channels)
 
 
 def featureExtractionFileWrapper(wav_file, out_file, mt_win, mt_step,
@@ -34,16 +35,16 @@ def featureExtractionFileWrapper(wav_file, out_file, mt_win, mt_step,
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
 
-    aF.mtFeatureExtractionToFile(wav_file, mt_win, mt_step, st_win,
-                                 st_step, out_file, True, True, True)
+    aF.mid_feature_extraction_to_file(wav_file, mt_win, mt_step, st_win,
+                                      st_step, out_file, True, True, True)
 
 
 def beatExtractionWrapper(wav_file, plot):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
-    F, _ = aF.stFeatureExtraction(x, fs, 0.050 * fs, 0.050 * fs)
-    bpm, ratio = aF.beatExtraction(F, 0.050, plot)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
+    F, _ = sF.feature_extraction(x, fs, 0.050 * fs, 0.050 * fs)
+    bpm, ratio = aF.beat_extraction(F, 0.050, plot)
     print("Beat: {0:d} bpm ".format(int(bpm)))
     print("Ratio: {0:.2f} ".format(ratio))
 
@@ -51,8 +52,8 @@ def beatExtractionWrapper(wav_file, plot):
 def featureExtractionDirWrapper(directory, mt_win, mt_step, st_win, st_step):
     if not os.path.isdir(directory):
         raise Exception("Input path not found!")
-    aF.mtFeatureExtractionToFileDir(directory, mt_win, mt_step, st_win,
-                                    st_step, True, True, True)
+    aF.mid_feature_extraction_file_dir(directory, mt_win, mt_step, st_win,
+                                       st_step, True, True, True)
 
 
 def featureVisualizationDirWrapper(directory):
@@ -65,19 +66,19 @@ def featureVisualizationDirWrapper(directory):
 def fileSpectrogramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
-    x = audioBasicIO.stereo2mono(x)
-    specgram, TimeAxis, FreqAxis = aF.stSpectogram(x, fs, round(fs * 0.040),
-                                                   round(fs * 0.040), True)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
+    x = audioBasicIO.stereo_to_mono(x)
+    specgram, TimeAxis, FreqAxis = sF.spectrogram(x, fs, round(fs * 0.040),
+                                                  round(fs * 0.040), True)
 
 
 def fileChromagramWrapper(wav_file):
     if not os.path.isfile(wav_file):
         raise Exception("Input audio file not found!")
-    [fs, x] = audioBasicIO.readAudioFile(wav_file)
-    x = audioBasicIO.stereo2mono(x)
-    specgram, TimeAxis, FreqAxis = aF.stChromagram(x, fs, round(fs * 0.040),
-                                                   round(fs * 0.040), True)
+    [fs, x] = audioBasicIO.read_audio_file(wav_file)
+    x = audioBasicIO.stereo_to_mono(x)
+    specgram, TimeAxis, FreqAxis = sF.chromagram(x, fs, round(fs * 0.040),
+                                                 round(fs * 0.040), True)
 
 
 def trainClassifierWrapper(method, beat_feats, directories, model_name):
@@ -217,7 +218,7 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [fs, x] = audioBasicIO.read_audio_file(inputFile)
     segmentLimits = aS.silenceRemoval(x, fs, 0.05, 0.05,
                                       smoothingWindow, weight, True)
     for i, s in enumerate(segmentLimits):
@@ -238,7 +239,7 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [fs, x] = audioBasicIO.readAudioFile(inputFile)
+    [fs, x] = audioBasicIO.read_audio_file(inputFile)
     if fs == -1:    # could not read file
         return
 
