@@ -47,7 +47,7 @@ class kNN:
         return np.argmax(P), P
 
 
-def classifierWrapper(classifier, classifier_type, test_sample):
+def classifier_wrapper(classifier, classifier_type, test_sample):
     """
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
@@ -394,7 +394,7 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
     print("Selected params: {0:.5f}".format(bestParam))
 
     C = len(classNames)
-    [features_norm, MEAN, STD] = normalizeFeatures(features)
+    [features_norm, MEAN, STD] = normalize_features(features)
     MEAN = MEAN.tolist()
     STD = STD.tolist()
     featuresNew = features_norm
@@ -538,7 +538,7 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
-        [features_norm, MEAN, STD] = normalizeFeatures([f_final[iRegression]])
+        [features_norm, MEAN, STD] = normalize_features([f_final[iRegression]])
 
         # STEP C: Save the model to file
         if model_type == "svm":
@@ -674,7 +674,7 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
     """
 
     # feature normalization:
-    (features_norm, MEAN, STD) = normalizeFeatures(features)
+    (features_norm, MEAN, STD) = normalize_features(features)
     #features_norm = features;
     n_classes = len(features)
     ac_all = []
@@ -725,9 +725,9 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
                 n_test_samples = len(f_test[c1])
                 res = np.zeros((n_test_samples, 1))
                 for ss in range(n_test_samples):
-                    [res[ss], _] = classifierWrapper(classifier,
-                                                     classifier_name,
-                                                     f_test[c1][ss])
+                    [res[ss], _] = classifier_wrapper(classifier,
+                                                      classifier_name,
+                                                      f_test[c1][ss])
                 for c2 in range(n_classes):
                     cmt[c1][c2] = float(len(np.nonzero(res == c2)[0]))
             cm = cm + cmt
@@ -804,7 +804,7 @@ def evaluateRegression(features, labels, n_exp, method_name, Params):
     """
 
     # feature normalization:
-    (features_norm, MEAN, STD) = normalizeFeatures([features])
+    (features_norm, MEAN, STD) = normalize_features([features])
     features_norm = features_norm[0]
     n_samples = labels.shape[0]
     per_train = 0.9
@@ -902,7 +902,7 @@ def printConfusionMatrix(cm, class_names):
         print("")
 
 
-def normalizeFeatures(features):
+def normalize_features(features):
     """
     This function normalizes a feature set to 0-mean and 1-std.
     Used in most classifier trainning cases.
@@ -1022,7 +1022,7 @@ def fileClassification(inputFile, model_name, model_type):
     curFV = (mt_features - MEAN) / STD    # normalization
 
     # classification
-    [Result, P] = classifierWrapper(classifier, model_type, curFV)
+    [Result, P] = classifier_wrapper(classifier, model_type, curFV)
     return Result, P, classNames
 
 

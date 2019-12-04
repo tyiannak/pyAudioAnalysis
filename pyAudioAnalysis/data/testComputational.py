@@ -47,7 +47,7 @@ def main(argv):
 			duration = x.shape[0] / float(Fs)				
 			t1 = time.clock()
 			[Fs, x] = audioBasicIO.read_audio_file("diarizationExample.wav");
-			segments = aS.silenceRemoval(x, Fs, 0.050, 0.050, smoothWindow = 1.0, Weight = 0.3, plot = False)
+			segments = aS.silence_removal(x, Fs, 0.050, 0.050, smooth_window= 1.0, Weight = 0.3, plot = False)
 			t2 = time.clock()
 			perTime1 =  duration / (t2-t1); print "Silence removal \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-thumbnailing":
@@ -63,7 +63,7 @@ def main(argv):
 			[Fs1, x1] = audioBasicIO.read_audio_file("diarizationExample.wav")
 			duration1 = x1.shape[0] / float(Fs1)		
 			t1 = time.clock()		
-			aS.speakerDiarization("diarizationExample.wav", 4, LDAdim = 0, PLOT = False)
+			aS.speaker_diarization("diarizationExample.wav", 4, LDAdim = 0, PLOT = False)
 			t2 = time.clock()
 			perTime1 =  duration1 / (t2-t1); print "Diarization \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-diarization-LDA":
@@ -71,7 +71,7 @@ def main(argv):
 			[Fs1, x1] = audioBasicIO.read_audio_file("diarizationExample.wav")
 			duration1 = x1.shape[0] / float(Fs1)		
 			t1 = time.clock()		
-			aS.speakerDiarization("diarizationExample.wav", 4, PLOT = False)
+			aS.speaker_diarization("diarizationExample.wav", 4, PLOT = False)
 			t2 = time.clock()
 			perTime1 =  duration1 / (t2-t1); print "Diarization \t {0:.1f} x realtime".format(perTime1)
 		

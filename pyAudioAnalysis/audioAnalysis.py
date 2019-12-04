@@ -211,7 +211,7 @@ def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
 
 
 def segmentationEvaluation(dirName, model_name, methodName):
-    aS.evaluateSegmentationClassificationDir(dirName, model_name, methodName)
+    aS.evaluate_segmentation_classification_dir(dirName, model_name, methodName)
 
 
 def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
@@ -219,8 +219,8 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
         raise Exception("Input audio file not found!")
 
     [fs, x] = audioBasicIO.read_audio_file(inputFile)
-    segmentLimits = aS.silenceRemoval(x, fs, 0.05, 0.05,
-                                      smoothingWindow, weight, True)
+    segmentLimits = aS.silence_removal(x, fs, 0.05, 0.05,
+                                       smoothingWindow, weight, True)
     for i, s in enumerate(segmentLimits):
         strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
         wavfile.write(strOut, fs, x[int(fs * s[0]):int(fs * s[1])])
@@ -228,9 +228,9 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
 
 def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
     if useLDA:
-        aS.speakerDiarization(inputFile, numSpeakers, plot_res=True)
+        aS.speaker_diarization(inputFile, numSpeakers, plot_res=True)
     else:
-        aS.speakerDiarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
+        aS.speaker_diarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
 
 
 def thumbnailWrapper(inputFile, thumbnailWrapperSize):
