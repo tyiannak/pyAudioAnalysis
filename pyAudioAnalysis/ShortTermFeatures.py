@@ -586,6 +586,9 @@ def feature_extraction(signal, sampling_rate, window, step):
     feature_names += ["chroma_{0:d}".format(chroma_i)
                       for chroma_i in range(1, n_chroma_feats)]
     feature_names.append("chroma_std")
+
+    feature_names_2 = feature_names + ["delta " + f for f in feature_names]
+    feature_names = feature_names_2
     features = []
     # for each short-term window to end of signal
     while current_position + window - 1 < number_of_samples:
@@ -648,18 +651,17 @@ def feature_extraction(signal, sampling_rate, window, step):
         feature_vector[mffc_feats_end:chroma_features_end] = \
             chroma_feature_matrix
         feature_vector[chroma_features_end] = chroma_feature_matrix.std()
-        features.append(feature_vector)
+#        features.append(feature_vector) # no deltas
 
         # delta features
-        """
         if count_fr>1:
-            delta = curFV - prevFV
-            curFVFinal = np.concatenate((curFV, delta))            
+            delta = feature_vector - feature_vector_prev
+            feature_vector_2 = np.concatenate((feature_vector, delta))
         else:
-            curFVFinal = np.concatenate((curFV, curFV))
-        prevFV = curFV
-        st_features.append(curFVFinal)        
-        """
+            feature_vector_2 = np.concatenate((feature_vector, feature_vector))
+        feature_vector_prev = feature_vector
+        features.append(feature_vector_2)
+
         # end of delta
         fft_magnitude_previous = fft_magnitude.copy()
 
