@@ -14,7 +14,7 @@ def parseArguments():
                         help="Classifier type")
     parser.add_argument('-t', '--task', nargs=None, required=True,
                         choices = ["sm", "movie8", "speakers", "speaker-gender",
-                                   "music-genre6"],
+                                   "music-genre6", "4class"],
                         help="Classification task")
     args = parser.parse_args()        
     return args
@@ -68,4 +68,11 @@ if __name__ == '__main__':
                             root_data_path + "musicalGenreClassification/Rap",
                             root_data_path + "musicalGenreClassification/Rock"],
                            1.0, 1.0, 0.05, 0.05, classifier_type,
-                          classifier_type + "_musical_genre_6", False)
+                          classifier_type + "_musical_genre_6", True)
+    elif args.task == "4class":
+        aT.featureAndTrain([root_data_path + "4class/speech",
+                            root_data_path + "4class/music",
+                            root_data_path + "4class/silence",
+                            root_data_path + "4class/other"],
+                           1.0, 1.0, 0.05, 0.05, classifier_type,
+                           classifier_type + "_4class", False)
