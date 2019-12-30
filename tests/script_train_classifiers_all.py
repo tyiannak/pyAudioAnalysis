@@ -29,7 +29,7 @@ if __name__ == '__main__':
     if args.task == "sm":
         aT.featureAndTrain([root_data_path +"SM/speech",
                             root_data_path + "SM/music"],
-                           1.0, 1.0, 0.1, 0.05, classifier_type,
+                           1.0, 1.0, 0.05, 0.05, classifier_type,
                            classifier_type + "_sm", False)
     elif args.task == "movie8":
         aT.featureAndTrain([root_data_path + "movieSegments/8-class/Speech",
