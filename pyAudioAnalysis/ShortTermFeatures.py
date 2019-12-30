@@ -532,7 +532,7 @@ def phormants(x, sampling_rate):
 """ Windowing and feature extraction """
 
 
-def feature_extraction(signal, sampling_rate, window, step):
+def feature_extraction(signal, sampling_rate, window, step, deltas=True):
     """
     This function implements the shor-term windowing process.
     For each short-term window a set of features is extracted.
@@ -543,6 +543,8 @@ def feature_extraction(signal, sampling_rate, window, step):
         sampling_rate:  the sampling freq (in Hz)
         window:         the short-term window size (in samples)
         step:           the short-term window step (in samples)
+        deltas:         (opt) True/False if delta features are to be
+                        computed
     RETURNS
         features (numpy.ndarray):        contains features
                                          (n_feats x numOfShortTermWindows)
@@ -589,9 +591,10 @@ def feature_extraction(signal, sampling_rate, window, step):
                       for chroma_i in range(1, n_chroma_feats)]
     feature_names.append("chroma_std")
 
-    # add names for delta featuresL
-    feature_names_2 = feature_names + ["delta " + f for f in feature_names]
-    feature_names = feature_names_2
+    # add names for delta features:
+    if deltas:
+        feature_names_2 = feature_names + ["delta " + f for f in feature_names]
+        feature_names = feature_names_2
 
     features = []
     # for each short-term window to end of signal
@@ -655,18 +658,19 @@ def feature_extraction(signal, sampling_rate, window, step):
         feature_vector[mffc_feats_end:chroma_features_end] = \
             chroma_feature_matrix
         feature_vector[chroma_features_end] = chroma_feature_matrix.std()
-#        features.append(feature_vector) # uncomment this for no deltas
-
-        # delta features
-        if count_fr > 1:
-            delta = feature_vector - feature_vector_prev
-            feature_vector_2 = np.concatenate((feature_vector, delta))
+        if not deltas:
+            features.append(feature_vector)
         else:
-            feature_vector_2 = np.concatenate((feature_vector,
-                                               np.zeros(feature_vector.shape)))
-        feature_vector_prev = feature_vector
-        features.append(feature_vector_2)
-        # end of delta
+            # delta features
+            if count_fr > 1:
+                delta = feature_vector - feature_vector_prev
+                feature_vector_2 = np.concatenate((feature_vector, delta))
+            else:
+                feature_vector_2 = np.concatenate((feature_vector,
+                                                   np.zeros(feature_vector.
+                                                            shape)))
+            feature_vector_prev = feature_vector
+            features.append(feature_vector_2)
 
         fft_magnitude_previous = fft_magnitude.copy()
 
