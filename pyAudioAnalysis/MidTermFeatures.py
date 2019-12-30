@@ -132,7 +132,7 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
 
 def directory_feature_extraction(folder_path, mid_window, mid_step,
                                  short_window, short_step,
-                                 compute_beat=False):
+                                 compute_beat=True):
     """
     This function extracts the mid-term features of the WAVE files of a 
     particular folder.
