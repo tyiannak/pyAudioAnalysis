@@ -576,6 +576,8 @@ def feature_extraction(signal, sampling_rate, window, step):
                     n_chroma_feats
     #    n_total_feats = n_time_spectral_feats + n_mfcc_feats +
     #    n_harmonic_feats
+
+    # define list of feature names
     feature_names = ["zcr", "energy", "energy_entropy"]
     feature_names += ["spectral_centroid", "spectral_spread"]
     feature_names.append("spectral_entropy")
@@ -587,8 +589,10 @@ def feature_extraction(signal, sampling_rate, window, step):
                       for chroma_i in range(1, n_chroma_feats)]
     feature_names.append("chroma_std")
 
+    # add names for delta featuresL
     feature_names_2 = feature_names + ["delta " + f for f in feature_names]
     feature_names = feature_names_2
+
     features = []
     # for each short-term window to end of signal
     while current_position + window - 1 < number_of_samples:
@@ -651,18 +655,19 @@ def feature_extraction(signal, sampling_rate, window, step):
         feature_vector[mffc_feats_end:chroma_features_end] = \
             chroma_feature_matrix
         feature_vector[chroma_features_end] = chroma_feature_matrix.std()
-#        features.append(feature_vector) # no deltas
+#        features.append(feature_vector) # uncomment this for no deltas
 
         # delta features
-        if count_fr>1:
+        if count_fr > 1:
             delta = feature_vector - feature_vector_prev
             feature_vector_2 = np.concatenate((feature_vector, delta))
         else:
-            feature_vector_2 = np.concatenate((feature_vector, feature_vector))
+            feature_vector_2 = np.concatenate((feature_vector,
+                                               np.zeros(feature_vector.shape)))
         feature_vector_prev = feature_vector
         features.append(feature_vector_2)
-
         # end of delta
+
         fft_magnitude_previous = fft_magnitude.copy()
 
     features = np.concatenate(features, 1)
