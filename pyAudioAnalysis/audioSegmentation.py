@@ -776,8 +776,8 @@ def speakerDiarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     x = audioBasicIO.stereo_to_mono(x)
     duration = len(x) / fs
 
-    [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerAll"))
-    [classifier_2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "knnSpeakerFemaleMale"))
+    [classifier_1, MEAN1, STD1, classNames1, mtWin1, mtStep1, stWin1, stStep1, computeBEAT1] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/models", "knn_speaker_10"))
+    [classifier_2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.load_model_knn(os.path.join(os.path.dirname(os.path.realpath(__file__)), "data/models", "knn_speaker_male_female"))
 
     [mt_feats, st_feats, _] = aF.mid_feature_extraction(x, fs, mt_size * fs,
                                                         mt_step * fs,
