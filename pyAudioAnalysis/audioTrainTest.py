@@ -181,7 +181,8 @@ def trainSVM(features, Cparam):
     """
 
     [X, Y] = listOfFeatures2Matrix(features)
-    svm = sklearn.svm.SVC(C=Cparam, kernel='linear',  probability=True)
+    svm = sklearn.svm.SVC(C=Cparam, kernel='linear',  probability=True,
+                          gamma='auto')
     svm.fit(X, Y)
 
     return svm
@@ -207,7 +208,8 @@ def trainSVM_RBF(features, Cparam):
     """
 
     [X, Y] = listOfFeatures2Matrix(features)
-    svm = sklearn.svm.SVC(C=Cparam, kernel='rbf',  probability=True)
+    svm = sklearn.svm.SVC(C=Cparam, kernel='rbf',  probability=True,
+                          gamma='auto')
     svm.fit(X, Y)
 
     return svm
@@ -688,13 +690,17 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
     n_samples_total = 0
     for f in features:
         n_samples_total += f.shape[0]
-    if n_samples_total > 1000 and n_exp > 50:
-        n_exp = 50
-        print("Number of training experiments changed to 50 due to "
-              "high number of samples")
-    if n_samples_total > 2000 and n_exp > 10:
+    if n_samples_total > 10000 and n_exp > 2:
+        n_exp = 2
+        print("Number of training experiments changed to 2 due to "
+              "very high number of samples")
+    elif n_samples_total > 2000 and n_exp > 10:
         n_exp = 10
         print("Number of training experiments changed to 10 due to "
+              "high number of samples")
+    elif n_samples_total > 1000 and n_exp > 50:
+        n_exp = 50
+        print("Number of training experiments changed to 50 due to "
               "high number of samples")
 
     for Ci, C in enumerate(Params):
