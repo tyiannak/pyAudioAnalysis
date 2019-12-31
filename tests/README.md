@@ -18,6 +18,12 @@ python3 script_train_classifiers_all.py -d "/Users/tyiannak/ResearchData/Audio D
 python3 script_train_classifiers_all.py -d "/Users/tyiannak/ResearchData/Audio Dataset/pyAudioAnalysisData/" -c knn -t music-genre6
 python3 script_train_classifiers_all.py -d "/Users/tyiannak/ResearchData/Audio Dataset/pyAudioAnalysisData/" -c knn -t 4class
 ```
+
+Then you have to copy the classifiers to the models folder (and to the local folder with the datasets)
+```
+cp models/* ../pyAudioAnalysis/data/models/
+cp models/* ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/models
+``` 
  
 ## Tests:
 For testing that the current version of the library is functionable just run:
