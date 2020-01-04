@@ -575,12 +575,7 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
 
 
 def load_model_knn(kNNModelName, is_regression=False):
-    try:
-        fo = open(kNNModelName, "rb")
-    except IOError:
-        print("didn't find file")
-        return
-    try:
+    with open(kNNModelName, "rb") as fo:
         X = cPickle.load(fo)
         Y = cPickle.load(fo)
         MEAN = cPickle.load(fo)
@@ -593,9 +588,6 @@ def load_model_knn(kNNModelName, is_regression=False):
         st_win = cPickle.load(fo)
         st_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
-    except:
-        fo.close()
-    fo.close()
 
     X = np.array(X)
     Y = np.array(Y)
@@ -621,12 +613,7 @@ def load_model(model_name, is_regression=False):
         - is_regression:     a flag indigating whereas this model
                              is regression or not
     """
-    try:
-        fo = open(model_name + "MEANS", "rb")
-    except IOError:
-            print("Load SVM model: Didn't find file")
-            return
-    try:
+    with open(model_name + "MEANS", "rb") as fo:
         MEAN = cPickle.load(fo)
         STD = cPickle.load(fo)
         if not is_regression:
@@ -636,10 +623,6 @@ def load_model(model_name, is_regression=False):
         st_win = cPickle.load(fo)
         st_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
 
     MEAN = np.array(MEAN)
     STD = np.array(STD)
