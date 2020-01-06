@@ -68,6 +68,11 @@ def flags2segs(flags, window):
                    the i-th segment
     """
 
+    if len(flags)==1:
+        segs = [0, window]
+        classes = flags
+        return segs, classes
+
     preFlag = 0
     cur_flag = 0
     n_segs = 0
@@ -561,7 +566,6 @@ def mtFileClassification(input_file, model_name, model_type,
         flags.append(class_names[int(res)])  # update class label matrix
         Ps.append(np.max(P))   # update probability matrix
     flags_ind = np.array(flags_ind)
-
     # 1-window smoothing
     for i in range(1, len(flags_ind) - 1):
         if flags_ind[i-1] == flags_ind[i + 1]:
