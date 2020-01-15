@@ -16,11 +16,11 @@ def beat_extraction(short_features, window_size, plot=False):
     """
     This function extracts an estimate of the beat rate for a musical signal.
     ARGUMENTS:
-     - st_features:     a np array (n_feats x numOfShortTermWindows)
-     - win_len:        window size in seconds
+     - short_features:     a np array (n_feats x numOfShortTermWindows)
+     - window_size:        window size in seconds
     RETURNS:
-     - BPM:            estimates of beats per minute
-     - Ratio:          a confidence measure
+     - bpm:            estimates of beats per minute
+     - ratio:          a confidence measure
     """
 
     # Features that are related to the beat tracking task:
@@ -142,9 +142,9 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
     Therefore ONE FEATURE VECTOR is extracted for each WAV file.
 
     ARGUMENTS:
-        - dirName:        the path of the WAVE directory
-        - mt_win, mt_step:    mid-term window and step (in seconds)
-        - st_win, st_step:    short-term window and step (in seconds)
+        - folder_path:        the path of the WAVE directory
+        - mid_window, mid_step:    mid-term window and step (in seconds)
+        - short_window, short_step:    short-term window and step (in seconds)
     """
 
     mid_term_features = np.array([])
@@ -164,7 +164,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
         if os.stat(file_path).st_size == 0:
             print("   (EMPTY FILE -- SKIPPING)")
             continue        
-        [sampling_rate, signal] = audioBasicIO.read_audio_file(file_path)
+        sampling_rate, signal = audioBasicIO.read_audio_file(file_path)
         if sampling_rate == 0:
             continue        
 
@@ -259,9 +259,9 @@ def directory_feature_extraction_no_avg(folder_path, mid_window, mid_step,
     files of a particular folder without averaging each file.
 
     ARGUMENTS:
-        - dirName:          the path of the WAVE directory
-        - mt_win, mt_step:    mid-term window and step (in seconds)
-        - st_win, st_step:    short-term window and step (in seconds)
+        - folder_path:          the path of the WAVE directory
+        - mid_window, mid_step:    mid-term window and step (in seconds)
+        - short_window, short_step:    short-term window and step (in seconds)
     RETURNS:
         - X:                A feature matrix
         - Y:                A matrix of file labels

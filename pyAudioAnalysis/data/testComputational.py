@@ -22,7 +22,7 @@ def main(argv):
 			[Fs, x] = audioBasicIO.read_audio_file("diarizationExample.wav");
 			duration = x.shape[0] / float(Fs)		
 			t1 = time.clock()
-			aT.fileClassification("diarizationExample.wav", "svmSM","svm")
+			aT.file_classification("diarizationExample.wav", "svmSM", "svm")
 			t2 = time.clock()
 			perTime1 =  duration / (t2-t1); print "Mid-term feature extraction + classification \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-mtClassify":
@@ -55,7 +55,7 @@ def main(argv):
 			[Fs1, x1] = audioBasicIO.read_audio_file("scottish.wav")
 			duration1 = x1.shape[0] / float(Fs1)		
 			t1 = time.clock()
-			[A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x1, Fs1, 1.0, 1.0, 15.0)	# find thumbnail endpoints			
+			[A1, A2, B1, B2, Smatrix] = aS.music_thumbnailing(x1, Fs1, 1.0, 1.0, 15.0)	# find thumbnail endpoints
 			t2 = time.clock()
 			perTime1 =  duration1 / (t2-t1); print "Thumbnail \t {0:.1f} x realtime".format(perTime1)
 	elif argv[1] == "-diarization-noLDA":

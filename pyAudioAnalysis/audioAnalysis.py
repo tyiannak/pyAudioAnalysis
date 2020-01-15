@@ -84,8 +84,8 @@ def fileChromagramWrapper(wav_file):
 def trainClassifierWrapper(method, beat_feats, directories, model_name):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
-    aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
-                       method.lower(), model_name, compute_beat=beat_feats)
+    aT.extract_features_and_train(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
+                                  method.lower(), model_name, compute_beat=beat_feats)
 
 
 def trainRegressionWrapper(method, beat_feats, dirName, model_name):
@@ -100,8 +100,8 @@ def classifyFileWrapper(inputFile, model_type, model_name):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [Result, P, classNames] = aT.fileClassification(inputFile, model_name,
-                                                    model_type)
+    [Result, P, classNames] = aT.file_classification(inputFile, model_name,
+                                                     model_type)
     print("{0:s}\t{1:s}".format("Class", "Probability"))
     for i, c in enumerate(classNames):
         print("{0:s}\t{1:.2f}".format(c, P[i]))
@@ -131,8 +131,8 @@ def classifyFolderWrapper(inputFolder, model_type, model_name,
         return
     Results = []
     for wavFile in wavFilesList:
-        [Result, P, classNames] = aT.fileClassification(wavFile, model_name,
-                                                        model_type)
+        [Result, P, classNames] = aT.file_classification(wavFile, model_name,
+                                                         model_type)
         Result = int(Result)
         Results.append(Result)
         if outputMode:
@@ -243,8 +243,8 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     if fs == -1:    # could not read file
         return
 
-    [A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, fs, st_window, st_step,
-                                                     thumbnailWrapperSize)
+    [A1, A2, B1, B2, Smatrix] = aS.music_thumbnailing(x, fs, st_window, st_step,
+                                                      thumbnailWrapperSize)
 
     # write thumbnailWrappers to WAV files:
     if inputFile.endswith(".wav"):
@@ -612,7 +612,7 @@ if __name__ == "__main__":
     elif args.task == "speakerDiarizationScriptEval":
         # Evaluate speaker diarization given a folder that contains
         # WAV files and .segment (Groundtruth files)
-        aS.speakerDiarizationEvaluateScript(args.input, args.LDAs)
+        aS.speaker_diarization_evaluation(args.input, args.LDAs)
     elif args.task == "thumbnail":
         # Audio thumbnailing
         thumbnailWrapper(args.input, args.size)

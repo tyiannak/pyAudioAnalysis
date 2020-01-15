@@ -710,7 +710,7 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
 
     # (ONSET vs SILENCE)
     features_norm, mean, std = at.normalize_features(features)
-    svm = at.trainSVM(features_norm, 1.0)
+    svm = at.train_svm(features_norm, 1.0)
 
     # Step 3: compute onset probability based on the trained svm
     prob_on_set = []
@@ -785,16 +785,16 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     return seg_limits
 
 
-def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
-                        st_win=0.05, lda_dim=35, plot_res=False):
+def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
+                        short_window=0.05, lda_dim=35, plot_res=False):
     """
     ARGUMENTS:
         - filename:        the name of the WAV file to be analyzed
         - n_speakers       the number of speakers (clusters) in
                            the recording (<=0 for unknown)
-        - mt_size (opt)    mid-term window size
-        - mt_step (opt)    mid-term window step
-        - st_win  (opt)    short-term window size
+        - mid_window (opt)    mid-term window size
+        - mid_step (opt)    mid-term window step
+        - short_window  (opt)    short-term window size
         - lda_dim (opt     LDA dimension (0 for no LDA)
         - plot_res         (opt)   0 for not plotting the results 1 for plotting
     """
@@ -804,47 +804,45 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
 
     base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
 
-    classifier_all, mean_all, std_all, class_names_all, mt_win_all,\
-    mt_step_all, st_win_all, st_step_all, compute_beat_all = \
+    classifier_all, mean_all, std_all, class_names_all, _, _, _, _, _ = \
         at.load_model_knn(os.path.join(base_dir, "knnSpeakerAll"))
-    classifier_fm, mean_fm, std_fm, class_names_fm, mt_win_fm, mt_step_fm, \
-    st_win_fm, st_step_fm,  compute_beat_fm = \
+    classifier_fm, mean_fm, std_fm, class_names_fm, _, _, _, _,  _ = \
         at.load_model_knn(os.path.join(base_dir, "knnSpeakerFemaleMale"))
 
-    mt_feats, st_feats, _ = \
+    mid_feats, st_feats, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,
-                                   mt_size * sampling_rate,
-                                   mt_step * sampling_rate,
-                                   round(sampling_rate * st_win),
-                                   round(sampling_rate*st_win * 0.5))
+                                   mid_window * sampling_rate,
+                                   mid_step * sampling_rate,
+                                   round(sampling_rate * short_window),
+                                   round(sampling_rate * short_window * 0.5))
 
-    mid_term_features = np.zeros((mt_feats.shape[0] + len(class_names_all) +
-                                    len(class_names_fm), mt_feats.shape[1]))
+    mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
+                                  len(class_names_fm), mid_feats.shape[1]))
 
-    for index in range(mt_feats.shape[1]):
-        feature_norm_all = (mt_feats[:, index] - mean_all) / std_all
-        feature_norm_fm = (mt_feats[:, index] - mean_fm) / std_fm
+    for index in range(mid_feats.shape[1]):
+        feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
+        feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
         _, p1 = at.classifier_wrapper(classifier_all, "knn", feature_norm_all)
         _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
-        mid_term_features[0:mt_feats.shape[0], index] = mt_feats[:, index]
-        mid_term_features[mt_feats.shape[0]:
-                          mt_feats.shape[0] + len(class_names_all), index] = \
+        mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
+        mid_term_features[mid_feats.shape[0]:
+                          mid_feats.shape[0] + len(class_names_all), index] = \
             p1 + 1e-4
-        mid_term_features[mt_feats.shape[0] + len(class_names_all)::, index] = \
+        mid_term_features[mid_feats.shape[0] + len(class_names_all)::, index] = \
             p2 + 1e-4
 
-    mt_feats = mid_term_features    # TODO
+    mid_feats = mid_term_features    # TODO
     feature_selected = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 41,
                         42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
 
-    mt_feats = mt_feats[feature_selected, :]
+    mid_feats = mid_feats[feature_selected, :]
 
-    mt_feats_norm, mean, std = at.normalize_features([mt_feats.T])
-    mt_feats_norm = mt_feats_norm[0].T
-    n_wins = mt_feats.shape[1]
+    mid_feats_norm, mean, std = at.normalize_features([mid_feats.T])
+    mid_feats_norm = mid_feats_norm[0].T
+    n_wins = mid_feats.shape[1]
 
     # remove outliers:
-    dist_all = np.sum(distance.squareform(distance.pdist(mt_feats_norm.T)),
+    dist_all = np.sum(distance.squareform(distance.pdist(mid_feats_norm.T)),
                       axis=0)
     m_dist_all = np.mean(dist_all)
     i_non_outliers = np.nonzero(dist_all < 1.2 * m_dist_all)[0]
@@ -856,15 +854,15 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     #i_non_outliers = np.nonzero(mt_feats[1,:] > Thres)[0]
     #print i_non_outliers
 
-    mt_feats_norm_or = mt_feats_norm
-    mt_feats_norm = mt_feats_norm[:, i_non_outliers]
+    mt_feats_norm_or = mid_feats_norm
+    mid_feats_norm = mid_feats_norm[:, i_non_outliers]
 
     # LDA dimensionality reduction:
     if lda_dim > 0:
 
         # extract mid-term features with minimum step:
-        mt_win_ratio = int(round(mt_size / st_win))
-        mt_step_ratio = int(round(st_win / st_win))
+        window_ratio = int(round(mid_window / short_window))
+        step_ratio = int(round(short_window / short_window))
         mt_feats_to_red = []
         num_of_features = len(st_feats)
         num_of_stats = 2
@@ -876,15 +874,15 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
             cur_pos = 0
             feat_len = len(st_feats[index])
             while cur_pos < feat_len:
-                N1 = cur_pos
-                N2 = cur_pos + mt_win_ratio
-                if N2 > feat_len:
-                    N2 = feat_len
-                curStFeatures = st_feats[index][N1:N2]
-                mt_feats_to_red[index].append(np.mean(curStFeatures))
+                n1 = cur_pos
+                n2 = cur_pos + window_ratio
+                if n2 > feat_len:
+                    n2 = feat_len
+                short_features = st_feats[index][n1:n2]
+                mt_feats_to_red[index].append(np.mean(short_features))
                 mt_feats_to_red[index+num_of_features].\
-                    append(np.std(curStFeatures))
-                cur_pos += mt_step_ratio
+                    append(np.std(short_features))
+                cur_pos += step_ratio
         mt_feats_to_red = np.array(mt_feats_to_red)
         mt_feats_to_red_2 = np.zeros((mt_feats_to_red.shape[0] +
                                       len(class_names_all) +
@@ -900,72 +898,71 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
                 mt_feats_to_red[:, index]
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:
                               mt_feats_to_red.shape[0] + len(class_names_all),
-            index] = p1 + 0.0001
+                index] = p1 + 0.0001
             mt_feats_to_red_2[mt_feats_to_red.shape[0]+len(class_names_all)::,
             index] = p2 + 0.0001
         mt_feats_to_red = mt_feats_to_red_2
         mt_feats_to_red = mt_feats_to_red[feature_selected, :]
-        (mt_feats_to_red, mean, std) = at.normalize_features([mt_feats_to_red.T])
+        mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
         mt_feats_to_red = mt_feats_to_red[0].T
         labels = np.zeros((mt_feats_to_red.shape[1], ))
         lda_step = 1.0
-        lda_step_ratio = lda_step / st_win
+        lda_step_ratio = lda_step / short_window
         for index in range(labels.shape[0]):
-            labels[index] = int(index*st_win/lda_step_ratio)
+            labels[index] = int(index * short_window / lda_step_ratio)
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=lda_dim)
         clf.fit(mt_feats_to_red.T, labels)
-        mt_feats_norm = (clf.transform(mt_feats_norm.T)).T
+        mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
 
     if n_speakers <= 0:
         s_range = range(2, 10)
     else:
         s_range = [n_speakers]
-    clsAll = []
+    cluster_labels = []
     sil_all = []
-    centersAll = []
+    cluster_centers = []
     
     for speakers in s_range:
         k_means = sklearn.cluster.KMeans(n_clusters=speakers)
-        k_means.fit(mt_feats_norm.T)
+        k_means.fit(mid_feats_norm.T)
         cls = k_means.labels_        
         means = k_means.cluster_centers_
 
         # Y = distance.squareform(distance.pdist(mt_feats_norm.T))
-        clsAll.append(cls)
-        centersAll.append(means)
+        cluster_labels.append(cls)
+        cluster_centers.append(means)
         sil_1 = []; sil_2 = []
         for c in range(speakers):
             # for each speaker (i.e. for each extracted cluster)
-            clust_per_cent = np.nonzero(cls == c)[0].shape[0] / \
-                             float(len(cls))
+            clust_per_cent = np.nonzero(cls == c)[0].shape[0] / float(len(cls))
             if clust_per_cent < 0.020:
                 sil_1.append(0.0)
                 sil_2.append(0.0)
             else:
                 # get subset of feature vectors
-                mt_feats_norm_temp = mt_feats_norm[:, cls==c]
+                mt_feats_norm_temp = mid_feats_norm[:, cls == c]
                 # compute average distance between samples
                 # that belong to the cluster (a values)
-                Yt = distance.pdist(mt_feats_norm_temp.T)
-                sil_1.append(np.mean(Yt)*clust_per_cent)
-                silBs = []
+                dist = distance.pdist(mt_feats_norm_temp.T)
+                sil_1.append(np.mean(dist)*clust_per_cent)
+                sil_temp = []
                 for c2 in range(speakers):
                     # compute distances from samples of other clusters
                     if c2 != c:
                         clust_per_cent_2 = np.nonzero(cls == c2)[0].shape[0] /\
                                            float(len(cls))
-                        MidTermFeaturesNormTemp2 = mt_feats_norm[:, cls == c2]
-                        Yt = distance.cdist(mt_feats_norm_temp.T, 
-                                            MidTermFeaturesNormTemp2.T)
-                        silBs.append(np.mean(Yt)*(clust_per_cent
-                                                     + clust_per_cent_2)/2.0)
-                silBs = np.array(silBs)
+                        mid_features_temp = mid_feats_norm[:, cls == c2]
+                        dist = distance.cdist(mt_feats_norm_temp.T,
+                                              mid_features_temp.T)
+                        sil_temp.append(np.mean(dist)*(clust_per_cent
+                                                       + clust_per_cent_2)/2.0)
+                sil_temp = np.array(sil_temp)
                 # ... and keep the minimum value (i.e.
                 # the distance from the "nearest" cluster)
-                sil_2.append(min(silBs))
-        sil_1 = np.array(sil_1); 
-        sil_2 = np.array(sil_2); 
+                sil_2.append(min(sil_temp))
+        sil_1 = np.array(sil_1)
+        sil_2 = np.array(sil_2)
         sil = []
         for c in range(speakers):
             # for each cluster (speaker) compute silhouette
@@ -974,9 +971,9 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         # keep the AVERAGE SILLOUETTE
         sil_all.append(np.mean(sil))
 
-    imax = np.argmax(sil_all)
+    imax = int(np.argmax(sil_all))
     # optimal number of clusters
-    nSpeakersFinal = s_range[imax]
+    num_speakers = s_range[imax]
 
     # generate the final set of cluster labels
     # (important: need to retrieve the outlier windows:
@@ -985,7 +982,7 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     cls = np.zeros((n_wins,))
     for index in range(n_wins):
         j = np.argmin(np.abs(index-i_non_outliers))
-        cls[index] = clsAll[imax][j]
+        cls[index] = cluster_labels[imax][j]
         
     # Post-process method 1: hmm smoothing
     for index in range(1):
@@ -1002,16 +999,15 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
     cls = scipy.signal.medfilt(cls, 13)
     cls = scipy.signal.medfilt(cls, 11)
 
-    sil = sil_all[imax]
-    class_names = ["speaker{0:d}".format(c) for c in range(nSpeakersFinal)];
-
+    class_names = ["speaker{0:d}".format(c) for c in range(num_speakers)]
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
-    # if groundturh exists
+    # if groundtruth exists
     if os.path.isfile(gt_file):
-        [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file)
-        flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
+        seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+        flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end,
+                                                      seg_labs, mid_step)
 
     if plot_res:
         fig = plt.figure()    
@@ -1022,12 +1018,12 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
         ax1.set_yticks(np.array(range(len(class_names))))
         ax1.axis((0, duration, -1, len(class_names)))
         ax1.set_yticklabels(class_names)
-        ax1.plot(np.array(range(len(cls)))*mt_step+mt_step/2.0, cls)
+        ax1.plot(np.array(range(len(cls))) * mid_step + mid_step / 2.0, cls)
 
     if os.path.isfile(gt_file):
         if plot_res:
             ax1.plot(np.array(range(len(flags_gt))) *
-                     mt_step + mt_step / 2.0, flags_gt, 'r')
+                     mid_step + mid_step / 2.0, flags_gt, 'r')
         purity_cluster_m, purity_speaker_m = \
             evaluate_speaker_diarization(cls, flags_gt)
         print("{0:.1f}\t{1:.1f}".format(100 * purity_cluster_m,
@@ -1038,58 +1034,59 @@ def speaker_diarization(filename, n_speakers, mt_size=2.0, mt_step=0.2,
                                                         100 * purity_speaker_m))
     if plot_res:
         plt.xlabel("time (seconds)")
-        #print s_range, sil_all    
-        if n_speakers<=0:
+        if n_speakers <= 0:
             plt.subplot(212)
             plt.plot(s_range, sil_all)
-            plt.xlabel("number of clusters");
-            plt.ylabel("average clustering's sillouette");
+            plt.xlabel("number of clusters")
+            plt.ylabel("average clustering's sillouette")
         plt.show()
     return cls
 
 
-def speakerDiarizationEvaluateScript(folder_name, ldas):
+def speaker_diarization_evaluation(folder_name, lda_dimensions):
     """
         This function prints the cluster purity and speaker purity for
         each WAV file stored in a provided directory (.SEGMENT files
          are needed as ground-truth)
         ARGUMENTS:
             - folder_name:     the full path of the folder where the WAV and
-                              SEGMENT (ground-truth) files are stored
-            - ldas:           a list of LDA dimensions (0 for no LDA)
+                               segment (ground-truth) files are stored
+            - lda_dimensions:  a list of LDA dimensions (0 for no LDA)
     """
-    types = ('*.wav',  )
-    wavFilesList = []
+    types = ('*.wav', )
+    wav_files = []
     for files in types:
-        wavFilesList.extend(glob.glob(os.path.join(folder_name, files)))    
+        wav_files.extend(glob.glob(os.path.join(folder_name, files)))
     
-    wavFilesList = sorted(wavFilesList)
+    wav_files = sorted(wav_files)
 
     # get number of unique speakers per file (from ground-truth)    
-    N = []
-    for wav_file in wavFilesList:        
-        gt_file = wav_file.replace('.wav', '.segments');
+    num_speakers = []
+    for wav_file in wav_files:
+        gt_file = wav_file.replace('.wav', '.segments')
         if os.path.isfile(gt_file):
-            [seg_start, seg_end, seg_labs] = read_segmentation_gt(gt_file)
-            N.append(len(list(set(seg_labs))))
+            _, _, seg_labs = read_segmentation_gt(gt_file)
+            num_speakers.append(len(list(set(seg_labs))))
         else:
-            N.append(-1)
+            num_speakers.append(-1)
     
-    for l in ldas:
-        print("LDA = {0:d}".format(l))
-        for i, wav_file in enumerate(wavFilesList):
-            speaker_diarization(wav_file, N[i], 2.0, 0.2, 0.05, l, plot_res=False)
-        print
-        
-def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5, 
-                      thumb_size=10.0, limit_1 = 0, limit_2 = 1):
+    for dim in lda_dimensions:
+        print("LDA = {0:d}".format(dim))
+        for i, wav_file in enumerate(wav_files):
+            speaker_diarization(wav_file, num_speakers[i], 2.0, 0.2, 0.05, dim,
+                                plot_res=False)
+
+
+def music_thumbnailing(signal, sampling_rate, short_window=1.0, short_step=0.5,
+                       thumb_size=10.0, limit_1=0, limit_2=1):
     """
     This function detects instances of the most representative part of a
     music recording, also called "music thumbnails".
     A technique similar to the one proposed in [1], however a wider set of
     audio features is used instead of chroma features.
     In particular the following steps are followed:
-     - Extract short-term audio features. Typical short-term window size: 1 second
+     - Extract short-term audio features. Typical short-term window size: 1
+       second
      - Compute the self-similarity matrix, i.e. all pairwise similarities
        between feature vectors
      - Apply a diagonal mask is as a moving average filter on the values of the
@@ -1101,10 +1098,10 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     
 
     ARGUMENTS:
-     - x:            input signal
-     - fs:            sampling frequency
-     - short_term_size:     window size (in seconds)
-     - short_term_step:    window step (in seconds)
+     - signal:            input signal
+     - sampling_rate:            sampling frequency
+     - short_window:     window size (in seconds)
+     - short_step:    window step (in seconds)
      - thumb_size:    desider thumbnail size (in seconds)
     
     RETURNS:
@@ -1122,54 +1119,52 @@ def musicThumbnailing(x, fs, short_term_size=1.0, short_term_step=0.5,
     of popular music using chroma-based representations.
     Multimedia, IEEE Transactions on, 7(1), 96-104.
     """
-    x = audioBasicIO.stereo_to_mono(x);
+    signal = audioBasicIO.stereo_to_mono(signal)
     # feature extraction:
-    st_feats, _ = stf.feature_extraction(x, fs, fs * short_term_size,
-                                         fs * short_term_step)
+    st_feats, _ = stf.feature_extraction(signal, sampling_rate,
+                                         sampling_rate * short_window,
+                                         sampling_rate * short_step)
 
     # self-similarity matrix
-    S = self_similarity_matrix(st_feats)
+    sim_matrix = self_similarity_matrix(st_feats)
 
     # moving filter:
-    M = int(round(thumb_size / short_term_step))
-    B = np.eye(M,M)
-    S = scipy.signal.convolve2d(S, B, 'valid')
-
+    m_filter = int(round(thumb_size / short_step))
+    diagonal = np.eye(m_filter, m_filter)
+    sim_matrix = scipy.signal.convolve2d(sim_matrix, diagonal, 'valid')
 
     # post-processing (remove main diagonal elements)
-    min_sm = np.min(S)
-    for i in range(S.shape[0]):
-        for j in range(S.shape[1]):
-            if abs(i-j) < 5.0 / short_term_step or i > j:
-                S[i,j] = min_sm;
+    min_sm = np.min(sim_matrix)
+    for i in range(sim_matrix.shape[0]):
+        for j in range(sim_matrix.shape[1]):
+            if abs(i-j) < 5.0 / short_step or i > j:
+                sim_matrix[i, j] = min_sm
 
     # find max position:
-    S[0:int(limit_1 * S.shape[0]), :] = min_sm
-    S[:, 0:int(limit_1 * S.shape[0])] = min_sm
-    S[int(limit_2 * S.shape[0])::, :] = min_sm
-    S[:, int(limit_2 * S.shape[0])::] = min_sm
+    sim_matrix[0:int(limit_1 * sim_matrix.shape[0]), :] = min_sm
+    sim_matrix[:, 0:int(limit_1 * sim_matrix.shape[0])] = min_sm
+    sim_matrix[int(limit_2 * sim_matrix.shape[0])::, :] = min_sm
+    sim_matrix[:, int(limit_2 * sim_matrix.shape[0])::] = min_sm
 
-    maxVal = np.max(S)        
-    [I, J] = np.unravel_index(S.argmax(), S.shape)
-    #plt.imshow(S)
-    #plt.show()
-    # expand:
-    i1 = I
-    i2 = I
-    j1 = J
-    j2 = J
+    rows, cols = np.unravel_index(sim_matrix.argmax(), sim_matrix.shape)
+    i1 = rows
+    i2 = rows
+    j1 = cols
+    j2 = cols
 
-    while i2-i1<M: 
-        if i1 <=0 or j1<=0 or i2 >= S.shape[0]-2 or j2 >= S.shape[1]-2:
+    while i2-i1 < m_filter:
+        if i1 <= 0 or j1 <= 0 or i2 >= sim_matrix.shape[0]-2 or \
+                j2 >= sim_matrix.shape[1]-2:
             break
-        if S[i1-1, j1-1] > S[i2 + 1, j2 + 1]:
+        if sim_matrix[i1-1, j1-1] > sim_matrix[i2 + 1, j2 + 1]:
             i1 -= 1
             j1 -= 1            
         else:            
             i2 += 1
             j2 += 1            
 
-    return short_term_step * i1, short_term_step * i2, \
-           short_term_step * j1, short_term_step * j2, S
+    return short_step * i1, short_step * i2, short_step * j1, short_step * j2, \
+        sim_matrix
+
 
 
