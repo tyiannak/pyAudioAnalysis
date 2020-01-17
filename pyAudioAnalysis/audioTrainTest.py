@@ -839,24 +839,25 @@ def normalize_features(features):
     Used in most classifier trainning cases.
 
     ARGUMENTS:
-        - features:    list of feature matrices (each one of them is a np matrix)
+        - features:    list of feature matrices (each one of them is a np
+                       matrix)
     RETURNS:
         - features_norm:    list of NORMALIZED feature matrices
         - mean:        mean vector
         - std:        std vector
     """
-    X = np.array([])
+    temp_feats = np.array([])
 
     for count, f in enumerate(features):
         if f.shape[0] > 0:
             if count == 0:
-                X = f
+                temp_feats = f
             else:
-                X = np.vstack((X, f))
+                temp_feats = np.vstack((temp_feats, f))
             count += 1
 
-    mean = np.mean(X, axis=0) + 1e-14
-    std = np.std(X, axis=0) + 1e-14
+    mean = np.mean(temp_feats, axis=0) + 1e-14
+    std = np.std(temp_feats, axis=0) + 1e-14
 
     features_norm = []
     for f in features:
@@ -924,10 +925,10 @@ def file_classification(input_file, model_name, model_type):
 
     if model_type == 'knn':
         classifier, mean, std, classes, mid_window, mid_step, short_window, \
-        short_step, compute_beat = load_model_knn(model_name)
+            short_step, compute_beat = load_model_knn(model_name)
     else:
         classifier, mean, std, classes, mid_window, mid_step, short_window, \
-        short_step, compute_beat = load_model(model_name)
+            short_step, compute_beat = load_model(model_name)
 
     # read audio file and convert to mono
     sampling_rate, signal = audioBasicIO.read_audio_file(input_file)
@@ -940,19 +941,19 @@ def file_classification(input_file, model_name, model_type):
         return -1, -1, -1
 
     # feature extraction:
-    mt_features, s, _ = \
+    mid_features, s, _ = \
         aF.mid_feature_extraction(signal, sampling_rate,
                                   mid_window * sampling_rate,
                                   mid_step * sampling_rate,
                                   round(sampling_rate * short_window),
                                   round(sampling_rate * short_step))
     # long term averaging of mid-term statistics
-    mt_features = mt_features.mean(axis=1)
+    mid_features = mid_features.mean(axis=1)
     if compute_beat:
-        beat, beatConf = aF.beat_extraction(s, short_step)
-        mt_features = np.append(mt_features, beat)
-        mt_features = np.append(mt_features, beatConf)
-    feature_vector = (mt_features - mean) / std    # normalization
+        beat, beat_conf = aF.beat_extraction(s, short_step)
+        mid_features = np.append(mid_features, beat)
+        mid_features = np.append(mid_features, beat_conf)
+    feature_vector = (mid_features - mean) / std    # normalization
 
     # classification
     class_id, probability = classifier_wrapper(classifier, model_type,
@@ -960,10 +961,10 @@ def file_classification(input_file, model_name, model_type):
     return class_id, probability, classes
 
 
-def file_regression(inputFile, model_name, model_type):
+def file_regression(input_file, model_name, model_type):
     # Load classifier:
 
-    if not os.path.isfile(inputFile):
+    if not os.path.isfile(input_file):
         print("fileClassification: wav file not found!")
         return -1, -1, -1
 
@@ -985,7 +986,7 @@ def file_regression(inputFile, model_name, model_type):
             = load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    samping_rate, signal = audioBasicIO.read_audio_file(inputFile)
+    samping_rate, signal = audioBasicIO.read_audio_file(input_file)
     signal = audioBasicIO.stereo_to_mono(signal)
     # feature extraction:
     mid_features, s, _ = \
