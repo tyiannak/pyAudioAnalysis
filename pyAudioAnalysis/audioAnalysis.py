@@ -112,7 +112,7 @@ def regressionFileWrapper(inputFile, model_type, model_name):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    R, regressionNames = aT.fileRegression(inputFile, model_name, model_type)
+    R, regressionNames = aT.file_regression(inputFile, model_name, model_type)
     for i in range(len(R)):
         print("{0:s}\t{1:.3f}".format(regressionNames[i], R[i]))
 
@@ -161,7 +161,7 @@ def regressionFolderWrapper(inputFolder, model_type, model_name):
         return
     Results = []
     for wavFile in wavFilesList:
-        R, regressionNames = aT.fileRegression(wavFile, model_name, model_type)
+        R, regressionNames = aT.file_regression(wavFile, model_name, model_type)
         Results.append(R)
     Results = numpy.array(Results)
 

@@ -319,7 +319,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     n_feats = features[0].shape[1]
     feature_names = ["features" + str(d + 1) for d in range(n_feats)]
 
-    writeTrainDataToARFF(model_name, features, class_names, feature_names)
+    write_train_data_arff(model_name, features, class_names, feature_names)
 
     for i, feat in enumerate(features):
         if len(feat) == 0:
@@ -960,12 +960,12 @@ def file_classification(input_file, model_name, model_type):
     return class_id, probability, classes
 
 
-def fileRegression(inputFile, model_name, model_type):
+def file_regression(inputFile, model_name, model_type):
     # Load classifier:
 
     if not os.path.isfile(inputFile):
         print("fileClassification: wav file not found!")
-        return (-1, -1, -1)
+        return -1, -1, -1
 
     regression_models = glob.glob(model_name + "_*")
     regression_models2 = []
@@ -981,24 +981,24 @@ def fileRegression(inputFile, model_name, model_type):
     # LOAD ONLY THE FIRST MODEL (for mt_win, etc)
     if model_type == 'svm' or model_type == "svm_rbf" or \
             model_type == 'randomforest':
-        [_, _, _, mt_win, mt_step, st_win, st_step, compute_beat] = \
-            load_model(regression_models[0], True)
+        _, _, _, mid_window, mid_step, short_window, short_step, compute_beat \
+            = load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
-    x = audioBasicIO.stereo_to_mono(x)
+    samping_rate, signal = audioBasicIO.read_audio_file(inputFile)
+    signal = audioBasicIO.stereo_to_mono(signal)
     # feature extraction:
-    [mt_features, s, _] = aF.mid_feature_extraction(x, Fs,
-                                                    mt_win * Fs,
-                                                    mt_step * Fs,
-                                                    round(Fs * st_win),
-                                                    round(Fs * st_step))
+    mid_features, s, _ = \
+        aF.mid_feature_extraction(signal, samping_rate, mid_window * samping_rate,
+                                  mid_step * samping_rate,
+                                  round(samping_rate * short_window),
+                                  round(samping_rate * short_step))
     # long term averaging of mid-term statistics
-    mt_features = mt_features.mean(axis=1)
+    mid_features = mid_features.mean(axis=1)
     if compute_beat:
-        [beat, beatConf] = aF.beat_extraction(s, st_step)
-        mt_features = np.append(mt_features, beat)
-        mt_features = np.append(mt_features, beatConf)
+        beat, beat_conf = aF.beat_extraction(s, short_step)
+        mid_features = np.append(mid_features, beat)
+        mid_features = np.append(mid_features, beat_conf)
 
     # REGRESSION
     R = []
@@ -1008,20 +1008,18 @@ def fileRegression(inputFile, model_name, model_type):
             return (-1, -1, -1)
         if model_type == 'svm' or model_type == "svm_rbf" \
                 or model_type == 'randomforest':
-            [model, MEAN, STD, mt_win, mt_step, st_win,
-             st_step, compute_beat] =  load_model(r, True)
-        curFV = (mt_features - MEAN) / STD  # normalization
+            model, mean, std, _, _, _, _, _ = load_model(r, True)
+        curFV = (mid_features - mean) / std  # normalization
         R.append(regression_wrapper(model, model_type, curFV))  # classification
     return R, regression_names
 
 
-def lda(data, labels, redDim):
+def lda(data, labels, red_dim):
     # Centre data
     data -= data.mean(axis=0)
     n_data = np.shape(data)[0]
     n_dim = np.shape(data)[1]
     Sw = np.zeros((n_dim, n_dim))
-    Sb = np.zeros((n_dim, n_dim))
 
     C = np.cov((data.T))
 
@@ -1041,14 +1039,13 @@ def lda(data, labels, redDim):
     indices = np.argsort(evals)
     indices = indices[::-1]
     evecs = evecs[:, indices]
-    evals = evals[indices]
-    w = evecs[:, :redDim]
+    w = evecs[:, :red_dim]
 
-    newData = np.dot(data, w)
-    return newData, w
+    new_data = np.dot(data, w)
+    return new_data, w
 
 
-def writeTrainDataToARFF(model_name, features, classNames, feature_names):
+def write_train_data_arff(model_name, features, classNames, feature_names):
     f = open(model_name + ".arff", 'w')
     f.write('@RELATION ' + model_name + '\n')
     for fn in feature_names:
@@ -1066,7 +1063,7 @@ def writeTrainDataToARFF(model_name, features, classNames, feature_names):
     f.close()
 
 
-def trainSpeakerModelsScript():
+def train_speaker_models():
     """
     This script is used to train the speaker-related models
     (NOTE: data paths are hard-coded and NOT included in the library,
@@ -1099,6 +1096,7 @@ def trainSpeakerModelsScript():
 
 def main(argv):
     return 0
+
 
 if __name__ == '__main__':
     main(sys.argv)
