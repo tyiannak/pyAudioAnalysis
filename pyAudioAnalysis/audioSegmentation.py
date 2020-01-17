@@ -341,7 +341,7 @@ def train_hmm_compute_statistics(features, labels):
     return class_priors, transmutation_matrix, means, cov
 
 
-def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
+def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mid_window, mid_step):
     """
     This function trains a HMM model for segmentation-classification
     using a single annotated audio file
@@ -362,12 +362,12 @@ def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     """
 
     seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
-    flags, class_names = segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
+    flags, class_names = segments_to_labels(seg_start, seg_end, seg_labs, mid_step)
     sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
     features, _, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,
-                                   mt_win * sampling_rate,
-                                   mt_step * sampling_rate,
+                                   mid_window * sampling_rate,
+                                   mid_step * sampling_rate,
                                    round(sampling_rate * 0.050),
                                    round(sampling_rate * 0.050))
     class_priors, transumation_matrix, means, cov = \
@@ -379,16 +379,12 @@ def train_hmm_from_file(wav_file, gt_file, hmm_model_name, mt_win, mt_step):
     hmm.startprob_ = class_priors
     hmm.transmat_ = transumation_matrix
 
-    with open(hmm_model_name, "wb") as f_handle:
-        cpickle.dump(hmm, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(class_names, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(mt_win, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(mt_step, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+    save_hmm(hmm_model_name, hmm, class_names, mid_window, mid_step)
 
     return hmm, class_names
 
 
-def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
+def train_hmm_from_directory(folder_path, hmm_model_name, mid_window, mid_step):
     """
     This function trains a HMM model for segmentation-classification using
     a where WAV files and .segment (ground-truth files) are stored
@@ -406,7 +402,7 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
     """
 
     flags_all = np.array([])
-    classes_all = []
+    class_names = []
     for i, f in enumerate(glob.glob(folder_path + os.sep + '*.wav')):
         # for each WAV file
         wav_file = f
@@ -414,16 +410,16 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
         if os.path.isfile(gt_file):
             seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
             flags, class_names = \
-                segments_to_labels(seg_start, seg_end, seg_labs, mt_step)
+                segments_to_labels(seg_start, seg_end, seg_labs, mid_step)
             for c in class_names:
                 # update class names:
-                if c not in classes_all:
-                    classes_all.append(c)
+                if c not in class_names:
+                    class_names.append(c)
             sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
             feature_vector, _, _ = \
                 mtf.mid_feature_extraction(signal, sampling_rate,
-                                           mt_win * sampling_rate,
-                                           mt_step * sampling_rate,
+                                           mid_window * sampling_rate,
+                                           mid_step * sampling_rate,
                                            round(sampling_rate * 0.050),
                                            round(sampling_rate * 0.050))
 
@@ -436,7 +432,7 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
             flags_new = []
             # append features and labels
             for j, fl in enumerate(flags):
-                flags_new.append(classes_all.index(class_names[flags[j]]))
+                flags_new.append(class_names.index(class_names[flags[j]]))
 
             flags_all = np.append(flags_all, np.array(flags_new))
 
@@ -455,50 +451,48 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mt_win, mt_step):
     hmm.startprob_ = class_priors
     hmm.transmat_ = transmutation_matrix
 
-    # save HMM model
+    save_hmm(hmm_model_name, hmm, class_names, mid_window, mid_step)
+
+    return hmm, class_names
+
+
+def save_hmm(hmm_model_name, model, classes, mid_window, mid_step):
+    """Save HMM model"""
     with open(hmm_model_name, "wb") as f_handle:
-        cpickle.dump(hmm, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(classes_all, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(mt_win, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-        cpickle.dump(mt_step, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
-
-    return hmm, classes_all
+        cpickle.dump(model, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(classes, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mid_window, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
+        cpickle.dump(mid_step, f_handle, protocol=cpickle.HIGHEST_PROTOCOL)
 
 
-def hmm_segmentation(audio_file, hmm_model_name, plot_res=False, gt_file=""):
+def hmm_segmentation(audio_file, hmm_model_name, plot_results=False,
+                     gt_file=""):
     sampling_rate, signal = audioBasicIO.read_audio_file(audio_file)
 
     with open(hmm_model_name, "rb") as f_handle:
         hmm = cpickle.load(f_handle)
         class_names = cpickle.load(f_handle)
-        mt_win = cpickle.load(f_handle)
-        mt_step = cpickle.load(f_handle)
+        mid_window = cpickle.load(f_handle)
+        mid_step = cpickle.load(f_handle)
 
     features, _, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,
-                                   mt_win * sampling_rate,
-                                   mt_step * sampling_rate,
+                                   mid_window * sampling_rate,
+                                   mid_step * sampling_rate,
                                    round(sampling_rate * 0.050),
                                    round(sampling_rate * 0.050))
-    cm = np.array([])
-    labels_gt = np.array([])
-    # apply model
-    predictions = hmm.predict(features.T)
-    if os.path.isfile(gt_file):
-        labels_gt, class_names = load_ground_truth_segments(gt_file, mt_step)
-        cm = calculate_confusion_matrix(predictions, labels_gt, class_names)
 
-    accuracy = plot_segmentation_results(predictions, labels_gt, class_names,
-                                    mt_step, not plot_res)
-    if accuracy >= 0:
-        print("Overall Accuracy: {0:.2f}".format(accuracy))
-    return predictions, class_names, accuracy, cm
+    # apply model
+    labels = hmm.predict(features.T)
+    labels_gt, class_names, accuracy, cm = \
+        load_ground_truth(gt_file, labels, mid_step, plot_results)
+    return labels, class_names, accuracy, cm
 
 
 def load_ground_truth_segments(gt_file, mt_step):
     seg_start, seg_end, seg_labels = read_segmentation_gt(gt_file)
-    labels, class_names = segments_to_labels(seg_start, seg_end,
-                                                   seg_labels, mt_step)
+    labels, class_names = segments_to_labels(seg_start, seg_end, seg_labels,
+                                             mt_step)
     labels_temp = []
     for index, label in enumerate(labels):
         # "align" labels with GT
@@ -548,10 +542,10 @@ def mid_term_file_classification(input_file, model_name, model_type,
 
     # Load classifier:
     if model_type == "knn":
-        classifier, mean, std, class_names, mt_win, mt_step, st_win, \
+        classifier, mean, std, class_names, mt_win, mid_step, st_win, \
          st_step, compute_beat = at.load_model_knn(model_name)
     else:
-        classifier, mean, std, class_names, mt_win, mt_step, st_win, \
+        classifier, mean, std, class_names, mt_win, mid_step, st_win, \
          st_step, compute_beat = at.load_model(model_name)
 
     if compute_beat:
@@ -573,7 +567,7 @@ def mid_term_file_classification(input_file, model_name, model_type,
     mt_feats, _, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,
                                    mt_win * sampling_rate,
-                                   mt_step * sampling_rate,
+                                   mid_step * sampling_rate,
                                    round(sampling_rate * st_win),
                                    round(sampling_rate * st_step))
     posterior_matrix = []
@@ -600,18 +594,30 @@ def mid_term_file_classification(input_file, model_name, model_type,
             labels[col_index] = labels[col_index + 1]
 
     # convert fix-sized flags to segments and classes
-    segs, classes = labels_to_segments(labels, mt_step)
+    segs, classes = labels_to_segments(labels, mid_step)
     segs[-1] = len(signal) / float(sampling_rate)
 
     # Load grount-truth:
-    if os.path.isfile(gt_file):
-        labels_gt, class_names = load_ground_truth_segments(gt_file, mt_step)
-        cm = calculate_confusion_matrix(labels_gt, labels_gt, class_names)
+    labels_gt, class_names, accuracy, cm = \
+        load_ground_truth(gt_file, labels, mid_step, plot_results)
 
-    accuracy = plot_segmentation_results(labels, labels_gt,
-                                    class_names, mt_step, not plot_results)
-    if accuracy >= 0:
-        print("Overall Accuracy: {0:.2f}".format(accuracy))
+    return labels_gt, class_names, accuracy, cm
+
+
+def load_ground_truth(gt_file, labels, mid_step, plot_results):
+    accuracy = 0
+    class_names = []
+    cm = np.array([])
+    labels_gt = np.array([])
+    if os.path.isfile(gt_file):
+        labels_gt, class_names = load_ground_truth_segments(gt_file, mid_step)
+        cm = calculate_confusion_matrix(labels, labels_gt, class_names)
+
+        accuracy = plot_segmentation_results(labels, labels_gt,
+                                        class_names, mid_step, not plot_results)
+        if accuracy >= 0:
+            print("Overall Accuracy: {0:.2f}".format(accuracy))
+
     return labels_gt, class_names, accuracy, cm
 
 
@@ -825,18 +831,6 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
                                   len(class_names_fm), mid_feats.shape[1]))
 
-    for index in range(mid_feats.shape[1]):
-        feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
-        feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
-        _, p1 = at.classifier_wrapper(classifier_all, "knn", feature_norm_all)
-        _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
-        mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
-        mid_term_features[mid_feats.shape[0]:
-                          mid_feats.shape[0] + len(class_names_all), index] = \
-            p1 + 1e-4
-        mid_term_features[mid_feats.shape[0] + len(class_names_all)::, index] = \
-            p2 + 1e-4
-
     mid_feats = mid_term_features    # TODO
     feature_selected = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 41,
                         42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
@@ -854,11 +848,11 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     i_non_outliers = np.nonzero(dist_all < 1.2 * m_dist_all)[0]
 
     # TODO: Combine energy threshold for outlier removal:
-    #EnergyMin = np.min(mt_feats[1,:])
-    #EnergyMean = np.mean(mt_feats[1,:])
-    #Thres = (1.5*EnergyMin + 0.5*EnergyMean) / 2.0
-    #i_non_outliers = np.nonzero(mt_feats[1,:] > Thres)[0]
-    #print i_non_outliers
+    # EnergyMin = np.min(mt_feats[1,:])
+    # EnergyMean = np.mean(mt_feats[1,:])
+    # Thres = (1.5*EnergyMin + 0.5*EnergyMean) / 2.0
+    # i_non_outliers = np.nonzero(mt_feats[1,:] > Thres)[0]
+    # print i_non_outliers
 
     mt_feats_norm_or = mid_feats_norm
     mid_feats_norm = mid_feats_norm[:, i_non_outliers]
@@ -886,7 +880,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
                     n2 = feat_len
                 short_features = st_feats[index][n1:n2]
                 mt_feats_to_red[index].append(np.mean(short_features))
-                mt_feats_to_red[index+num_of_features].\
+                mt_feats_to_red[index + num_of_features].\
                     append(np.std(short_features))
                 cur_pos += step_ratio
         mt_feats_to_red = np.array(mt_feats_to_red)
@@ -894,6 +888,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
                                       len(class_names_all) +
                                       len(class_names_fm),
                                       mt_feats_to_red.shape[1]))
+        limit = mt_feats_to_red.shape[0] + len(class_names_all)
         for index in range(mt_feats_to_red.shape[1]):
             feature_norm_all = (mt_feats_to_red[:, index] - mean_all) / std_all
             feature_norm_fm = (mt_feats_to_red[:, index] - mean_fm) / std_fm
@@ -902,11 +897,8 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
             _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
             mt_feats_to_red_2[0:mt_feats_to_red.shape[0], index] = \
                 mt_feats_to_red[:, index]
-            mt_feats_to_red_2[mt_feats_to_red.shape[0]:
-                              mt_feats_to_red.shape[0] + len(class_names_all),
-                index] = p1 + 0.0001
-            mt_feats_to_red_2[mt_feats_to_red.shape[0]+len(class_names_all)::,
-            index] = p2 + 0.0001
+            mt_feats_to_red_2[mt_feats_to_red.shape[0]:limit, index] = p1 + 1e-4
+            mt_feats_to_red_2[limit::, index] = p2 + 1e-4
         mt_feats_to_red = mt_feats_to_red_2
         mt_feats_to_red = mt_feats_to_red[feature_selected, :]
         mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
@@ -935,7 +927,6 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
         cls = k_means.labels_        
         means = k_means.cluster_centers_
 
-        # Y = distance.squareform(distance.pdist(mt_feats_norm.T))
         cluster_labels.append(cls)
         cluster_centers.append(means)
         sil_1 = []; sil_2 = []
@@ -972,8 +963,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
         sil = []
         for c in range(speakers):
             # for each cluster (speaker) compute silhouette
-            sil.append( ( sil_2[c] - sil_1[c]) / (max(sil_2[c],
-                                                      sil_1[c]) + 0.00001))
+            sil.append((sil_2[c] - sil_1[c]) / (max(sil_2[c], sil_1[c]) + 1e-5))
         # keep the AVERAGE SILLOUETTE
         sil_all.append(np.mean(sil))
 
