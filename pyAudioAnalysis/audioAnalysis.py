@@ -89,9 +89,9 @@ def trainClassifierWrapper(method, beat_feats, directories, model_name):
 
 
 def trainRegressionWrapper(method, beat_feats, dirName, model_name):
-    aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow,
-                                 aT.shortTermStep, method.lower(), model_name,
-                                 compute_beat=beat_feats)
+    aT.feature_extraction_train_regression(dirName, 1, 1, aT.shortTermWindow,
+                                           aT.shortTermStep, method.lower(), model_name,
+                                           compute_beat=beat_feats)
 
 
 def classifyFileWrapper(inputFile, model_type, model_name):

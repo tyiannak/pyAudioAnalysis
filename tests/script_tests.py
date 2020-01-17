@@ -41,14 +41,14 @@ aS.hmm_segmentation(root_data_path + "47361748.wav", 'hmmTemp1', True, root_data
 aS.hmm_segmentation(root_data_path + "47361748.wav", 'hmmTemp2', True, root_data_path + 'pyAudioAnalysis/data//scottish.segments')				# test 2
 
 print("\n\n\n * * * TEST 7 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm_rbf", "temp.mod", compute_beat=False)
+aT.feature_extraction_train_regression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm_rbf", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "47361748.wav", "temp.mod", "svm_rbf"))
 
 print("\n\n\n * * * TEST 8 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm", "temp.mod", compute_beat=False)
+aT.feature_extraction_train_regression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "svm", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "47361748.wav", "temp.mod", "svm"))
 
 print("\n\n\n * * * TEST 9 * * * \n\n\n")
-aT.featureAndTrainRegression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "randomforest", "temp.mod", compute_beat=False)
+aT.feature_extraction_train_regression(root_data_path + "pyAudioAnalysis/data/speechEmotion", 1, 1, 0.050, 0.050, "randomforest", "temp.mod", compute_beat=False)
 print(aT.fileRegression(root_data_path + "47361748.wav", "temp.mod", "randomforest"))
 
