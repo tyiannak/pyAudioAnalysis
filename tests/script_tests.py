@@ -32,7 +32,7 @@ print("\n\n\n * * * TEST 4 * * * \n\n\n")
 aT.extract_features_and_train([root_data_path + "1/", root_data_path + "2/"], 1.0, 1.0, 0.2, 0.2, "svm", "temp", True)
 
 print("\n\n\n * * * TEST 5 * * * \n\n\n")
-[flagsInd, classesAll, acc, CM] = aS.mid_term_file_classification(root_data_path + "47361748.wav", root_data_path + "pyAudioAnalysis/data/svmSM", "svm", True, root_data_path + 'pyAudioAnalysis/data/scottish.segments')
+[flagsInd, classesAll, acc, CM] = aS.mid_term_file_classification(root_data_path + "scottish.wav", root_data_path + "models/svm_rbf_sm", "svm_rbf", True, root_data_path + 'pyAudioAnalysis/data/scottish.segments')
 
 print("\n\n\n * * * TEST 6 * * * \n\n\n")
 aS.train_hmm_from_file(root_data_path + "47361748.wav", root_data_path + 'radioFinal/train/bbc4A.segments', 'hmmTemp1', 1.0, 1.0)

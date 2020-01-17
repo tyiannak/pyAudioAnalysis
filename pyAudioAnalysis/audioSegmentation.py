@@ -65,6 +65,12 @@ def labels_to_segments(labels, window):
                    the i-th segment
     """
 
+    if len(labels)==1:
+        segs = [0, window]
+        classes = labels
+        return segs, classes
+
+
     num_segs = 0
     index = 0
     classes = []
@@ -588,7 +594,6 @@ def mid_term_file_classification(input_file, model_name, model_type,
         # update probability matrix
         posterior_matrix.append(np.max(posterior))
     labels = np.array(labels)
-
     # 1-window smoothing
     for col_index in range(1, len(labels) - 1):
         if labels[col_index-1] == labels[col_index + 1]:
@@ -802,12 +807,13 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     signal = audioBasicIO.stereo_to_mono(signal)
     duration = len(signal) / sampling_rate
 
-    base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
+    base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            "data/models")
 
     classifier_all, mean_all, std_all, class_names_all, _, _, _, _, _ = \
-        at.load_model_knn(os.path.join(base_dir, "knnSpeakerAll"))
+        at.load_model_knn(os.path.join(base_dir, "knn_speaker_10"))
     classifier_fm, mean_fm, std_fm, class_names_fm, _, _, _, _,  _ = \
-        at.load_model_knn(os.path.join(base_dir, "knnSpeakerFemaleMale"))
+        at.load_model_knn(os.path.join(base_dir, "knn_speaker_male_female"))
 
     mid_feats, st_feats, _ = \
         mtf.mid_feature_extraction(signal, sampling_rate,

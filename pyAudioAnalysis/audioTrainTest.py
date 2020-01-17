@@ -175,12 +175,13 @@ def train_svm(features, c_param, kernel='linear'):
         - svm:              the trained SVM variable
 
     NOTE:
-        This function trains a linear-kernel SVM for a given C value. 
+        This function trains a linear-kernel SVM for a given C value.
         For a different kernel, other types of parameters should be provided.
     """
 
     feature_matrix, labels = features_to_matrix(features)
-    svm = sklearn.svm.SVC(C=c_param, kernel=kernel, probability=True)
+    svm = sklearn.svm.SVC(C=c_param, kernel=kernel, probability=True,
+                          gamma='auto')
     svm.fit(feature_matrix, labels)
 
     return svm
@@ -533,12 +534,7 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
 
 
 def load_model_knn(kNNModelName, is_regression=False):
-    try:
-        fo = open(kNNModelName, "rb")
-    except IOError:
-        print("didn't find file")
-        return
-    try:
+    with open(kNNModelName, "rb") as fo:
         X = cPickle.load(fo)
         Y = cPickle.load(fo)
         MEAN = cPickle.load(fo)
@@ -551,9 +547,6 @@ def load_model_knn(kNNModelName, is_regression=False):
         st_win = cPickle.load(fo)
         st_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
-    except:
-        fo.close()
-    fo.close()
 
     X = np.array(X)
     Y = np.array(Y)
@@ -579,12 +572,7 @@ def load_model(model_name, is_regression=False):
         - is_regression:     a flag indigating whereas this model
                              is regression or not
     """
-    try:
-        fo = open(model_name + "MEANS", "rb")
-    except IOError:
-            print("Load SVM model: Didn't find file")
-            return
-    try:
+    with open(model_name + "MEANS", "rb") as fo:
         MEAN = cPickle.load(fo)
         STD = cPickle.load(fo)
         if not is_regression:
@@ -594,10 +582,6 @@ def load_model(model_name, is_regression=False):
         st_win = cPickle.load(fo)
         st_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
-
-    except:
-        fo.close()
-    fo.close()
 
     MEAN = np.array(MEAN)
     STD = np.array(STD)
@@ -648,13 +632,17 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
     n_samples_total = 0
     for f in features:
         n_samples_total += f.shape[0]
-    if n_samples_total > 1000 and n_exp > 50:
-        n_exp = 50
-        print("Number of training experiments changed to 50 due to "
-              "high number of samples")
-    if n_samples_total > 2000 and n_exp > 10:
+    if n_samples_total > 10000 and n_exp > 2:
+        n_exp = 2
+        print("Number of training experiments changed to 2 due to "
+              "very high number of samples")
+    elif n_samples_total > 2000 and n_exp > 10:
         n_exp = 10
         print("Number of training experiments changed to 10 due to "
+              "high number of samples")
+    elif n_samples_total > 1000 and n_exp > 50:
+        n_exp = 50
+        print("Number of training experiments changed to 50 due to "
               "high number of samples")
 
     for Ci, C in enumerate(Params):

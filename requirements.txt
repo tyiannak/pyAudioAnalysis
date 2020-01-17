@@ -1,5 +1,5 @@
 numpy
-matplotlib
+matplotlib==1.5.3
 scipy
 sklearn
 hmmlearn
