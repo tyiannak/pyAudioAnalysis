@@ -7,4 +7,4 @@ eyeD3==0.8.7
 pydub==0.23.1
 pyAudioAnalysis==0.2.5
 pylab==0.0.2
-scikit_learn==0.22.1
+scikit_learn==0.19.1
