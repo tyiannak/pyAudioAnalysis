@@ -88,8 +88,8 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
     """
 
     short_features, short_feature_names = \
-        ShortTermFeatures.feature_extraction(signal, sampling_rate, short_window,
-                                             short_step)
+        ShortTermFeatures.feature_extraction(signal, sampling_rate,
+                                             short_window, short_step)
 
     n_stats = 2
     n_feats = len(short_features)
@@ -301,14 +301,17 @@ def directory_feature_extraction_no_avg(folder_path, mid_window, mid_step,
     return mid_features, signal_idx, wav_file_list
 
 
-# The following two feature extraction wrappers extract features for given audio
-# files, however  NO LONG-TERM AVERAGING is performed. Therefore, the output for
-# each audio file is NOT A SINGLE FEATURE VECTOR but a whole feature matrix.
-#
-# Also, another difference between the following two wrappers and the previous
-# is that they NO LONG-TERM AVERAGING IS PERFORMED. In other words, the WAV
-# files in these functions are not used as uniform samples that need to be
-# averaged but as sequences
+"""
+The following two feature extraction wrappers extract features for given audio
+files, however  NO LONG-TERM AVERAGING is performed. Therefore, the output for
+each audio file is NOT A SINGLE FEATURE VECTOR but a whole feature matrix.
+
+Also, another difference between the following two wrappers and the previous
+is that they NO LONG-TERM AVERAGING IS PERFORMED. In other words, the WAV
+files in these functions are not used as uniform samples that need to be
+averaged but as sequences
+"""
+
 
 def mid_feature_extraction_to_file(file_path, mid_window, mid_step,
                                    short_window, short_step, output_file,

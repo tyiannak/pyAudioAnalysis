@@ -423,7 +423,8 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
         frequency_ticks = range(0, int(num_fft) + fstep, fstep)
         frequency_tick_labels = \
             [str(sampling_rate / 2 -
-                 int((f * sampling_rate) / (2 * num_fft))) for f in frequency_ticks]
+                 int((f * sampling_rate) / (2 * num_fft)))
+             for f in frequency_ticks]
         ax.set_yticks(frequency_ticks)
         ax.set_yticklabels(frequency_tick_labels)
         t_step = int(count_fr / 3)
