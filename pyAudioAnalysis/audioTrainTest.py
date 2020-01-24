@@ -344,9 +344,9 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     for feat in features:
         temp = []
         for i in range(feat.shape[0]):
-            temp = feat[i, :]
-            if (not np.isnan(temp).any()) and (not np.isinf(temp).any()):
-                temp.append(temp.tolist())
+            temp_fv = feat[i, :]
+            if (not np.isnan(temp_fv).any()) and (not np.isinf(temp_fv).any()):
+                temp.append(temp_fv.tolist())
             else:
                 print("NaN Found! Feature vector not used for training")
         temp_features.append(np.array(temp))
