@@ -140,7 +140,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         namesCategoryToVisualize = [ntpath.basename(w).replace('.wav','').split(" --- ")[0] for w in wavFilesList]; 
         namesToVisualize       = [ntpath.basename(w).replace('.wav','') for w in wavFilesList]; 
 
-        (F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
+        (F, MEAN, STD) = aT.normalize_features([allMtFeatures])
         F = np.concatenate(F)
         
         # check that the new PCA dimension is at most equal to the number of samples
@@ -177,7 +177,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
                     YsNew[indices] = i
             ldaLabels = YsNew
 
-        (F, MEAN, STD) = aT.normalizeFeatures([allMtFeatures])
+        (F, MEAN, STD) = aT.normalize_features([allMtFeatures])
         F = np.array(F[0])
 
         clf = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(n_components=10)
