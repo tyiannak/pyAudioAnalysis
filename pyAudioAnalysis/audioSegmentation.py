@@ -831,6 +831,17 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
                                   len(class_names_fm), mid_feats.shape[1]))
 
+    for index in range(mid_feats.shape[1]):
+        feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
+        feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
+        _, p1 = at.classifier_wrapper(classifier_all, "knn", feature_norm_all)
+        _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
+        start = mid_feats.shape[0]
+        end = mid_feats.shape[0] + len(class_names_all)
+        mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
+        mid_term_features[start:end, index] = p1 + 1e-4
+        mid_term_features[end::, index] = p2 + 1e-4
+
     mid_feats = mid_term_features    # TODO
     feature_selected = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 41,
                         42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
