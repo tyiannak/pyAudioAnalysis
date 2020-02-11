@@ -35,7 +35,7 @@ def classifyFolderWrapper(inputFolder, modelType, modelName, outputMode=False):
 	for wavFile in wavFilesList:	
 		[Fs, x] = audioBasicIO.readAudioFile(wavFile)	
 		signalLength = x.shape[0] / float(Fs)
-		[Result, P, classNames] = aT.fileClassification(wavFile, modelName, modelType)					
+		[Result, P, classNames] = aT.file_classification(wavFile, modelName, modelType)
 		PsAll += (numpy.array(P) * signalLength)		
 		Result = int(Result)
 		Results.append(Result)

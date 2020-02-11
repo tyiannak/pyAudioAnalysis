@@ -22,6 +22,6 @@ if __name__ == '__main__':
     root_data_path = args.data_folder
     classifier_type = args.classifier_type
     classifier_path = "sm_" + classifier_type
-    aT.featureAndTrain([root_data_path +"SM/speech",root_data_path + "SM/music"], 
-                       1.0, 1.0, 0.2, 0.2, classifier_type, 
-                       classifier_path, False)
+    aT.extract_features_and_train([root_data_path + "SM/speech", root_data_path + "SM/music"],
+                                  1.0, 1.0, 0.2, 0.2, classifier_type,
+                                  classifier_path, False)
