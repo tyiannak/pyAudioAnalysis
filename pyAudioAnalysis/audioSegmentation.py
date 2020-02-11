@@ -582,16 +582,9 @@ def mid_term_file_classification(input_file, model_name, model_type,
             at.classifier_wrapper(classifier, model_type, feature_vector)
         labels.append(label_predicted)
 
-        # update class label matrix
-        labels.append(class_names[int(label_predicted)])
-
         # update probability matrix
         posterior_matrix.append(np.max(posterior))
     labels = np.array(labels)
-    # 1-window smoothing
-    for col_index in range(1, len(labels) - 1):
-        if labels[col_index-1] == labels[col_index + 1]:
-            labels[col_index] = labels[col_index + 1]
 
     # convert fix-sized flags to segments and classes
     segs, classes = labels_to_segments(labels, mid_step)
