@@ -48,5 +48,8 @@ sh cmd_test_08.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
 sh cmd_test_09.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
 sh cmd_test_10.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
 sh cmd_test_11.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/ 
+sh cmd_test_12_1.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
+sh cmd_test_12_2.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
+sh cmd_test_12_3.sh ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/
 ```
 
