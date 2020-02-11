@@ -206,7 +206,7 @@ def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):
 
 def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
     gtFile = wavFile.replace(".wav", ".segments")
-    aS.hmm_segmentation(wavFile, hmmModelName, plot_res=True,
+    aS.hmm_segmentation(wavFile, hmmModelName, plot_results=True,
                         gt_file=gtFile)
 
 
