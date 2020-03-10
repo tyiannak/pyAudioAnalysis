@@ -484,9 +484,9 @@ def hmm_segmentation(audio_file, hmm_model_name, plot_results=False,
 
     # apply model
     labels = hmm.predict(features.T)
-    labels_gt, class_names, accuracy, cm = \
-        load_ground_truth(gt_file, labels, mid_step, plot_results)
-    return labels, class_names, accuracy, cm
+    labels_gt, class_names_gt, accuracy, cm = \
+        load_ground_truth(gt_file, labels, class_names, mid_step, plot_results)
+    return labels, class_names_gt, accuracy, cm
 
 
 def load_ground_truth_segments(gt_file, mt_step):
@@ -547,7 +547,6 @@ def mid_term_file_classification(input_file, model_name, model_type,
     else:
         classifier, mean, std, class_names, mt_win, mid_step, st_win, \
          st_step, compute_beat = at.load_model(model_name)
-
     if compute_beat:
         print("Model " + model_name + " contains long-term music features "
                                       "(beat etc) and cannot be used in "
@@ -589,22 +588,30 @@ def mid_term_file_classification(input_file, model_name, model_type,
     # convert fix-sized flags to segments and classes
     segs, classes = labels_to_segments(labels, mid_step)
     segs[-1] = len(signal) / float(sampling_rate)
-
     # Load grount-truth:
-    labels_gt, class_names, accuracy, cm = \
-        load_ground_truth(gt_file, labels, mid_step, plot_results)
+    labels_gt, class_names_gt, accuracy, cm = \
+        load_ground_truth(gt_file, labels, class_names, mid_step, plot_results)
 
-    return labels_gt, class_names, accuracy, cm
+    return labels_gt, class_names_gt, accuracy, cm
 
 
-def load_ground_truth(gt_file, labels, mid_step, plot_results):
+def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
     accuracy = 0
-    class_names = []
     cm = np.array([])
     labels_gt = np.array([])
     if os.path.isfile(gt_file):
-        labels_gt, class_names = load_ground_truth_segments(gt_file, mid_step)
-        cm = calculate_confusion_matrix(labels, labels_gt, class_names)
+        # load ground truth and class names
+        labels_gt, class_names_gt = load_ground_truth_segments(gt_file,
+                                                               mid_step)
+        # map predicted labels to ground truth class names
+        labels_new = []
+        for il, l in enumerate(labels):
+            if l in class_names_gt:
+                labels_new.append(class_names_gt.index(l))
+            else:
+                labels_new.append(-1)
+
+        cm = calculate_confusion_matrix(labels, labels_gt, class_names_gt)
 
         accuracy = plot_segmentation_results(labels, labels_gt,
                                         class_names, mid_step, not plot_results)
