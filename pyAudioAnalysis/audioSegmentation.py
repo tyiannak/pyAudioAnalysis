@@ -606,14 +606,14 @@ def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
         # map predicted labels to ground truth class names
         labels_new = []
         for il, l in enumerate(labels):
-            if l in class_names_gt:
-                labels_new.append(class_names_gt.index(l))
+            if class_names[int(l)] in class_names_gt:
+                labels_new.append(class_names_gt.index(class_names[int(l)]))
             else:
                 labels_new.append(-1)
+        labels_new = np.array(labels_new)
+        cm = calculate_confusion_matrix(labels_new, labels_gt, class_names_gt)
 
-        cm = calculate_confusion_matrix(labels, labels_gt, class_names_gt)
-
-        accuracy = plot_segmentation_results(labels, labels_gt,
+        accuracy = plot_segmentation_results(labels_new, labels_gt,
                                         class_names, mid_step, not plot_results)
         if accuracy >= 0:
             print("Overall Accuracy: {0:.2f}".format(accuracy))
