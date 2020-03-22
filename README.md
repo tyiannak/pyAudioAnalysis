@@ -4,6 +4,7 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
+ * [2020-03-20] pip package has been updated (version 0.3.0)
  * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
  * Check the tutorial for the course ["Multimodal Information Processing & Analysis", MSc in Data Science in NCSR-D](https://github.com/tyiannak/multimodalAnalysis)
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
