@@ -5,6 +5,7 @@ from scipy.fftpack import fft
 import matplotlib.pyplot as plt
 from scipy.signal import lfilter
 from scipy.fftpack.realtransforms import dct
+from tqdm import tqdm
 
 eps = 0.00000001
 
@@ -371,7 +372,8 @@ def chromagram(signal, sampling_rate, window, step, plot=False):
     return chromogram, time_axis, freq_axis
 
 
-def spectrogram(signal, sampling_rate, window, step, plot=False):
+def spectrogram(signal, sampling_rate, window, step, plot=False,
+                show_progress=False):
     """
     Short-term FFT mag for spectogram estimation:
     Returns:
@@ -382,6 +384,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
         window:         the short-term window size (in samples)
         step:        the short-term window step (in samples)
         plot:        flag, 1 if results are to be ploted
+        show_progress flag for showing progress using tqdm
     RETURNS:
     """
     window = int(window)
@@ -398,7 +401,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
     num_fft = int(window / 2)
     specgram = np.array([], dtype=np.float64)
 
-    while cur_p + window - 1 < num_samples:
+    for cur_p in tqdm(range(window, num_samples - step, step)):
         count_fr += 1
         x = signal[cur_p:cur_p + window]
         cur_p = cur_p + step
