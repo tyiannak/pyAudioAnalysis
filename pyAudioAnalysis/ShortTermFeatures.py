@@ -396,7 +396,6 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
     signal = (signal - dc_offset) / (maximum - dc_offset)
 
     num_samples = len(signal)  # total number of signals
-    cur_p = 0
     count_fr = 0
     num_fft = int(window / 2)
     specgram = np.array([], dtype=np.float64)
