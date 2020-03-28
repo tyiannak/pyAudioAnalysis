@@ -402,7 +402,7 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mid_window, mid_step):
     """
 
     flags_all = np.array([])
-    class_names = []
+    class_names_all = []
     for i, f in enumerate(glob.glob(folder_path + os.sep + '*.wav')):
         # for each WAV file
         wav_file = f
@@ -413,8 +413,8 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mid_window, mid_step):
                 segments_to_labels(seg_start, seg_end, seg_labs, mid_step)
             for c in class_names:
                 # update class names:
-                if c not in class_names:
-                    class_names.append(c)
+                if c not in class_names_all:
+                    class_names_all.append(c)
             sampling_rate, signal = audioBasicIO.read_audio_file(wav_file)
             feature_vector, _, _ = \
                 mtf.mid_feature_extraction(signal, sampling_rate,
@@ -432,7 +432,7 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mid_window, mid_step):
             flags_new = []
             # append features and labels
             for j, fl in enumerate(flags):
-                flags_new.append(class_names.index(class_names[flags[j]]))
+                flags_new.append(class_names_all.index(class_names_all[flags[j]]))
 
             flags_all = np.append(flags_all, np.array(flags_new))
 
@@ -451,9 +451,9 @@ def train_hmm_from_directory(folder_path, hmm_model_name, mid_window, mid_step):
     hmm.startprob_ = class_priors
     hmm.transmat_ = transmutation_matrix
 
-    save_hmm(hmm_model_name, hmm, class_names, mid_window, mid_step)
+    save_hmm(hmm_model_name, hmm, class_names_all, mid_window, mid_step)
 
-    return hmm, class_names
+    return hmm, class_names_all
 
 
 def save_hmm(hmm_model_name, model, classes, mid_window, mid_step):
@@ -604,6 +604,8 @@ def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
         labels_gt, class_names_gt = load_ground_truth_segments(gt_file,
                                                                mid_step)
         # map predicted labels to ground truth class names
+        # Note: if a predicted label does not belong to the ground truth
+        #       classes --> -1
         labels_new = []
         for il, l in enumerate(labels):
             if class_names[int(l)] in class_names_gt:
