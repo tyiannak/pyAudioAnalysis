@@ -20,7 +20,7 @@ plt.subplot(2,1,2); plt.plot(F[1,:]); plt.xlabel('Frame no'); plt.ylabel(f_names
 print("\n\n\n * * * TEST 2 * * * \n\n\n")
 [Fs, x] = audioBasicIO.read_audio_file(root_data_path + "pyAudioAnalysis/data/doremi.wav")
 x = audioBasicIO.stereo_to_mono(x)
-specgram, TimeAxis, FreqAxis = ShortTermFeatures.spectrogram(x, Fs, round(Fs * 0.040), round(Fs * 0.040), True)
+specgram, TimeAxis, FreqAxis = ShortTermFeatures.spectrogram(x, Fs, round(Fs * 0.040), round(Fs * 0.040), True, True)
 
 print("\n\n\n * * * TEST 3 * * * \n\n\n")
 [Fs, x] = audioBasicIO.read_audio_file(root_data_path + "pyAudioAnalysis/data/doremi.wav")

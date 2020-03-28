@@ -400,10 +400,10 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
     num_fft = int(window / 2)
     specgram = np.array([], dtype=np.float64)
 
-    for cur_p in tqdm(range(window, num_samples - step, step)):
+    for cur_p in tqdm(range(window, num_samples - step, step),
+                      disable=not show_progress):
         count_fr += 1
         x = signal[cur_p:cur_p + window]
-        cur_p = cur_p + step
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
