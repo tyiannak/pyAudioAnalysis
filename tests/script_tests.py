@@ -28,7 +28,7 @@ x = audioBasicIO.stereo_to_mono(x)
 specgram, TimeAxis, FreqAxis = ShortTermFeatures.chromagram(x, Fs, round(Fs * 0.040), round(Fs * 0.040), True)
 
 print("\n\n\n * * * TEST 4 * * * \n\n\n")
-aT.extract_features_and_train([root_data_path + "1/", root_data_path + "2/"], 1.0, 1.0, 0.2, 0.2, "svm", "temp", True)
+aT.extract_features_and_train([root_data_path + "speakerAll/F1/", root_data_path + "speakerAll/F2/"], 1.0, 1.0, 0.2, 0.2, "svm", "temp", True)
 
 print("\n\n\n * * * TEST 5 * * * \n\n\n")
 [flagsInd, classesAll, acc, CM] = aS.mid_term_file_classification(root_data_path + "scottish.wav", root_data_path + "models/svm_rbf_sm", "svm_rbf", True, root_data_path + 'pyAudioAnalysis/data/scottish.segments')
