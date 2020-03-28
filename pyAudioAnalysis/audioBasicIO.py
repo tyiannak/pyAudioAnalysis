@@ -97,7 +97,7 @@ def read_audio_file(path):
     elif extension in [".mp3", ".wav", ".au", ".ogg"]:
         sampling_rate, signal = read_audio_generic(path)
     else:
-        print(f"Error: unknown file type {extension}")
+        print("Error: unknown file type {extension}")
 
     if signal.ndim == 2 and signal.shape[1] == 1:
         signal = signal.flatten()
