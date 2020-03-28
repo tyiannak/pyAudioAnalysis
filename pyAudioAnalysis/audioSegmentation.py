@@ -158,7 +158,7 @@ def read_segmentation_gt(gt_file):
      - seg_label:     a list of respective class labels (strings)
     """
     with open(gt_file, 'rt') as f_handle:
-        reader = csv.reader(f_handle, delimiter=',')
+        reader = csv.reader(f_handle, delimiter='\t')
         start_times = []
         end_times = []
         labels = []
