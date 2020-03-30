@@ -18,6 +18,9 @@ setup(name='pyAudioAnalysis',
       author_email='tyiannak@gmail.com',
       license='Apache License, Version 2.0',
       packages=['pyAudioAnalysis'],
+      package_data={
+        'pyAudioAnalysis': ['data/models/*']
+      },
       zip_safe=False,
       install_requires=requirements,
       )
