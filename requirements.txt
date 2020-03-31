@@ -7,3 +7,4 @@ eyeD3==0.8.12
 pydub==0.23.1
 pyAudioAnalysis==0.2.5
 scikit_learn==0.21.3
+python-magic-bin==0.4.14
