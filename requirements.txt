@@ -5,5 +5,5 @@ numpy==1.18.1
 hmmlearn==0.2.2
 eyeD3==0.8.12
 pydub==0.23.1
-pyAudioAnalysis==0.2.5
 scikit_learn==0.21.3
+tqdm==4.44.1
