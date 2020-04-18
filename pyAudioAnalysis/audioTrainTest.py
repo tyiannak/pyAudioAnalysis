@@ -618,13 +618,13 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
         n_exp = 2
         print("Number of training experiments changed to 2 due to "
               "very high number of samples")
-    elif n_samples_total > 2000 and n_exp > 10:
+    elif n_samples_total > 2000 and n_exp > 5:
+        n_exp = 5
+        print("Number of training experiments changed to 5 due to "
+              "high number of samples")
+    elif n_samples_total > 1000 and n_exp > 10:
         n_exp = 10
         print("Number of training experiments changed to 10 due to "
-              "high number of samples")
-    elif n_samples_total > 1000 and n_exp > 50:
-        n_exp = 50
-        print("Number of training experiments changed to 50 due to "
               "high number of samples")
 
     for Ci, C in enumerate(params):
