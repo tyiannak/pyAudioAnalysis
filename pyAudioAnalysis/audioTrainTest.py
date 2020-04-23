@@ -915,9 +915,9 @@ def pca_wrapper(features, dimensions):
     return features_transformed, coeff
 
 
-def model_precision_recall_curve(input_test_folders, model_name, model_type):
+def model_prerec_and_roc(input_test_folders, model_name, model_type):
     """
-    model_precision_recall_curve(input_test_folders, model_name, model_type)
+    model_prerec_and_roc(input_test_folders, model_name, model_type)
     This function generates a ROC and Precision / Recall diagram for an already
     trained model, for a given test dataset.
     The dataset needs to be organized in folders (one folder per audio class),
