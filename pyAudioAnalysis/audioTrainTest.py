@@ -916,19 +916,20 @@ def pca_wrapper(features, dimensions):
 
 
 def model_precision_recall_curve(input_test_folders, model_name, model_type):
-    # Load classifier:
-    if not os.path.isfile(model_name):
-        print("fileClassification: input model_name not found!")
-        return -1, -1, -1
-
-    if model_type == 'knn':
-        classifier, mean, std, classes, mid_window, mid_step, short_window, \
-            short_step, compute_beat = load_model_knn(model_name)
-    else:
-        classifier, mean, std, classes, mid_window, mid_step, short_window, \
-            short_step, compute_beat = load_model(model_name)
-    print(classifier)
-
+    """
+    model_precision_recall_curve(input_test_folders, model_name, model_type)
+    This function generates a ROC and Precision / Recall diagram for an already
+    trained model, for a given test dataset.
+    The dataset needs to be organized in folders (one folder per audio class),
+    exactly like in extract_features_and_train()
+    :param input_test_folders:  list of folders (each folder represents a
+    separate audio class)
+    :param model_name:  path to the model to be tested
+    :param model_type:  type of the model
+    :return: thr_prre, pre, rec  (thresholds, precision recall values)
+    thr_roc, fpr, tpr (thresholds, false positive , true positive rates)
+    """
+    
     class_names = []
 
     y_true = []
@@ -952,7 +953,7 @@ def model_precision_recall_curve(input_test_folders, model_name, model_type):
         else:
             class_names.append(d.split(os.sep)[-1])
 
-    pre, rec, thr = precision_recall_curve(y_true,
+    pre, rec, thr_prre = precision_recall_curve(y_true,
                                            probs_positive)
     fpr, tpr, thr_roc = roc_curve(y_true, probs_positive)
 
@@ -961,6 +962,8 @@ def model_precision_recall_curve(input_test_folders, model_name, model_type):
     print("ROC")
     for i in range(len(fpr)):
         print(fpr[i], tpr[i])
+
+    return thr_prre, pre, rec, thr_roc, fpr, tpr
 
 
 def file_classification(input_file, model_name, model_type):
