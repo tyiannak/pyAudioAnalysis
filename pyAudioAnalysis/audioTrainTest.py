@@ -90,7 +90,7 @@ def classifier_wrapper(classifier, classifier_type, test_sample):
             classifier_type == "gradientboosting" or \
             classifier_type == "extratrees" or \
             classifier_type == "svm_rbf":
-        class_id = classifier.predict(test_sample.reshape(1,-1))[0]
+        class_id = classifier.predict(test_sample.reshape(1, -1))[0]
         probability = classifier.predict_proba(test_sample.reshape(1, -1))[0]
     return class_id, probability
 
@@ -918,7 +918,7 @@ def pca_wrapper(features, dimensions):
 
 
 def model_prerec_and_roc(input_test_folders, model_name, model_type,
-                         plot=True):
+                         positive_class, plot=True):
     """
     model_prerec_and_roc(input_test_folders, model_name, model_type)
     This function generates a ROC and Precision / Recall diagram for an already
@@ -929,9 +929,16 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type,
     separate audio class)
     :param model_name:  path to the model to be tested
     :param model_type:  type of the model
+    :param positive_class name of the positive class
     :param plot (True default) if to plot 2 diagrams on plotly
     :return: thr_prre, pre, rec  (thresholds, precision recall values)
     thr_roc, fpr, tpr (thresholds, false positive , true positive rates)
+
+    Usage example:
+    from pyAudioAnalysis import audioTrainTest as aT
+    thr_prre, pre, rec, thr_roc, fpr, tpr =
+    aT.model_prerec_and_roc(["4_classes_small/speech", "4_classes_small/music"],
+                             "data/models/svm_rbf_4class", "svm_rbf", "speech")
     """
     
     class_names = []
@@ -942,13 +949,16 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type,
         wav_file_list = []
         for files in types:
             wav_file_list.extend(glob.glob(os.path.join(d, files)))
-
-        for w in wav_file_list:
-            y_true.append(i)
+        # get list of audio files for current folder and run classifier
+        for w in wav_file_list[::10]:
             c, p, probs_names = file_classification(w, model_name, model_type)
-            prob_positive = p[probs_names.index("yes")]
-            probs_positive.append(prob_positive)
+            if i==probs_names.index(positive_class):
+                y_true.append(1)
+            else:
+                y_true.append(0)
 
+            prob_positive = p[probs_names.index(positive_class)]
+            probs_positive.append(prob_positive)
         if d[-1] == os.sep:
             class_names.append(d.split(os.sep)[-2])
         else:
@@ -996,7 +1006,7 @@ def file_classification(input_file, model_name, model_type):
     if sampling_rate == 0:
         # audio file IO problem
         return -1, -1, -1
-    if signal.shape[0] / float(sampling_rate) <= mid_window:
+    if signal.shape[0] / float(sampling_rate) < mid_window:
         return -1, -1, -1
 
     # feature extraction:
