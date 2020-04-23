@@ -14,6 +14,9 @@ from scipy.spatial import distance
 import sklearn.svm
 import sklearn.decomposition
 import sklearn.ensemble
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import roc_curve
+
 
 def signal_handler(signal, frame):
     print('You pressed Ctrl+C! - EXIT')
@@ -912,9 +915,56 @@ def pca_wrapper(features, dimensions):
     return features_transformed, coeff
 
 
+def model_precision_recall_curve(input_test_folders, model_name, model_type):
+    # Load classifier:
+    if not os.path.isfile(model_name):
+        print("fileClassification: input model_name not found!")
+        return -1, -1, -1
+
+    if model_type == 'knn':
+        classifier, mean, std, classes, mid_window, mid_step, short_window, \
+            short_step, compute_beat = load_model_knn(model_name)
+    else:
+        classifier, mean, std, classes, mid_window, mid_step, short_window, \
+            short_step, compute_beat = load_model(model_name)
+    print(classifier)
+
+    class_names = []
+
+    y_true = []
+    probs_positive = []
+    for i, d in enumerate(input_test_folders):
+        types = ('*.wav', '*.aif', '*.aiff', '*.mp3', '*.au', '*.ogg')
+        wav_file_list = []
+        for files in types:
+            wav_file_list.extend(glob.glob(os.path.join(d, files)))
+        print(len(wav_file_list))
+
+        for w in wav_file_list[::5]:
+            print(w)
+            y_true.append(i)
+            c, p, probs_names = file_classification(w, model_name, model_type)
+            prob_positive = p[probs_names.index("yes")]
+            probs_positive.append(prob_positive)
+
+        if d[-1] == os.sep:
+            class_names.append(d.split(os.sep)[-2])
+        else:
+            class_names.append(d.split(os.sep)[-1])
+
+    pre, rec, thr = precision_recall_curve(y_true,
+                                           probs_positive)
+    fpr, tpr, thr_roc = roc_curve(y_true, probs_positive)
+
+    for i in range(len(pre)):
+        print(pre[i], rec[i])
+    print("ROC")
+    for i in range(len(fpr)):
+        print(fpr[i], tpr[i])
+
+
 def file_classification(input_file, model_name, model_type):
     # Load classifier:
-
     if not os.path.isfile(model_name):
         print("fileClassification: input model_name not found!")
         return -1, -1, -1
