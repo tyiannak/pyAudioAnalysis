@@ -14,6 +14,8 @@ from scipy.spatial import distance
 import sklearn.svm
 import sklearn.decomposition
 import sklearn.ensemble
+import plotly
+import plotly.graph_objs as go
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve
 
@@ -915,7 +917,8 @@ def pca_wrapper(features, dimensions):
     return features_transformed, coeff
 
 
-def model_prerec_and_roc(input_test_folders, model_name, model_type):
+def model_prerec_and_roc(input_test_folders, model_name, model_type,
+                         plot=True):
     """
     model_prerec_and_roc(input_test_folders, model_name, model_type)
     This function generates a ROC and Precision / Recall diagram for an already
@@ -926,12 +929,12 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type):
     separate audio class)
     :param model_name:  path to the model to be tested
     :param model_type:  type of the model
+    :param plot (True default) if to plot 2 diagrams on plotly
     :return: thr_prre, pre, rec  (thresholds, precision recall values)
     thr_roc, fpr, tpr (thresholds, false positive , true positive rates)
     """
     
     class_names = []
-
     y_true = []
     probs_positive = []
     for i, d in enumerate(input_test_folders):
@@ -939,10 +942,8 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type):
         wav_file_list = []
         for files in types:
             wav_file_list.extend(glob.glob(os.path.join(d, files)))
-        print(len(wav_file_list))
 
-        for w in wav_file_list[::5]:
-            print(w)
+        for w in wav_file_list:
             y_true.append(i)
             c, p, probs_names = file_classification(w, model_name, model_type)
             prob_positive = p[probs_names.index("yes")]
@@ -953,15 +954,20 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type):
         else:
             class_names.append(d.split(os.sep)[-1])
 
-    pre, rec, thr_prre = precision_recall_curve(y_true,
-                                           probs_positive)
+    pre, rec, thr_prre = precision_recall_curve(y_true, probs_positive)
     fpr, tpr, thr_roc = roc_curve(y_true, probs_positive)
 
-    for i in range(len(pre)):
-        print(pre[i], rec[i])
-    print("ROC")
-    for i in range(len(fpr)):
-        print(fpr[i], tpr[i])
+    if plot:
+        figs = plotly.tools.make_subplots(rows=2, cols=1,
+                                          subplot_titles=["Pre vs Rec",
+                                                          "ROC"])
+        figs.append_trace(go.Scatter(x=thr_prre, y=pre, name="Precision"), 1, 1)
+        figs.append_trace(go.Scatter(x=thr_prre, y=rec, name="Recall"), 1, 1)
+        figs.append_trace(go.Scatter(x=fpr, y=tpr, showlegend=False), 2, 1)
+        figs.update_xaxes(title_text="threshold", row=1, col=1)
+        figs.update_xaxes(title_text="false positive rate", row=2, col=1)
+        figs.update_yaxes(title_text="true positive rate", row=2, col=1)
+        plotly.offline.plot(figs, filename="temp.html", auto_open=True)
 
     return thr_prre, pre, rec, thr_roc, fpr, tpr
 
