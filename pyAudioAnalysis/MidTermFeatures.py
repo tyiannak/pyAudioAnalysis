@@ -117,7 +117,9 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
             mid_features[i].append(np.mean(cur_st_feats))
             mid_features[i + n_feats].append(np.std(cur_st_feats))
             cur_position += mt_step_ratio
-    return np.array(mid_features), short_features, mid_feature_names
+    mid_features = np.array(mid_features)
+    mid_features = np.nan_to_num(mid_features)
+    return mid_features, short_features, mid_feature_names
 
 
 """ Feature Extraction Wrappers
