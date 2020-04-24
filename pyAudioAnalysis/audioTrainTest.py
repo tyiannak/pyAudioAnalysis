@@ -16,8 +16,7 @@ import sklearn.decomposition
 import sklearn.ensemble
 import plotly
 import plotly.graph_objs as go
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import roc_curve
+import sklearn.metrics
 
 
 def signal_handler(signal, frame):
@@ -917,6 +916,21 @@ def pca_wrapper(features, dimensions):
     return features_transformed, coeff
 
 
+def compute_class_rec_pre_f1(c_mat):
+    """
+    Gets recall, precision and f1 PER CLASS, given the confusion matrix
+    :param c_mat: the [n_class x n_class] confusion matrix
+    :return: rec, pre and f1 for each class
+    """
+    n_class = c_mat.shape[0]
+    rec, pre, f1 = [], [], []
+    for i in range(n_class):
+        rec.append(float(c_mat[i, i]) / np.sum(c_mat[i, :]))
+        pre.append(float(c_mat[i, i]) / np.sum(c_mat[:, i]))
+        f1.append(2 * rec[-1] * pre[-1] / (rec[-1] + pre[-1]))
+    return rec,  pre, f1
+
+
 def model_prerec_and_roc(input_test_folders, model_name, model_type,
                          positive_class, plot=True):
     """
@@ -942,9 +956,16 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type,
     """
     
     class_names = []
+    y_true_binary = []
     y_true = []
+    y_pred = []
     probs_positive = []
     for i, d in enumerate(input_test_folders):
+        if d[-1] == os.sep:
+            class_names.append(d.split(os.sep)[-2])
+        else:
+            class_names.append(d.split(os.sep)[-1])
+
         types = ('*.wav', '*.aif', '*.aiff', '*.mp3', '*.au', '*.ogg')
         wav_file_list = []
         for files in types:
@@ -952,34 +973,64 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type,
         # get list of audio files for current folder and run classifier
         for w in wav_file_list[::10]:
             c, p, probs_names = file_classification(w, model_name, model_type)
+            y_pred.append(c)
+            y_true.append(probs_names.index(class_names[i]))
             if i==probs_names.index(positive_class):
-                y_true.append(1)
+                y_true_binary.append(1)
             else:
-                y_true.append(0)
+                y_true_binary.append(0)
 
             prob_positive = p[probs_names.index(positive_class)]
             probs_positive.append(prob_positive)
-        if d[-1] == os.sep:
-            class_names.append(d.split(os.sep)[-2])
-        else:
-            class_names.append(d.split(os.sep)[-1])
 
-    pre, rec, thr_prre = precision_recall_curve(y_true, probs_positive)
-    fpr, tpr, thr_roc = roc_curve(y_true, probs_positive)
-
+    pre, rec, thr_prre = sklearn.metrics.precision_recall_curve(y_true_binary,
+                                                                probs_positive)
+    fpr, tpr, thr_roc = sklearn.metrics.roc_curve(y_true_binary, probs_positive)
+    cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
+    rec_c,  pre_c, f1_c = compute_class_rec_pre_f1(cm)
+    f1 = (sklearn.metrics.f1_score(y_true, y_pred, average='micro'))
+    acc = (sklearn.metrics.accuracy_score(y_true, y_pred))
+    print(cm)
+    print(rec_c, pre_c, f1_c, f1, acc)
     if plot:
-        figs = plotly.tools.make_subplots(rows=2, cols=1,
-                                          subplot_titles=["Pre vs Rec",
-                                                          "ROC"])
-        figs.append_trace(go.Scatter(x=thr_prre, y=pre, name="Precision"), 1, 1)
-        figs.append_trace(go.Scatter(x=thr_prre, y=rec, name="Recall"), 1, 1)
-        figs.append_trace(go.Scatter(x=fpr, y=tpr, showlegend=False), 2, 1)
-        figs.update_xaxes(title_text="threshold", row=1, col=1)
-        figs.update_xaxes(title_text="false positive rate", row=2, col=1)
-        figs.update_yaxes(title_text="true positive rate", row=2, col=1)
+        titles = ["Confusion matrix, acc = {0:.1f}%, "
+                  " F1 (micro): {1:.1f}%".format(100 * acc, 100 * f1),
+                  "Class-wise Performance measures",
+                  "Pre vs Rec for " + positive_class,
+                  "ROC for " + positive_class]
+        figs = plotly.subplots.make_subplots(rows=2, cols=2,
+                                             subplot_titles=titles)
+
+        heatmap = go.Heatmap(z=np.flip(cm, axis=0), x=class_names,
+                             y=list(reversed(class_names)),
+                             colorscale=[[0, '#4422ff'], [1, '#ff4422']],
+                             name="confusin matrix", showscale=False)
+        mark_prop1 = dict(color='rgba(80, 220, 150, 0.5)',
+                          line=dict(color='rgba(80, 220, 150, 1)', width=2))
+        mark_prop2 = dict(color='rgba(80, 150, 220, 0.5)',
+                          line=dict(color='rgba(80, 150, 220, 1)', width=2))
+        mark_prop3 = dict(color='rgba(250, 150, 150, 0.5)',
+                          line=dict(color='rgba(250, 150, 150, 1)', width=3))
+        b1 = go.Bar(x=class_names, y=rec_c, name="Recall", marker=mark_prop1)
+        b2 = go.Bar(x=class_names, y=pre_c, name="Precision", marker=mark_prop2)
+        b3 = go.Bar(x=class_names, y=f1_c, name="F1", marker=mark_prop3)
+
+        figs.append_trace(heatmap, 1, 1);
+        figs.append_trace(b1, 1, 2)
+        figs.append_trace(b2, 1, 2);
+        figs.append_trace(b3, 1, 2)
+        figs.append_trace(go.Scatter(x=thr_prre, y=pre, name="Precision",
+                                     marker=mark_prop1), 2, 1)
+        figs.append_trace(go.Scatter(x=thr_prre, y=rec, name="Recall",
+                                     marker=mark_prop2), 2, 1)
+        figs.append_trace(go.Scatter(x=fpr, y=tpr, showlegend=False), 2, 2)
+        figs.update_xaxes(title_text="threshold", row=2, col=1)
+        figs.update_xaxes(title_text="false positive rate", row=2, col=2)
+        figs.update_yaxes(title_text="true positive rate", row=2, col=2)
+
         plotly.offline.plot(figs, filename="temp.html", auto_open=True)
 
-    return thr_prre, pre, rec, thr_roc, fpr, tpr
+    return cm, thr_prre, pre, rec, thr_roc, fpr, tpr
 
 
 def file_classification(input_file, model_name, model_type):
@@ -1007,7 +1058,7 @@ def file_classification(input_file, model_name, model_type):
         # audio file IO problem
         return -1, -1, -1
     if signal.shape[0] / float(sampling_rate) < mid_window:
-        return -1, -1, -1
+        mid_window = signal.shape[0] / float(sampling_rate)
 
     # feature extraction:
     mid_features, s, _ = \
