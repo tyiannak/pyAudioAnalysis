@@ -931,12 +931,13 @@ def compute_class_rec_pre_f1(c_mat):
     return rec,  pre, f1
 
 
-def model_prerec_and_roc(input_test_folders, model_name, model_type,
-                         positive_class, plot=True):
+def evaluate_model_for_folders(input_test_folders, model_name, model_type,
+                               positive_class, plot=True):
     """
-    model_prerec_and_roc(input_test_folders, model_name, model_type)
-    This function generates a ROC and Precision / Recall diagram for an already
-    trained model, for a given test dataset.
+    evaluate_model_for_folders(input_test_folders, model_name, model_type)
+    This function evaluates a model by computing the confusion matrix, the
+    per class performance metrics and by generating a ROC and Precision / Recall
+    diagrams (for a particular class of interest), for a given test dataset.
     The dataset needs to be organized in folders (one folder per audio class),
     exactly like in extract_features_and_train()
     :param input_test_folders:  list of folders (each folder represents a
@@ -951,8 +952,10 @@ def model_prerec_and_roc(input_test_folders, model_name, model_type,
     Usage example:
     from pyAudioAnalysis import audioTrainTest as aT
     thr_prre, pre, rec, thr_roc, fpr, tpr =
-    aT.model_prerec_and_roc(["4_classes_small/speech", "4_classes_small/music"],
-                             "data/models/svm_rbf_4class", "svm_rbf", "speech")
+    aT.evaluate_model_for_folders(["4_classes_small/speech",
+                                   "4_classes_small/music"],
+                                   "data/models/svm_rbf_4class",
+                                   "svm_rbf", "speech")
     """
     
     class_names = []
