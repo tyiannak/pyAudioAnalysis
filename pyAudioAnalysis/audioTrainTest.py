@@ -974,7 +974,7 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
         for files in types:
             wav_file_list.extend(glob.glob(os.path.join(d, files)))
         # get list of audio files for current folder and run classifier
-        for w in wav_file_list[::10]:
+        for w in wav_file_list:
             c, p, probs_names = file_classification(w, model_name, model_type)
             y_pred.append(c)
             y_true.append(probs_names.index(class_names[i]))
