@@ -66,7 +66,7 @@ def beat_extraction(short_features, window_size, plot=False):
     bpms = 60 / (hist_centers * window_size)
     bpm = bpms[max_indices]
     # ... and the beat ratio:
-    ratio = hist_all[max_indices] / hist_all.sum()
+    ratio = hist_all[max_indices] / (hist_all.sum() + eps)
 
     if plot:
         # filter out >500 beats from plotting:
