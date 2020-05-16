@@ -1042,7 +1042,7 @@ def file_classification(input_file, model_name, model_type):
         print("fileClassification: input model_name not found!")
         return -1, -1, -1
 
-    if not os.path.isfile(input_file):
+    if isinstance(input_file, str) and not os.path.isfile(input_file):
         print("fileClassification: wav file not found!")
         return -1, -1, -1
 

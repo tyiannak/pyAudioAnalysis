@@ -83,7 +83,7 @@ def convert_dir_fs_wav_to_wav(audio_folder, sampling_rate, num_channels):
         os.system(command)
 
 
-def read_audio_file(path):
+def read_audio_file(input_file):
     """
     This function returns a numpy array that stores the audio samples of a
     specified WAV of AIFF file
@@ -91,13 +91,16 @@ def read_audio_file(path):
 
     sampling_rate = 0
     signal = np.array([])
-    extension = os.path.splitext(path)[1].lower()
-    if extension in ['.aif', '.aiff']:
-        sampling_rate, signal = read_aif(path)
-    elif extension in [".mp3", ".wav", ".au", ".ogg"]:
-        sampling_rate, signal = read_audio_generic(path)
+    if isinstance(input_file, str):
+        extension = os.path.splitext(input_file)[1].lower()
+        if extension in ['.aif', '.aiff']:
+            sampling_rate, signal = read_aif(input_file)
+        elif extension in [".mp3", ".wav", ".au", ".ogg"]:
+            sampling_rate, signal = read_audio_generic(input_file)
+        else:
+            print("Error: unknown file type {extension}")
     else:
-        print("Error: unknown file type {extension}")
+        sampling_rate, signal = read_audio_generic(input_file)
 
     if signal.ndim == 2 and signal.shape[1] == 1:
         signal = signal.flatten()
@@ -122,7 +125,7 @@ def read_aif(path):
     return sampling_rate, signal
 
 
-def read_audio_generic(path):
+def read_audio_generic(input_file):
     """
     Function to read audio files with the following extensions
     [".mp3", ".wav", ".au", ".ogg"]
@@ -130,7 +133,7 @@ def read_audio_generic(path):
     sampling_rate = -1
     signal = np.array([])
     try:
-        audiofile = AudioSegment.from_file(path)
+        audiofile = AudioSegment.from_file(input_file)
         data = np.array([])
         if audiofile.sample_width == 2:
             data = numpy.fromstring(audiofile._data, numpy.int16)
