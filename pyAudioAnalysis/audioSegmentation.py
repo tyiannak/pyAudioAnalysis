@@ -486,7 +486,7 @@ def hmm_segmentation(audio_file, hmm_model_name, plot_results=False,
     labels = hmm.predict(features.T)
     labels_gt, class_names_gt, accuracy, cm = \
         load_ground_truth(gt_file, labels, class_names, mid_step, plot_results)
-    return labels, class_names_gt, accuracy, cm
+    return labels, class_names, accuracy, cm
 
 
 def load_ground_truth_segments(gt_file, mt_step):
