@@ -533,12 +533,11 @@ def mid_term_file_classification(input_file, model_name, model_type,
     """
     labels = []
     accuracy = 0.0
-    labels_gt = []
     class_names = []
     cm = np.array([])
     if not os.path.isfile(model_name):
         print("mtFileClassificationError: input model_type not found!")
-        return labels_gt, class_names, accuracy, cm
+        return labels, class_names, accuracy, cm
 
     # Load classifier:
     if model_type == "knn":
@@ -551,13 +550,13 @@ def mid_term_file_classification(input_file, model_name, model_type,
         print("Model " + model_name + " contains long-term music features "
                                       "(beat etc) and cannot be used in "
                                       "segmentation")
-        return labels_gt, class_names, accuracy, cm
+        return labels, class_names, accuracy, cm
     # load input file
     sampling_rate, signal = audioBasicIO.read_audio_file(input_file)
 
     # could not read file
     if sampling_rate == 0:
-        return labels_gt, class_names, accuracy, cm
+        return labels, class_names, accuracy, cm
 
     # convert stereo (if) to mono
     signal = audioBasicIO.stereo_to_mono(signal)
