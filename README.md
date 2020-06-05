@@ -4,11 +4,10 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
+ * [2020-06-05] Medium article [Basic Audio Handling: How to handle and process audio files in command-line and through basic Python programming](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d) 
  * [2020-03-20] pip package has been updated [version 0.3.0](https://pypi.org/manage/project/pyAudioAnalysis/release/0.3.0/)
  * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
- * Check the tutorial for the course ["Multimodal Information Processing & Analysis", MSc in Data Science in NCSR-D](https://github.com/tyiannak/multimodalAnalysis)
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * Check [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a Python script to visualize mp3 tags and lyrics
  * pyAudioAnalysis [2018-08-12] now ported to Python 3
 
 ## General
