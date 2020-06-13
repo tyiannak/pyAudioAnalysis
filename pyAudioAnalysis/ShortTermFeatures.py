@@ -302,7 +302,8 @@ def chroma_features(signal, sampling_rate, num_fft):
     return chroma_names, final_matrix
 
 
-def chromagram(signal, sampling_rate, window, step, plot=False):
+def chromagram(signal, sampling_rate, window, step, plot=False,
+               show_progress=False):
     """
     Short-term FFT mag for spectogram estimation:
     Returns:
@@ -324,16 +325,14 @@ def chromagram(signal, sampling_rate, window, step, plot=False):
     signal = (signal - dc_offset) / (maximum - dc_offset)
 
     num_samples = len(signal)  # total number of signals
-    cur_position = 0
     count_fr = 0
     num_fft = int(window / 2)
-    chromogram = np.zeros((int((num_samples-step-window) / step), 12),
+    chromogram = np.zeros((int((num_samples-step-window) / step) + 1, 12),
                           dtype=np.float64)
-
-    while cur_position + window - 1 < num_samples:
+    for cur_p in tqdm(range(window, num_samples - step, step),
+                      disable=not show_progress):
         count_fr += 1
-        x = signal[cur_position:cur_position + window]
-        cur_position = cur_position + step
+        x = signal[cur_p:cur_p + window]
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
@@ -396,7 +395,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
     num_samples = len(signal)  # total number of signals
     count_fr = 0
     num_fft = int(window / 2)
-    specgram = np.zeros((int((num_samples-step-window) / step), num_fft),
+    specgram = np.zeros((int((num_samples-step-window) / step) + 1, num_fft),
                         dtype=np.float64)
     for cur_p in tqdm(range(window, num_samples - step, step),
                       disable=not show_progress):
