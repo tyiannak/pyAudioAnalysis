@@ -195,9 +195,10 @@ def train_random_forest(features, n_estimators):
     """
     Train a multi-class decision tree classifier.
     Note:     This function is simply a wrapper to the sklearn functionality
-              for SVM training. See function trainSVM_feature() to use
-              a wrapper on both the feature extraction and the SVM
-              training (and parameter tuning) processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements
                             containt np matrices of features
@@ -205,11 +206,8 @@ def train_random_forest(features, n_estimators):
                             [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - svm:              the trained SVM variable
+        - rf:               the trained random forest
 
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
     """
 
     feature_matrix, labels = features_to_matrix(features)
@@ -223,21 +221,17 @@ def train_gradient_boosting(features, n_estimators):
     """
     Train a gradient boosting classifier
     Note:     This function is simply a wrapper to the sklearn functionality
-              for SVM training
-              See function trainSVM_feature() to use a wrapper on both
-              the feature extraction and the SVM training (and parameter tuning)
-              processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements containt
                             np matrices of features. each matrix features[i]
                             of class i is [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - rf:              the trained SVM variable
-
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
+        - rf:              the trained model
     """
 
     feature_matrix, labels = features_to_matrix(features)
@@ -251,10 +245,10 @@ def train_extra_trees(features, n_estimators):
     """
     Train a gradient boosting classifier
     Note:     This function is simply a wrapper to the sklearn functionality
-              for extra tree classifiers
-              See function trainSVM_feature() to use a wrapper on both the
-              feature extraction and the SVM training (and parameter tuning)
-              processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements
                             containt np matrices of features
@@ -262,11 +256,7 @@ def train_extra_trees(features, n_estimators):
                             [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - et:              the trained SVM variable
-
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
+        - et:               the trained model
     """
 
     feature_matrix, labels = features_to_matrix(features)
