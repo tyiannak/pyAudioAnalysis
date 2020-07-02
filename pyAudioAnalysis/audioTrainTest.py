@@ -193,7 +193,7 @@ def train_svm(features, c_param, kernel='linear'):
 
 def train_random_forest(features, n_estimators):
     """
-    Train a multi-class decision tree classifier.
+    Train a multi-class random forest classifier.
     Note:     This function is simply a wrapper to the sklearn functionality
               for model training.
               See function extract_features_and_train() to use a wrapper on both
@@ -243,7 +243,7 @@ def train_gradient_boosting(features, n_estimators):
 
 def train_extra_trees(features, n_estimators):
     """
-    Train a gradient boosting classifier
+    Train an extra tree
     Note:     This function is simply a wrapper to the sklearn functionality
               for model training.
               See function extract_features_and_train() to use a wrapper on both
