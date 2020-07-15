@@ -73,7 +73,7 @@ def classifier_wrapper(classifier, classifier_type, test_sample):
         [classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, st_step] =
         aT.load_model(model_name)
         # mid-term feature extraction:
-        [mt_features, _, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs,
+        [mt_features, _, _] = aF.mid_feature_extraction(x, Fs, mt_win * Fs,
         mt_step * Fs, round(Fs*st_win), round(Fs*st_step));
         # feature normalization:
         curFV = (mt_features[:, i] - MEAN) / STD;
