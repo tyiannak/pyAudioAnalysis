@@ -170,7 +170,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
         if sampling_rate == 0:
             continue        
 
-        t1 = time.clock()        
+        t1 = time.time()        
         signal = audioBasicIO.stereo_to_mono(signal)
         if signal.shape[0] < float(sampling_rate)/5:
             print("  (AUDIO FILE TOO SMALL - SKIPPING)")
@@ -205,7 +205,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
                 mid_term_features = mid_features
             else:
                 mid_term_features = np.vstack((mid_term_features, mid_features))
-            t2 = time.clock()
+            t2 = time.time()
             duration = float(len(signal)) / sampling_rate
             process_times.append((t2 - t1) / duration)
     if len(process_times) > 0:
