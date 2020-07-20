@@ -271,7 +271,7 @@ def chroma_features(signal, sampling_rate, num_fft):
     spec = signal ** 2
     if num_chroma.max() < num_chroma.shape[0]:
         C = np.zeros((num_chroma.shape[0],))
-        C[num_chroma] = spec
+        C[num_chroma] = np.pad(spec, (0, len(C[num_chroma]) - len(spec)))
         C /= num_freqs_per_chroma[num_chroma]
     else:
         I = np.nonzero(num_chroma > num_chroma.shape[0])[0][0]
