@@ -4,8 +4,8 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * [2020-07-20] Checkout latest hackernoon article on a music emotion recognition demo: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
- * [2020-06-05] Please refer to this article as introductory material for handling audio data: [Basic Audio Handling: How to handle and process audio files in command-line and through basic Python programming](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). 
+ * [2020-07-20] Hackernoon article on a music emotion recognition demo: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
+ * [2020-06-05] Introductory material for handling audio data: [Basic Audio Handling: How to handle and process audio files in command-line and through basic Python programming](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). 
  * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
  * pyAudioAnalysis [2018-08-12] now ported to Python 3
