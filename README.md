@@ -4,12 +4,12 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 2020 30 November
- * [2020-07-20] Article on a music emotion recognition demo: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
- * [2020-06-05] Read this for an intro to audio data: [Basic Audio Handling: How to handle and process audio files in command-line and through basic Python programming](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). 
- * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
+ * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 November 2020
+ * [2020-07-20] Related article: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
+ * [2020-06-05] Read this for an intro to audio data: [Basic Audio Handling](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). 
+ * [2019-11-19] Major lib refactoring. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * pyAudioAnalysis [2018-08-12] now ported to Python 3
+ * [2018-08-12] pyAudioAnalysis now ported to Python 3
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
@@ -25,14 +25,8 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
 
 ## Installation
  * Clone the source of this library: `git clone https://github.com/tyiannak/pyAudioAnalysis.git`
- * Install dependencies:
- ```
-pip install -r ./requirements.txt
-```
- * Install using pip:
- ```
-pip install -e .
-```
+ * Install dependencies: `pip install -r ./requirements.txt `
+ * Install using pip: `pip install -e .`
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
