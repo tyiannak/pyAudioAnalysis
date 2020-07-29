@@ -84,14 +84,14 @@ def fileChromagramWrapper(wav_file):
 def trainClassifierWrapper(method, beat_feats, directories, model_name):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
-    aT.featureAndTrain(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
-                       method.lower(), model_name, compute_beat=beat_feats)
+    aT.extract_features_and_train(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
+                                  method.lower(), model_name, compute_beat=beat_feats)
 
 
 def trainRegressionWrapper(method, beat_feats, dirName, model_name):
-    aT.featureAndTrainRegression(dirName, 1, 1, aT.shortTermWindow,
-                                 aT.shortTermStep, method.lower(), model_name,
-                                 compute_beat=beat_feats)
+    aT.feature_extraction_train_regression(dirName, 1, 1, aT.shortTermWindow,
+                                           aT.shortTermStep, method.lower(), model_name,
+                                           compute_beat=beat_feats)
 
 
 def classifyFileWrapper(inputFile, model_type, model_name):
@@ -100,8 +100,8 @@ def classifyFileWrapper(inputFile, model_type, model_name):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    [Result, P, classNames] = aT.fileClassification(inputFile, model_name,
-                                                    model_type)
+    [Result, P, classNames] = aT.file_classification(inputFile, model_name,
+                                                     model_type)
     print("{0:s}\t{1:s}".format("Class", "Probability"))
     for i, c in enumerate(classNames):
         print("{0:s}\t{1:.2f}".format(c, P[i]))
@@ -112,7 +112,7 @@ def regressionFileWrapper(inputFile, model_type, model_name):
     if not os.path.isfile(inputFile):
         raise Exception("Input audio file not found!")
 
-    R, regressionNames = aT.fileRegression(inputFile, model_name, model_type)
+    R, regressionNames = aT.file_regression(inputFile, model_name, model_type)
     for i in range(len(R)):
         print("{0:s}\t{1:.3f}".format(regressionNames[i], R[i]))
 
@@ -131,8 +131,8 @@ def classifyFolderWrapper(inputFolder, model_type, model_name,
         return
     Results = []
     for wavFile in wavFilesList:
-        [Result, P, classNames] = aT.fileClassification(wavFile, model_name,
-                                                        model_type)
+        [Result, P, classNames] = aT.file_classification(wavFile, model_name,
+                                                         model_type)
         Result = int(Result)
         Results.append(Result)
         if outputMode:
@@ -161,7 +161,7 @@ def regressionFolderWrapper(inputFolder, model_type, model_name):
         return
     Results = []
     for wavFile in wavFilesList:
-        R, regressionNames = aT.fileRegression(wavFile, model_name, model_type)
+        R, regressionNames = aT.file_regression(wavFile, model_name, model_type)
         Results.append(R)
     Results = numpy.array(Results)
 
@@ -182,13 +182,13 @@ def trainHMMsegmenter_fromfile(wavFile, gtFile, hmmModelName, mt_win, mt_step):
         print("Error: groundtruth does not exist!")
         return
 
-    aS.trainHMM_fromFile(wavFile, gtFile, hmmModelName, mt_win, mt_step)
+    aS.train_hmm_from_file(wavFile, gtFile, hmmModelName, mt_win, mt_step)
 
 
 def trainHMMsegmenter_fromdir(directory, hmmModelName, mt_win, mt_step):
     if not os.path.isdir(directory):
         raise Exception("Input folder not found!")
-    aS.trainHMM_fromDir(directory, hmmModelName, mt_win, mt_step)
+    aS.train_hmm_from_directory(directory, hmmModelName, mt_win, mt_step)
 
 
 def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):
@@ -201,17 +201,17 @@ def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):
         gtFile = inputWavFile.replace(".wav", ".segments")
     if inputWavFile[-4::]==".mp3":
         gtFile = inputWavFile.replace(".mp3", ".segments")
-    aS.mtFileClassification(inputWavFile, model_name, model_type, True, gtFile)
+    aS.mid_term_file_classification(inputWavFile, model_name, model_type, True, gtFile)
 
 
 def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
     gtFile = wavFile.replace(".wav", ".segments")
-    aS.hmmSegmentation(wavFile, hmmModelName, plot_res=True,
-                       gt_file_name=gtFile)
+    aS.hmm_segmentation(wavFile, hmmModelName, plot_results=True,
+                        gt_file=gtFile)
 
 
 def segmentationEvaluation(dirName, model_name, methodName):
-    aS.evaluateSegmentationClassificationDir(dirName, model_name, methodName)
+    aS.evaluate_segmentation_classification_dir(dirName, model_name, methodName)
 
 
 def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
@@ -219,8 +219,8 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
         raise Exception("Input audio file not found!")
 
     [fs, x] = audioBasicIO.read_audio_file(inputFile)
-    segmentLimits = aS.silenceRemoval(x, fs, 0.05, 0.05,
-                                      smoothingWindow, weight, True)
+    segmentLimits = aS.silence_removal(x, fs, 0.05, 0.05,
+                                       smoothingWindow, weight, True)
     for i, s in enumerate(segmentLimits):
         strOut = "{0:s}_{1:.3f}-{2:.3f}.wav".format(inputFile[0:-4], s[0], s[1])
         wavfile.write(strOut, fs, x[int(fs * s[0]):int(fs * s[1])])
@@ -228,9 +228,9 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
 
 def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
     if useLDA:
-        aS.speakerDiarization(inputFile, numSpeakers, plot_res=True)
+        aS.speaker_diarization(inputFile, numSpeakers, plot_res=True)
     else:
-        aS.speakerDiarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
+        aS.speaker_diarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
 
 
 def thumbnailWrapper(inputFile, thumbnailWrapperSize):
@@ -243,8 +243,8 @@ def thumbnailWrapper(inputFile, thumbnailWrapperSize):
     if fs == -1:    # could not read file
         return
 
-    [A1, A2, B1, B2, Smatrix] = aS.musicThumbnailing(x, fs, st_window, st_step,
-                                                     thumbnailWrapperSize)
+    [A1, A2, B1, B2, Smatrix] = aS.music_thumbnailing(x, fs, st_window, st_step,
+                                                      thumbnailWrapperSize)
 
     # write thumbnailWrappers to WAV files:
     if inputFile.endswith(".wav"):
@@ -612,7 +612,7 @@ if __name__ == "__main__":
     elif args.task == "speakerDiarizationScriptEval":
         # Evaluate speaker diarization given a folder that contains
         # WAV files and .segment (Groundtruth files)
-        aS.speakerDiarizationEvaluateScript(args.input, args.LDAs)
+        aS.speaker_diarization_evaluation(args.input, args.LDAs)
     elif args.task == "thumbnail":
         # Audio thumbnailing
         thumbnailWrapper(args.input, args.size)

@@ -14,6 +14,10 @@ from scipy.spatial import distance
 import sklearn.svm
 import sklearn.decomposition
 import sklearn.ensemble
+import plotly
+import plotly.graph_objs as go
+import sklearn.metrics
+
 
 def signal_handler(signal, frame):
     print('You pressed Ctrl+C! - EXIT')
@@ -27,27 +31,26 @@ shortTermStep = 0.050
 eps = 0.00000001
 
 
-class kNN:
-    def __init__(self, X, Y, k):
-        self.X = X
-        self.Y = Y
-        self.k = k
+class Knn:
+    def __init__(self, features, labels, neighbors):
+        self.features = features
+        self.labels = labels
+        self.neighbors = neighbors
 
     def classify(self, test_sample):
-        n_classes = np.unique(self.Y).shape[0]
-        y_dist = (distance.cdist(self.X,
-                                 test_sample.reshape(1,
-                                                     test_sample.shape[0]),
+        n_classes = np.unique(self.labels).shape[0]
+        y_dist = (distance.cdist(self.features,
+                                 test_sample.reshape(1, test_sample.shape[0]),
                                  'euclidean')).T
         i_sort = np.argsort(y_dist)
         P = np.zeros((n_classes,))
         for i in range(n_classes):
-            P[i] = np.nonzero(self.Y[i_sort[0][0:self.k]] == i)[0].shape[0] / \
-                   float(self.k)
+            P[i] = np.nonzero(self.labels[i_sort[0]
+                [0:self.neighbors]] == i)[0].shape[0] / float(self.neighbors)
         return np.argmax(P), P
 
 
-def classifierWrapper(classifier, classifier_type, test_sample):
+def classifier_wrapper(classifier, classifier_type, test_sample):
     """
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
@@ -67,29 +70,31 @@ def classifierWrapper(classifier, classifier_type, test_sample):
         import audioFeatureExtraction as aF
         import audioTrainTest as aT
         # load the classifier (here SVM, for kNN use load_model_knn instead):
-        [classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, st_step] = aT.load_model(model_name)
+        [classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, st_step] =
+        aT.load_model(model_name)
         # mid-term feature extraction:
-        [mt_features, _, _] = aF.mtFeatureExtraction(x, Fs, mt_win * Fs, mt_step * Fs, round(Fs*st_win), round(Fs*st_step));
+        [mt_features, _, _] = aF.mid_feature_extraction(x, Fs, mt_win * Fs,
+        mt_step * Fs, round(Fs*st_win), round(Fs*st_step));
         # feature normalization:
         curFV = (mt_features[:, i] - MEAN) / STD;
         # classification
         [Result, P] = classifierWrapper(classifier, model_type, curFV)
     """
-    R = -1
-    P = -1
+    class_id = -1
+    probability = -1
     if classifier_type == "knn":
-        [R, P] = classifier.classify(test_sample)
+        class_id, probability = classifier.classify(test_sample)
     elif classifier_type == "svm" or \
-                    classifier_type == "randomforest" or \
-                    classifier_type == "gradientboosting" or \
-                    classifier_type == "extratrees" or \
-                    classifier_type == "svm_rbf":
-        R = classifier.predict(test_sample.reshape(1,-1))[0]
-        P = classifier.predict_proba(test_sample.reshape(1,-1))[0]
-    return [R, P]
+            classifier_type == "randomforest" or \
+            classifier_type == "gradientboosting" or \
+            classifier_type == "extratrees" or \
+            classifier_type == "svm_rbf":
+        class_id = classifier.predict(test_sample.reshape(1, -1))[0]
+        probability = classifier.predict_proba(test_sample.reshape(1, -1))[0]
+    return class_id, probability
 
 
-def regressionWrapper(model, model_type, test_sample):
+def regression_wrapper(model, model_type, test_sample):
     """
     This function is used as a wrapper to pattern classification.
     ARGUMENTS:
@@ -109,10 +114,8 @@ def regressionWrapper(model, model_type, test_sample):
     #    elif classifier_type == "knn":
     #    TODO
 
-    return None
 
-
-def randSplitFeatures(features, per_train):
+def random_split_features(features, percentage):
     """
     def randSplitFeatures(features):
 
@@ -131,16 +134,16 @@ def randSplitFeatures(features, per_train):
 
     f_train = []
     f_test = []
-    for i, f in enumerate(features):
-        [n_samples, numOfDims] = f.shape
+    for index, feat in enumerate(features):
+        n_samples, _ = feat.shape
         randperm = np.random.permutation(range(n_samples))
-        n_train = int(round(per_train * n_samples))
-        f_train.append(f[randperm[0:n_train]])
-        f_test.append(f[randperm[n_train::]])
+        n_train = int(round(percentage * n_samples))
+        f_train.append(feat[randperm[0:n_train]])
+        f_test.append(feat[randperm[n_train::]])
     return f_train, f_test
 
 
-def trainKNN(features, K):
+def train_knn(features, neighbors):
     """
     Train a kNN  classifier.
     ARGUMENTS:
@@ -148,17 +151,17 @@ def trainKNN(features, K):
                             contain np matrices of features.
                             each matrix features[i] of class i is 
                             [n_samples x numOfDimensions]
-        - K:                parameter K
+        - neighbors:                parameter K
     RETURNS:
         - kNN:              the trained kNN variable
 
     """
-    [Xt, Yt] = listOfFeatures2Matrix(features)
-    knn = kNN(Xt, Yt, K)
+    feature_matrix, labels = features_to_matrix(features)
+    knn = Knn(feature_matrix, labels, neighbors)
     return knn
 
 
-def trainSVM(features, Cparam):
+def train_svm(features, c_param, kernel='linear'):
     """
     Train a multi-class probabilitistic SVM classifier.
     Note:     This function is simply a wrapper to the sklearn functionality 
@@ -171,34 +174,7 @@ def trainSVM(features, Cparam):
                             containt np matrices of features  each matrix 
                             features[i] of class i is 
                             [n_samples x numOfDimensions]
-        - Cparam:           SVM parameter C (cost of constraints violation)
-    RETURNS:
-        - svm:              the trained SVM variable
-
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value. 
-        For a different kernel, other types of parameters should be provided.
-    """
-
-    [X, Y] = listOfFeatures2Matrix(features)
-    svm = sklearn.svm.SVC(C=Cparam, kernel='linear',  probability=True,
-                          gamma='auto')
-    svm.fit(X, Y)
-
-    return svm
-
-def trainSVM_RBF(features, Cparam):
-    """
-    Train a multi-class probabilitistic SVM classifier.
-    Note:     This function is simply a wrapper to the sklearn
-              functionality for SVM training
-              See function trainSVM_feature() to use a wrapper on both the
-              feature extraction and the SVM training (and parameter tuning) processes.
-    ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements containt
-                            np matrices of features each matrix features[i] of
-                            class i is [n_samples x numOfDimensions]
-        - Cparam:           SVM parameter C (cost of constraints violation)
+        - c_param:           SVM parameter C (cost of constraints violation)
     RETURNS:
         - svm:              the trained SVM variable
 
@@ -207,21 +183,22 @@ def trainSVM_RBF(features, Cparam):
         For a different kernel, other types of parameters should be provided.
     """
 
-    [X, Y] = listOfFeatures2Matrix(features)
-    svm = sklearn.svm.SVC(C=Cparam, kernel='rbf',  probability=True,
+    feature_matrix, labels = features_to_matrix(features)
+    svm = sklearn.svm.SVC(C=c_param, kernel=kernel, probability=True,
                           gamma='auto')
-    svm.fit(X, Y)
+    svm.fit(feature_matrix, labels)
 
     return svm
 
 
-def trainRandomForest(features, n_estimators):
+def train_random_forest(features, n_estimators):
     """
-    Train a multi-class decision tree classifier.
+    Train a multi-class random forest classifier.
     Note:     This function is simply a wrapper to the sklearn functionality
-              for SVM training. See function trainSVM_feature() to use
-              a wrapper on both the feature extraction and the SVM
-              training (and parameter tuning) processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements
                             containt np matrices of features
@@ -229,56 +206,49 @@ def trainRandomForest(features, n_estimators):
                             [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - svm:              the trained SVM variable
+        - rf:               the trained random forest
 
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
     """
 
-    [X, Y] = listOfFeatures2Matrix(features)
+    feature_matrix, labels = features_to_matrix(features)
     rf = sklearn.ensemble.RandomForestClassifier(n_estimators=n_estimators)
-    rf.fit(X,Y)
+    rf.fit(feature_matrix, labels)
 
     return rf
 
 
-def trainGradientBoosting(features, n_estimators):
+def train_gradient_boosting(features, n_estimators):
     """
     Train a gradient boosting classifier
     Note:     This function is simply a wrapper to the sklearn functionality
-              for SVM training
-              See function trainSVM_feature() to use a wrapper on both
-              the feature extraction and the SVM training (and parameter tuning)
-              processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements containt
                             np matrices of features. each matrix features[i]
                             of class i is [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - svm:              the trained SVM variable
-
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
+        - rf:              the trained model
     """
 
-    [X, Y] = listOfFeatures2Matrix(features)
+    feature_matrix, labels = features_to_matrix(features)
     rf = sklearn.ensemble.GradientBoostingClassifier(n_estimators=n_estimators)
-    rf.fit(X, Y)
+    rf.fit(feature_matrix, labels)
 
     return rf
 
 
-def trainExtraTrees(features, n_estimators):
+def train_extra_trees(features, n_estimators):
     """
-    Train a gradient boosting classifier
+    Train an extra tree
     Note:     This function is simply a wrapper to the sklearn functionality
-              for extra tree classifiers
-              See function trainSVM_feature() to use a wrapper on both the
-              feature extraction and the SVM training (and parameter tuning)
-              processes.
+              for model training.
+              See function extract_features_and_train() to use a wrapper on both
+              the feature extraction and the model training (and parameter
+              tuning) processes.
     ARGUMENTS:
         - features:         a list ([numOfClasses x 1]) whose elements
                             containt np matrices of features
@@ -286,69 +256,55 @@ def trainExtraTrees(features, n_estimators):
                             [n_samples x numOfDimensions]
         - n_estimators:     number of trees in the forest
     RETURNS:
-        - svm:              the trained SVM variable
-
-    NOTE:
-        This function trains a linear-kernel SVM for a given C value.
-        For a different kernel, other types of parameters should be provided.
+        - et:               the trained model
     """
 
-    [X, Y] = listOfFeatures2Matrix(features)
+    feature_matrix, labels = features_to_matrix(features)
     et = sklearn.ensemble.ExtraTreesClassifier(n_estimators=n_estimators)
-    et.fit(X,Y)
+    et.fit(feature_matrix,labels)
 
     return et
 
 
-def trainSVMregression(Features, Y, Cparam):    
-    svm = sklearn.svm.SVR(C=Cparam, kernel='linear')
-    svm.fit(Features,Y)    
-    train_err = np.mean(np.abs(svm.predict(Features) - Y))
+def train_svm_regression(features, labels, c_param, kernel='linear'):
+    svm = sklearn.svm.SVR(C=c_param, kernel=kernel)
+    svm.fit(features, labels)
+    train_err = np.mean(np.abs(svm.predict(features) - labels))
     return svm, train_err
 
 
-def trainSVMregression_rbf(Features, Y, Cparam):    
-    svm = sklearn.svm.SVR(C=Cparam, kernel='rbf')
-    svm.fit(Features,Y)    
-    train_err = np.mean(np.abs(svm.predict(Features) - Y))
-    return svm, train_err
-
-
-def trainRandomForestRegression(Features, Y, n_estimators):    
+def train_random_forest_regression(features, labels, n_estimators):
     rf = sklearn.ensemble.RandomForestRegressor(n_estimators=n_estimators)
-    rf.fit(Features,Y)
-    train_err = np.mean(np.abs(rf.predict(Features) - Y))
+    rf.fit(features, labels)
+    train_err = np.mean(np.abs(rf.predict(features) - labels))
     return rf, train_err
 
 
-def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step, 
-                    classifier_type, model_name, 
-                    compute_beat=False, perTrain=0.90):
+def extract_features_and_train(paths, mid_window, mid_step, short_window,
+                               short_step, classifier_type, model_name,
+                               compute_beat=False, train_percentage=0.90):
     """
     This function is used as a wrapper to segment-based audio feature extraction
     and classifier training.
     ARGUMENTS:
-        list_of_dirs:        list of paths of directories. Each directory
-                             contains a signle audio class whose samples
-                             are stored in seperate WAV files.
-        mt_win, mt_step:        mid-term window length and step
-        st_win, st_step:        short-term window and step
-        classifier_type:        "svm" or "knn" or "randomforest" or
-                             "gradientboosting" or "extratrees"
-        model_name:          name of the model to be saved
+        paths:                      list of paths of directories. Each directory
+                                    contains a signle audio class whose samples
+                                    are stored in seperate WAV files.
+        mid_window, mid_step:       mid-term window length and step
+        short_window, short_step:   short-term window and step
+        classifier_type:            "svm" or "knn" or "randomforest" or
+                                    "gradientboosting" or "extratrees"
+        model_name:                 name of the model to be saved
     RETURNS:
         None. Resulting classifier along with the respective model
         parameters are saved on files.
     """
 
     # STEP A: Feature Extraction:
-    [features, classNames, _] = aF.multiple_directory_feature_extraction(list_of_dirs,
-                                                                         mt_win,
-                                                                         mt_step,
-                                                                         st_win,
-                                                                         st_step,
-                                                                         compute_beat=
-                                                            compute_beat)
+    features, class_names, _ = \
+        aF.multiple_directory_feature_extraction(paths, mid_window, mid_step,
+                                                 short_window, short_step,
+                                                 compute_beat=compute_beat)
 
     if len(features) == 0:
         print("trainSVM_feature ERROR: No data found in any input folder!")
@@ -357,11 +313,11 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
     n_feats = features[0].shape[1]
     feature_names = ["features" + str(d + 1) for d in range(n_feats)]
 
-    writeTrainDataToARFF(model_name, features, classNames, feature_names)
+    write_train_data_arff(model_name, features, class_names, feature_names)
 
-    for i, f in enumerate(features):
-        if len(f) == 0:
-            print("trainSVM_feature ERROR: " + list_of_dirs[i] +
+    for i, feat in enumerate(features):
+        if len(feat) == 0:
+            print("trainSVM_feature ERROR: " + paths[i] +
                   " folder is empty or non-existing!")
             return
 
@@ -369,92 +325,82 @@ def featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
     if classifier_type == "svm" or classifier_type == "svm_rbf":
         classifier_par = np.array([0.001, 0.01,  0.5, 1.0, 5.0, 10.0, 20.0])
     elif classifier_type == "randomforest":
-        classifier_par = np.array([10, 25, 50, 100,200,500])
+        classifier_par = np.array([10, 25, 50, 100, 200, 500])
     elif classifier_type == "knn":
         classifier_par = np.array([1, 3, 5, 7, 9, 11, 13, 15])        
     elif classifier_type == "gradientboosting":
-        classifier_par = np.array([10, 25, 50, 100,200,500])        
+        classifier_par = np.array([10, 25, 50, 100, 200, 500])
     elif classifier_type == "extratrees":
-        classifier_par = np.array([10, 25, 50, 100,200,500])        
+        classifier_par = np.array([10, 25, 50, 100, 200, 500])
 
     # get optimal classifeir parameter:
-    features2 = []
-    for f in features:        
-        fTemp = []
-        for i in range(f.shape[0]):
-            temp = f[i,:]
-            if (not np.isnan(temp).any()) and (not np.isinf(temp).any()) :
-                fTemp.append(temp.tolist())
+    temp_features = []
+    for feat in features:
+        temp = []
+        for i in range(feat.shape[0]):
+            temp_fv = feat[i, :]
+            if (not np.isnan(temp_fv).any()) and (not np.isinf(temp_fv).any()):
+                temp.append(temp_fv.tolist())
             else:
                 print("NaN Found! Feature vector not used for training")
-        features2.append(np.array(fTemp))
-    features = features2
+        temp_features.append(np.array(temp))
+    features = temp_features
 
-    bestParam = evaluateclassifier(features, classNames, 100,
-                                   classifier_type, classifier_par, 0, perTrain)
+    best_param = evaluate_classifier(features, class_names, 100, classifier_type,
+                                     classifier_par, 0, train_percentage)
 
-    print("Selected params: {0:.5f}".format(bestParam))
+    print("Selected params: {0:.5f}".format(best_param))
 
-    C = len(classNames)
-    [features_norm, MEAN, STD] = normalizeFeatures(features)
-    MEAN = MEAN.tolist()
-    STD = STD.tolist()
-    featuresNew = features_norm
+    features_norm, mean, std = normalize_features(features)
+    mean = mean.tolist()
+    std = std.tolist()
 
     # STEP C: Save the classifier to file
     if classifier_type == "svm":
-        classifier = trainSVM(featuresNew, bestParam)        
+        classifier = train_svm(features_norm, best_param)
     elif classifier_type == "svm_rbf":
-        classifier = trainSVM_RBF(featuresNew, bestParam)
+        classifier = train_svm(features_norm, best_param, kernel='rbf')
     elif classifier_type == "randomforest":
-        classifier = trainRandomForest(featuresNew, bestParam)
+        classifier = train_random_forest(features_norm, best_param)
     elif classifier_type == "gradientboosting":
-        classifier = trainGradientBoosting(featuresNew, bestParam)
+        classifier = train_gradient_boosting(features_norm, best_param)
     elif classifier_type == "extratrees":
-        classifier = trainExtraTrees(featuresNew, bestParam)
+        classifier = train_extra_trees(features_norm, best_param)
 
     if classifier_type == "knn":
-        [X, Y] = listOfFeatures2Matrix(featuresNew)
-        X = X.tolist()
-        Y = Y.tolist()
-        fo = open(model_name, "wb")
-        cPickle.dump(X, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(Y,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(bestParam,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mt_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mt_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(st_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(st_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(compute_beat, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()
+        feature_matrix, labels = features_to_matrix(features_norm)
+        feature_matrix = feature_matrix.tolist()
+        labels = labels.tolist()
+        save_path = model_name
+        save_parameters(save_path, feature_matrix, labels, mean, std,
+                        class_names, best_param, mid_window, mid_step,
+                        short_window, short_step, compute_beat)
+
     elif classifier_type == "svm" or classifier_type == "svm_rbf" or \
-                    classifier_type == "randomforest" or \
-                    classifier_type == "gradientboosting" or \
-                    classifier_type == "extratrees":
+            classifier_type == "randomforest" or \
+            classifier_type == "gradientboosting" or \
+            classifier_type == "extratrees":
         with open(model_name, 'wb') as fid:
-            cPickle.dump(classifier, fid)            
-        fo = open(model_name + "MEANS", "wb")
-        cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(STD, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(classNames, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mt_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(mt_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(st_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(st_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        cPickle.dump(compute_beat, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-        fo.close()        
+            cPickle.dump(classifier, fid)
+        save_path = model_name + "MEANS"
+        save_parameters(save_path, mean, std, class_names, mid_window, mid_step,
+                        short_window, short_step, compute_beat)
 
 
-def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
-                              model_type, model_name, compute_beat=False):
+def save_parameters(path, *parameters):
+    with open(path, 'wb') as file_handle:
+        for param in parameters:
+            cPickle.dump(param, file_handle, protocol=cPickle.HIGHEST_PROTOCOL)
+
+
+def feature_extraction_train_regression(folder_name, mid_window, mid_step,
+                                        short_window, short_step, model_type,
+                                        model_name, compute_beat=False):
     """
     This function is used as a wrapper to segment-based audio
     feature extraction and classifier training.
     ARGUMENTS:
-        dir_name:        path of directory containing the WAV files
+        folder_name:        path of directory containing the WAV files
                          and Regression CSVs
         mt_win, mt_step:        mid-term window length and step
         st_win, st_step:        short-term window and step
@@ -465,39 +411,37 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
         model parameters are saved on files.
     """
     # STEP A: Feature Extraction:
-    [features, _, filenames] = aF.multiple_directory_feature_extraction([dir_name],
-                                                                        mt_win,
-                                                                        mt_step,
-                                                                        st_win,
-                                                                        st_step,
-                                                                        compute_beat=
-                                                           compute_beat)
+    features, _, filenames = \
+        aF.multiple_directory_feature_extraction([folder_name], mid_window,
+                                                 mid_step, short_window,
+                                                 short_step,
+                                                 compute_beat=compute_beat)
     features = features[0]
     filenames = [ntpath.basename(f) for f in filenames[0]]
     f_final = []
 
     # Read CSVs:
-    CSVs = glob.glob(dir_name + os.sep + "*.csv")
+    csv_files = glob.glob(folder_name + os.sep + "*.csv")
     regression_labels = []
     regression_names = []
     f_final = []
-    for c in CSVs:
+    for c in csv_files:
         cur_regression_labels = []
         f_temp = []
         # open the csv file that contains the current target value's annotations
         with open(c, 'rt') as csvfile:
-            CSVreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-            for row in CSVreader:
-                # if the current row contains two fields (filename, target value)
+            csv_reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            for row in csv_reader:
                 if len(row) == 2:
                     # ... and if the current filename exists
                     # in the list of filenames
                     if row[0] in filenames:
                         index = filenames.index(row[0])
                         cur_regression_labels.append(float(row[1]))
-                        f_temp.append(features[index,:])
+                        f_temp.append(features[index, :])
                     else:
-                        print("Warning: {} not found in list of files.".format(row[0]))
+                        print("Warning: {} not found "
+                              "in list of files.".format(row[0]))
                 else:
                     print("Warning: Row with unknown format in regression file")
 
@@ -511,8 +455,6 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
             print("ERROR: No data found in any input folder!")
             return
 
-    n_feats = f_final[0].shape[1]
-
     # TODO: ARRF WRITE????
     # STEP B: classifier Evaluation and Parameter Selection:
     if model_type == "svm" or model_type == "svm_rbf":
@@ -521,8 +463,6 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
     elif model_type == "randomforest":
         model_params = np.array([5, 10, 25, 50, 100])
 
-#    elif model_type == "knn":
-#        model_params = np.array([1, 3, 5, 7, 9, 11, 13, 15]);
     errors = []
     errors_base = []
     best_params = []
@@ -530,79 +470,73 @@ def featureAndTrainRegression(dir_name, mt_win, mt_step, st_win, st_step,
     for iRegression, r in enumerate(regression_names):
         # get optimal classifeir parameter:
         print("Regression task " + r)
-        bestParam, error, berror = evaluateRegression(f_final[iRegression], 
-                                                      regression_labels[
+        bestParam, error, berror = evaluate_regression(f_final[iRegression],
+                                                       regression_labels[
                                                           iRegression],
-                                                      100, model_type, 
-                                                      model_params)
+                                                       100, model_type,
+                                                       model_params)
         errors.append(error)
         errors_base.append(berror)
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
-        [features_norm, MEAN, STD] = normalizeFeatures([f_final[iRegression]])
+        features_norm, mean, std = normalize_features([f_final[iRegression]])
 
         # STEP C: Save the model to file
         if model_type == "svm":
-            classifier, _ = trainSVMregression(features_norm[0],
-                                               regression_labels[iRegression],
-                                               bestParam)
+            classifier, _ = train_svm_regression(features_norm[0],
+                                                 regression_labels[iRegression],
+                                                 bestParam)
         if model_type == "svm_rbf":
-            classifier, _ = trainSVMregression_rbf(features_norm[0],
-                                                   regression_labels[
-                                                       iRegression],
-                                                   bestParam)
+            classifier, _ = train_svm_regression(features_norm[0],
+                                                 regression_labels[iRegression],
+                                                 bestParam, kernel='rbf')
         if model_type == "randomforest":
-            classifier, _ = trainRandomForestRegression(features_norm[0],
-                                                        regression_labels[
+            classifier, _ = train_random_forest_regression(features_norm[0],
+                                                           regression_labels[
                                                             iRegression],
-                                                        bestParam)
+                                                           bestParam)
 
         if model_type == "svm" or model_type == "svm_rbf" \
                 or model_type == "randomforest":
             with open(model_name + "_" + r, 'wb') as fid:
-                cPickle.dump(classifier, fid)            
-            fo = open(model_name + "_" + r + "MEANS", "wb")
-            cPickle.dump(MEAN, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(STD,  fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(mt_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(mt_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(st_win, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(st_step, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            cPickle.dump(compute_beat, fo, protocol=cPickle.HIGHEST_PROTOCOL)
-            fo.close()
+                cPickle.dump(classifier, fid)
+            save_path = model_name + "_" + r + "MEANS"
+            save_parameters(save_path, mean, std, mid_window, mid_step,
+                            short_window, short_step, compute_beat)
+
     return errors, errors_base, best_params
 
 
-def load_model_knn(kNNModelName, is_regression=False):
-    with open(kNNModelName, "rb") as fo:
-        X = cPickle.load(fo)
-        Y = cPickle.load(fo)
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
+def load_model_knn(knn_model_name, is_regression=False):
+    with open(knn_model_name, "rb") as fo:
+        features = cPickle.load(fo)
+        labels = cPickle.load(fo)
+        mean = cPickle.load(fo)
+        std = cPickle.load(fo)
         if not is_regression:
-            classNames = cPickle.load(fo)
-        K = cPickle.load(fo)
-        mt_win = cPickle.load(fo)
-        mt_step = cPickle.load(fo)
-        st_win = cPickle.load(fo)
-        st_step = cPickle.load(fo)
+            classes = cPickle.load(fo)
+        neighbors = cPickle.load(fo)
+        mid_window = cPickle.load(fo)
+        mid_step = cPickle.load(fo)
+        short_window = cPickle.load(fo)
+        short_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
 
-    X = np.array(X)
-    Y = np.array(Y)
-    MEAN = np.array(MEAN)
-    STD = np.array(STD)
+    features = np.array(features)
+    labels = np.array(labels)
+    mean = np.array(mean)
+    std = np.array(std)
 
-    classifier = kNN(X, Y, K)
+    classifier = Knn(features, labels, neighbors)
     # Note: a direct call to the kNN constructor is used here
 
     if is_regression:
-        return classifier, MEAN, STD, mt_win, mt_step, st_win, \
-               st_step, compute_beat
+        return classifier, mean, std, mid_window, mid_step, short_window, \
+               short_step, compute_beat
     else:
-        return classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, \
-               st_step, compute_beat
+        return classifier, mean, std, classes, mid_window, mid_step, \
+               short_window, short_step, compute_beat
 
 
 def load_model(model_name, is_regression=False):
@@ -614,31 +548,32 @@ def load_model(model_name, is_regression=False):
                              is regression or not
     """
     with open(model_name + "MEANS", "rb") as fo:
-        MEAN = cPickle.load(fo)
-        STD = cPickle.load(fo)
+        mean = cPickle.load(fo)
+        std = cPickle.load(fo)
         if not is_regression:
             classNames = cPickle.load(fo)
-        mt_win = cPickle.load(fo)
-        mt_step = cPickle.load(fo)
-        st_win = cPickle.load(fo)
-        st_step = cPickle.load(fo)
+        mid_window = cPickle.load(fo)
+        mid_step = cPickle.load(fo)
+        short_window = cPickle.load(fo)
+        short_step = cPickle.load(fo)
         compute_beat = cPickle.load(fo)
 
-    MEAN = np.array(MEAN)
-    STD = np.array(STD)
+    mean = np.array(mean)
+    std = np.array(std)
 
     with open(model_name, 'rb') as fid:
-        SVM = cPickle.load(fid)    
+        svm_model = cPickle.load(fid)
 
     if is_regression:
-        return SVM, MEAN, STD, mt_win, mt_step, st_win, st_step, compute_beat
+        return svm_model, mean, std, mid_window, mid_step, short_window, \
+               short_step, compute_beat
     else:
-        return SVM, MEAN, STD, classNames, mt_win, mt_step, \
-               st_win, st_step, compute_beat
+        return svm_model, mean, std, classNames, mid_window, mid_step, \
+               short_window, short_step, compute_beat
 
 
-def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
-                       parameterMode, perTrain=0.90):
+def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
+                        parameter_mode, train_percentage=0.90):
     """
     ARGUMENTS:
         features:     a list ([numOfClasses x 1]) whose elements containt
@@ -647,9 +582,9 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
         class_names:    list of class names (strings)
         n_exp:        number of cross-validation experiments
         classifier_name: svm or knn or randomforest
-        Params:        list of classifier parameters (for parameter
+        params:        list of classifier parameters (for parameter
                        tuning during cross-validation)
-        parameterMode:    0: choose parameters that lead to maximum overall
+        parameter_mode:    0: choose parameters that lead to maximum overall
                              classification ACCURACY
                           1: choose parameters that lead to maximum overall
                           f1 MEASURE
@@ -659,8 +594,8 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
     """
 
     # feature normalization:
-    (features_norm, MEAN, STD) = normalizeFeatures(features)
-    #features_norm = features;
+    features_norm, MEAN, STD = normalize_features(features)
+    # features_norm = features;
     n_classes = len(features)
     ac_all = []
     f1_all = []
@@ -677,16 +612,16 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
         n_exp = 2
         print("Number of training experiments changed to 2 due to "
               "very high number of samples")
-    elif n_samples_total > 2000 and n_exp > 10:
+    elif n_samples_total > 2000 and n_exp > 5:
+        n_exp = 5
+        print("Number of training experiments changed to 5 due to "
+              "high number of samples")
+    elif n_samples_total > 1000 and n_exp > 10:
         n_exp = 10
         print("Number of training experiments changed to 10 due to "
               "high number of samples")
-    elif n_samples_total > 1000 and n_exp > 50:
-        n_exp = 50
-        print("Number of training experiments changed to 50 due to "
-              "high number of samples")
 
-    for Ci, C in enumerate(Params):
+    for Ci, C in enumerate(params):
         # for each param value
         cm = np.zeros((n_classes, n_classes))
         for e in range(n_exp):
@@ -694,29 +629,30 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
             print("Param = {0:.5f} - classifier Evaluation "
                   "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
             # split features:
-            f_train, f_test = randSplitFeatures(features_norm, perTrain)
+            f_train, f_test = random_split_features(features_norm,
+                                                    train_percentage)
             # train multi-class svms:
             if classifier_name == "svm":
-                classifier = trainSVM(f_train, C)
+                classifier = train_svm(f_train, C)
             elif classifier_name == "svm_rbf":
-                classifier = trainSVM_RBF(f_train, C)
+                classifier = train_svm(f_train, C, kernel='rbf')
             elif classifier_name == "knn":
-                classifier = trainKNN(f_train, C)
+                classifier = train_knn(f_train, C)
             elif classifier_name == "randomforest":
-                classifier = trainRandomForest(f_train, C)
+                classifier = train_random_forest(f_train, C)
             elif classifier_name == "gradientboosting":
-                classifier = trainGradientBoosting(f_train, C)
+                classifier = train_gradient_boosting(f_train, C)
             elif classifier_name == "extratrees":
-                classifier = trainExtraTrees(f_train, C)
+                classifier = train_extra_trees(f_train, C)
 
             cmt = np.zeros((n_classes, n_classes))
             for c1 in range(n_classes):
                 n_test_samples = len(f_test[c1])
                 res = np.zeros((n_test_samples, 1))
                 for ss in range(n_test_samples):
-                    [res[ss], _] = classifierWrapper(classifier,
-                                                     classifier_name,
-                                                     f_test[c1][ss])
+                    res[ss], _ = classifier_wrapper(classifier,
+                                                    classifier_name,
+                                                    f_test[c1][ss])
                 for c2 in range(n_classes):
                     cmt[c1][c2] = float(len(np.nonzero(res == c2)[0]))
             cm = cm + cmt
@@ -750,7 +686,7 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
     best_ac_ind = np.argmax(ac_all)
     best_f1_ind = np.argmax(f1_all)
     for i in range(len(pre_class_all)):
-        print("\t{0:.3f}".format(Params[i]), end="")
+        print("\t{0:.3f}".format(params[i]), end="")
         for c in range(len(pre_class_all[i])):
             print("\t{0:.1f}\t{1:.1f}\t{2:.1f}".format(100.0 *
                                                        pre_class_all[i][c],
@@ -767,40 +703,40 @@ def evaluateclassifier(features, class_names, n_exp, classifier_name, Params,
             print("\t best Acc", end="")
         print("")
 
-    if parameterMode == 0:
+    if parameter_mode == 0:
         # keep parameters that maximize overall classification accuracy:
         print("Confusion Matrix:")
-        printConfusionMatrix(cms_all[best_ac_ind], class_names)
-        return Params[best_ac_ind]
-    elif parameterMode == 1:
+        print_confusion_matrix(cms_all[best_ac_ind], class_names)
+        return params[best_ac_ind]
+    elif parameter_mode == 1:
         # keep parameters that maximize overall f1 measure:
         print("Confusion Matrix:")
-        printConfusionMatrix(cms_all[best_f1_ind], class_names)
-        return Params[best_f1_ind]
+        print_confusion_matrix(cms_all[best_f1_ind], class_names)
+        return params[best_f1_ind]
 
 
-def evaluateRegression(features, labels, n_exp, method_name, Params):
+def evaluate_regression(features, labels, n_exp, method_name, params):
     """
     ARGUMENTS:
         features:     np matrices of features [n_samples x numOfDimensions]
         labels:       list of sample labels
         n_exp:         number of cross-validation experiments
         method_name:   "svm" or "randomforest"
-        Params:       list of classifier params to be evaluated
+        params:       list of classifier params to be evaluated
     RETURNS:
          bestParam:   the value of the input parameter that optimizes
          the selected performance measure
     """
 
     # feature normalization:
-    (features_norm, MEAN, STD) = normalizeFeatures([features])
+    features_norm, mean, std = normalize_features([features])
     features_norm = features_norm[0]
     n_samples = labels.shape[0]
     per_train = 0.9
     errors_all = []
     er_train_all = []
     er_base_all = []
-    for Ci, C in enumerate(Params):   # for each param value
+    for Ci, C in enumerate(params):   # for each param value
                 errors = []
                 errors_train = []
                 errors_baseline = []
@@ -819,19 +755,19 @@ def evaluateRegression(features, labels, n_exp, method_name, Params):
                     # train multi-class svms:                    
                     f_train = np.matrix(f_train)                                 
                     if method_name == "svm":                                        
-                        [classifier, train_err] = trainSVMregression(f_train, 
-                                                                     l_train,
-                                                                     C)
+                        classifier, train_err = \
+                            train_svm_regression(f_train, l_train, C)
                     elif method_name == "svm_rbf":                      
-                        [classifier, train_err] = \
-                            trainSVMregression_rbf(f_train, l_train, C)
+                        classifier, train_err = \
+                            train_svm_regression(f_train, l_train, C,
+                                                 kernel='rbf')
                     elif method_name == "randomforest":
-                        [classifier, train_err] = \
-                            trainRandomForestRegression(f_train, l_train, C)
+                        classifier, train_err = \
+                            train_random_forest_regression(f_train, l_train, C)
                     error_test = []
                     error_test_baseline = []
                     for itest, fTest in enumerate(f_test):
-                        R = regressionWrapper(classifier, method_name, fTest)
+                        R = regression_wrapper(classifier, method_name, fTest)
                         Rbaseline = np.mean(l_train)
                         error_test.append((R - l_test[itest]) *
                                           (R - l_test[itest]))
@@ -851,7 +787,7 @@ def evaluateRegression(features, labels, n_exp, method_name, Params):
     print("{0:s}\t\t{1:s}\t\t{2:s}\t\t{3:s}".format("Param", "MSE",
                                                     "T-MSE", "R-MSE"))
     for i in range(len(errors_all)):
-        print("{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(Params[i],
+        print("{0:.4f}\t\t{1:.2f}\t\t{2:.2f}\t\t{3:.2f}".format(params[i],
                                                                 errors_all[i],
                                                                 er_train_all[i],
                                                                 er_base_all[i]),
@@ -859,10 +795,10 @@ def evaluateRegression(features, labels, n_exp, method_name, Params):
         if i == best_ind:
             print("\t\t best",end="")
         print("")
-    return Params[best_ind], errors_all[best_ind], er_base_all[best_ind]
+    return params[best_ind], errors_all[best_ind], er_base_all[best_ind]
 
 
-def printConfusionMatrix(cm, class_names):
+def print_confusion_matrix(cm, class_names):
     """
     This function prints a confusion matrix for a particular classification task.
     ARGUMENTS:
@@ -891,43 +827,44 @@ def printConfusionMatrix(cm, class_names):
         print("")
 
 
-def normalizeFeatures(features):
+def normalize_features(features):
     """
     This function normalizes a feature set to 0-mean and 1-std.
     Used in most classifier trainning cases.
 
     ARGUMENTS:
-        - features:    list of feature matrices (each one of them is a np matrix)
+        - features:    list of feature matrices (each one of them is a np
+                       matrix)
     RETURNS:
         - features_norm:    list of NORMALIZED feature matrices
-        - MEAN:        mean vector
-        - STD:        std vector
+        - mean:        mean vector
+        - std:        std vector
     """
-    X = np.array([])
+    temp_feats = np.array([])
 
     for count, f in enumerate(features):
         if f.shape[0] > 0:
             if count == 0:
-                X = f
+                temp_feats = f
             else:
-                X = np.vstack((X, f))
+                temp_feats = np.vstack((temp_feats, f))
             count += 1
 
-    MEAN = np.mean(X, axis=0) + 0.00000000000001;
-    STD = np.std(X, axis=0) + 0.00000000000001;
+    mean = np.mean(temp_feats, axis=0) + 1e-14
+    std = np.std(temp_feats, axis=0) + 1e-14
 
     features_norm = []
     for f in features:
         ft = f.copy()
         for n_samples in range(f.shape[0]):
-            ft[n_samples, :] = (ft[n_samples, :] - MEAN) / STD
+            ft[n_samples, :] = (ft[n_samples, :] - mean) / std
         features_norm.append(ft)
-    return (features_norm, MEAN, STD)
+    return features_norm, mean, std
 
 
-def listOfFeatures2Matrix(features):
+def features_to_matrix(features):
     """
-    listOfFeatures2Matrix(features)
+    features_to_matrix(features)
 
     This function takes a list of feature matrices as argument and returns
     a single concatenated feature matrix and the respective class labels.
@@ -936,91 +873,213 @@ def listOfFeatures2Matrix(features):
         - features:        a list of feature matrices
 
     RETURNS:
-        - X:            a concatenated matrix of features
-        - Y:            a vector of class indeces
+        - feature_matrix:    a concatenated matrix of features
+        - labels:            a vector of class indices
     """
 
-    X = np.array([])
-    Y = np.array([])
+    labels = np.array([])
+    feature_matrix = np.array([])
     for i, f in enumerate(features):
         if i == 0:
-            X = f
-            Y = i * np.ones((len(f), 1))
+            feature_matrix = f
+            labels = i * np.ones((len(f), 1))
         else:
-            X = np.vstack((X, f))
-            Y = np.append(Y, i * np.ones((len(f), 1)))
-    return (X, Y)
+            feature_matrix = np.vstack((feature_matrix, f))
+            labels = np.append(labels, i * np.ones((len(f), 1)))
+    return feature_matrix, labels
 
 
-def pcaDimRed(features, nDims):
-    [X, Y] = listOfFeatures2Matrix(features)
-    pca = sklearn.decomposition.PCA(n_components = nDims)
-    pca.fit(X)
+def pca_wrapper(features, dimensions):
+    features, labels = features_to_matrix(features)
+    pca = sklearn.decomposition.PCA(n_components = dimensions)
+    pca.fit(features)
     coeff = pca.components_
-    coeff = coeff[:, 0:nDims]
+    coeff = coeff[:, 0:dimensions]
 
-    featuresNew = []
+    features_transformed = []
     for f in features:
         ft = f.copy()
-#        ft = pca.transform(ft, k=nDims)
+        # ft = pca.transform(ft, k=nDims)
         ft = np.dot(f, coeff)
-        featuresNew.append(ft)
+        features_transformed.append(ft)
 
-    return (featuresNew, coeff)
+    return features_transformed, coeff
 
 
-def fileClassification(inputFile, model_name, model_type):
+def compute_class_rec_pre_f1(c_mat):
+    """
+    Gets recall, precision and f1 PER CLASS, given the confusion matrix
+    :param c_mat: the [n_class x n_class] confusion matrix
+    :return: rec, pre and f1 for each class
+    """
+    n_class = c_mat.shape[0]
+    rec, pre, f1 = [], [], []
+    for i in range(n_class):
+        rec.append(float(c_mat[i, i]) / np.sum(c_mat[i, :]))
+        pre.append(float(c_mat[i, i]) / np.sum(c_mat[:, i]))
+        f1.append(2 * rec[-1] * pre[-1] / (rec[-1] + pre[-1]))
+    return rec,  pre, f1
+
+
+def evaluate_model_for_folders(input_test_folders, model_name, model_type,
+                               positive_class, plot=True):
+    """
+    evaluate_model_for_folders(input_test_folders, model_name, model_type)
+    This function evaluates a model by computing the confusion matrix, the
+    per class performance metrics and by generating a ROC and Precision / Recall
+    diagrams (for a particular class of interest), for a given test dataset.
+    The dataset needs to be organized in folders (one folder per audio class),
+    exactly like in extract_features_and_train()
+    :param input_test_folders:  list of folders (each folder represents a
+    separate audio class)
+    :param model_name:  path to the model to be tested
+    :param model_type:  type of the model
+    :param positive_class name of the positive class
+    :param plot (True default) if to plot 2 diagrams on plotly
+    :return: thr_prre, pre, rec  (thresholds, precision recall values)
+    thr_roc, fpr, tpr (thresholds, false positive , true positive rates)
+
+    Usage example:
+    from pyAudioAnalysis import audioTrainTest as aT
+    thr_prre, pre, rec, thr_roc, fpr, tpr =
+    aT.evaluate_model_for_folders(["4_classes_small/speech",
+                                   "4_classes_small/music"],
+                                   "data/models/svm_rbf_4class",
+                                   "svm_rbf", "speech")
+    """
+    
+    class_names = []
+    y_true_binary = []
+    y_true = []
+    y_pred = []
+    probs_positive = []
+    for i, d in enumerate(input_test_folders):
+        if d[-1] == os.sep:
+            class_names.append(d.split(os.sep)[-2])
+        else:
+            class_names.append(d.split(os.sep)[-1])
+
+        types = ('*.wav', '*.aif', '*.aiff', '*.mp3', '*.au', '*.ogg')
+        wav_file_list = []
+        for files in types:
+            wav_file_list.extend(glob.glob(os.path.join(d, files)))
+        # get list of audio files for current folder and run classifier
+        for w in wav_file_list:
+            c, p, probs_names = file_classification(w, model_name, model_type)
+            y_pred.append(c)
+            y_true.append(probs_names.index(class_names[i]))
+            if i==probs_names.index(positive_class):
+                y_true_binary.append(1)
+            else:
+                y_true_binary.append(0)
+
+            prob_positive = p[probs_names.index(positive_class)]
+            probs_positive.append(prob_positive)
+
+    pre, rec, thr_prre = sklearn.metrics.precision_recall_curve(y_true_binary,
+                                                                probs_positive)
+    fpr, tpr, thr_roc = sklearn.metrics.roc_curve(y_true_binary, probs_positive)
+    cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
+    rec_c,  pre_c, f1_c = compute_class_rec_pre_f1(cm)
+    f1 = (sklearn.metrics.f1_score(y_true, y_pred, average='micro'))
+    acc = (sklearn.metrics.accuracy_score(y_true, y_pred))
+    print(cm)
+    print(rec_c, pre_c, f1_c, f1, acc)
+    if plot:
+        titles = ["Confusion matrix, acc = {0:.1f}%, "
+                  " F1 (micro): {1:.1f}%".format(100 * acc, 100 * f1),
+                  "Class-wise Performance measures",
+                  "Pre vs Rec for " + positive_class,
+                  "ROC for " + positive_class]
+        figs = plotly.subplots.make_subplots(rows=2, cols=2,
+                                             subplot_titles=titles)
+
+        heatmap = go.Heatmap(z=np.flip(cm, axis=0), x=class_names,
+                             y=list(reversed(class_names)),
+                             colorscale=[[0, '#4422ff'], [1, '#ff4422']],
+                             name="confusin matrix", showscale=False)
+        mark_prop1 = dict(color='rgba(80, 220, 150, 0.5)',
+                          line=dict(color='rgba(80, 220, 150, 1)', width=2))
+        mark_prop2 = dict(color='rgba(80, 150, 220, 0.5)',
+                          line=dict(color='rgba(80, 150, 220, 1)', width=2))
+        mark_prop3 = dict(color='rgba(250, 150, 150, 0.5)',
+                          line=dict(color='rgba(250, 150, 150, 1)', width=3))
+        b1 = go.Bar(x=class_names, y=rec_c, name="Recall", marker=mark_prop1)
+        b2 = go.Bar(x=class_names, y=pre_c, name="Precision", marker=mark_prop2)
+        b3 = go.Bar(x=class_names, y=f1_c, name="F1", marker=mark_prop3)
+
+        figs.append_trace(heatmap, 1, 1);
+        figs.append_trace(b1, 1, 2)
+        figs.append_trace(b2, 1, 2);
+        figs.append_trace(b3, 1, 2)
+        figs.append_trace(go.Scatter(x=thr_prre, y=pre, name="Precision",
+                                     marker=mark_prop1), 2, 1)
+        figs.append_trace(go.Scatter(x=thr_prre, y=rec, name="Recall",
+                                     marker=mark_prop2), 2, 1)
+        figs.append_trace(go.Scatter(x=fpr, y=tpr, showlegend=False), 2, 2)
+        figs.update_xaxes(title_text="threshold", row=2, col=1)
+        figs.update_xaxes(title_text="false positive rate", row=2, col=2)
+        figs.update_yaxes(title_text="true positive rate", row=2, col=2)
+
+        plotly.offline.plot(figs, filename="temp.html", auto_open=True)
+
+    return cm, thr_prre, pre, rec, thr_roc, fpr, tpr
+
+
+def file_classification(input_file, model_name, model_type):
     # Load classifier:
-
     if not os.path.isfile(model_name):
         print("fileClassification: input model_name not found!")
-        return (-1, -1, -1)
+        return -1, -1, -1
 
-    if not os.path.isfile(inputFile):
+    if isinstance(input_file, str) and not os.path.isfile(input_file):
         print("fileClassification: wav file not found!")
-        return (-1, -1, -1)
+        return -1, -1, -1
 
     if model_type == 'knn':
-        [classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, st_step,
-         compute_beat] = load_model_knn(model_name)
+        classifier, mean, std, classes, mid_window, mid_step, short_window, \
+            short_step, compute_beat = load_model_knn(model_name)
     else:
-        [classifier, MEAN, STD, classNames, mt_win, mt_step, st_win, st_step,
-         compute_beat] = load_model(model_name)
+        classifier, mean, std, classes, mid_window, mid_step, short_window, \
+            short_step, compute_beat = load_model(model_name)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
-    x = audioBasicIO.stereo_to_mono(x)
+    sampling_rate, signal = audioBasicIO.read_audio_file(input_file)
+    signal = audioBasicIO.stereo_to_mono(signal)
 
-    if Fs == 0:
+    if sampling_rate == 0:
         # audio file IO problem
         return -1, -1, -1
-    if x.shape[0] / float(Fs) <= mt_win:
-        return -1, -1, -1
+    if signal.shape[0] / float(sampling_rate) < mid_window:
+        mid_window = signal.shape[0] / float(sampling_rate)
 
     # feature extraction:
-    [mt_features, s, _] = aF.mid_feature_extraction(x, Fs, mt_win * Fs,
-                                                    mt_step * Fs,
-                                                    round(Fs * st_win),
-                                                    round(Fs * st_step))
+    mid_features, s, _ = \
+        aF.mid_feature_extraction(signal, sampling_rate,
+                                  mid_window * sampling_rate,
+                                  mid_step * sampling_rate,
+                                  round(sampling_rate * short_window),
+                                  round(sampling_rate * short_step))
     # long term averaging of mid-term statistics
-    mt_features = mt_features.mean(axis=1)
+    mid_features = mid_features.mean(axis=1)
     if compute_beat:
-        [beat, beatConf] = aF.beat_extraction(s, st_step)
-        mt_features = np.append(mt_features, beat)
-        mt_features = np.append(mt_features, beatConf)
-    curFV = (mt_features - MEAN) / STD    # normalization
+        beat, beat_conf = aF.beat_extraction(s, short_step)
+        mid_features = np.append(mid_features, beat)
+        mid_features = np.append(mid_features, beat_conf)
+    feature_vector = (mid_features - mean) / std    # normalization
 
     # classification
-    [Result, P] = classifierWrapper(classifier, model_type, curFV)
-    return Result, P, classNames
+    class_id, probability = classifier_wrapper(classifier, model_type,
+                                               feature_vector)
+    return class_id, probability, classes
 
 
-def fileRegression(inputFile, model_name, model_type):
+def file_regression(input_file, model_name, model_type):
     # Load classifier:
 
-    if not os.path.isfile(inputFile):
+    if not os.path.isfile(input_file):
         print("fileClassification: wav file not found!")
-        return (-1, -1, -1)
+        return -1, -1, -1
 
     regression_models = glob.glob(model_name + "_*")
     regression_models2 = []
@@ -1036,24 +1095,24 @@ def fileRegression(inputFile, model_name, model_type):
     # LOAD ONLY THE FIRST MODEL (for mt_win, etc)
     if model_type == 'svm' or model_type == "svm_rbf" or \
             model_type == 'randomforest':
-        [_, _, _, mt_win, mt_step, st_win, st_step, compute_beat] = \
-            load_model(regression_models[0], True)
+        _, _, _, mid_window, mid_step, short_window, short_step, compute_beat \
+            = load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    [Fs, x] = audioBasicIO.read_audio_file(inputFile)
-    x = audioBasicIO.stereo_to_mono(x)
+    samping_rate, signal = audioBasicIO.read_audio_file(input_file)
+    signal = audioBasicIO.stereo_to_mono(signal)
     # feature extraction:
-    [mt_features, s, _] = aF.mid_feature_extraction(x, Fs,
-                                                    mt_win * Fs,
-                                                    mt_step * Fs,
-                                                    round(Fs * st_win),
-                                                    round(Fs * st_step))
+    mid_features, s, _ = \
+        aF.mid_feature_extraction(signal, samping_rate, mid_window * samping_rate,
+                                  mid_step * samping_rate,
+                                  round(samping_rate * short_window),
+                                  round(samping_rate * short_step))
     # long term averaging of mid-term statistics
-    mt_features = mt_features.mean(axis=1)
+    mid_features = mid_features.mean(axis=1)
     if compute_beat:
-        [beat, beatConf] = aF.beat_extraction(s, st_step)
-        mt_features = np.append(mt_features, beat)
-        mt_features = np.append(mt_features, beatConf)
+        beat, beat_conf = aF.beat_extraction(s, short_step)
+        mid_features = np.append(mid_features, beat)
+        mid_features = np.append(mid_features, beat_conf)
 
     # REGRESSION
     R = []
@@ -1063,20 +1122,18 @@ def fileRegression(inputFile, model_name, model_type):
             return (-1, -1, -1)
         if model_type == 'svm' or model_type == "svm_rbf" \
                 or model_type == 'randomforest':
-            [model, MEAN, STD, mt_win, mt_step, st_win,
-             st_step, compute_beat] =  load_model(r, True)
-        curFV = (mt_features - MEAN) / STD  # normalization
-        R.append(regressionWrapper(model, model_type, curFV))  # classification
+            model, mean, std, _, _, _, _, _ = load_model(r, True)
+        curFV = (mid_features - mean) / std  # normalization
+        R.append(regression_wrapper(model, model_type, curFV))  # classification
     return R, regression_names
 
 
-def lda(data, labels, redDim):
+def lda(data, labels, red_dim):
     # Centre data
     data -= data.mean(axis=0)
     n_data = np.shape(data)[0]
     n_dim = np.shape(data)[1]
     Sw = np.zeros((n_dim, n_dim))
-    Sb = np.zeros((n_dim, n_dim))
 
     C = np.cov((data.T))
 
@@ -1096,14 +1153,13 @@ def lda(data, labels, redDim):
     indices = np.argsort(evals)
     indices = indices[::-1]
     evecs = evecs[:, indices]
-    evals = evals[indices]
-    w = evecs[:, :redDim]
+    w = evecs[:, :red_dim]
 
-    newData = np.dot(data, w)
-    return newData, w
+    new_data = np.dot(data, w)
+    return new_data, w
 
 
-def writeTrainDataToARFF(model_name, features, classNames, feature_names):
+def write_train_data_arff(model_name, features, classNames, feature_names):
     f = open(model_name + ".arff", 'w')
     f.write('@RELATION ' + model_name + '\n')
     for fn in feature_names:
@@ -1121,7 +1177,7 @@ def writeTrainDataToARFF(model_name, features, classNames, feature_names):
     f.close()
 
 
-def trainSpeakerModelsScript():
+def train_speaker_models():
     """
     This script is used to train the speaker-related models
     (NOTE: data paths are hard-coded and NOT included in the library,
@@ -1139,21 +1195,22 @@ def trainSpeakerModelsScript():
     list_of_dirs = [os.path.join(dir_name, name)
                     for name in os.listdir(dir_name)
                     if os.path.isdir(os.path.join(dir_name, name))]
-    featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
+    extract_features_and_train(list_of_dirs, mt_win, mt_step, st_win, st_step,
                     "knn", "data/knnSpeakerAll",
-                    compute_beat=False, perTrain=0.50)
+                               compute_beat=False, train_percentage=0.50)
 
     dir_name = "DIARIZATION_ALL/female_male"
     list_of_dirs = [os.path.join(dir_name, name)
                     for name in os.listdir(dir_name)
                     if os.path.isdir(os.path.join(dir_name, name))]
-    featureAndTrain(list_of_dirs, mt_win, mt_step, st_win, st_step,
+    extract_features_and_train(list_of_dirs, mt_win, mt_step, st_win, st_step,
                     "knn", "data/knnSpeakerFemaleMale",
-                    compute_beat=False, perTrain=0.50)
+                               compute_beat=False, train_percentage=0.50)
 
 
 def main(argv):
     return 0
+
 
 if __name__ == '__main__':
     main(sys.argv)

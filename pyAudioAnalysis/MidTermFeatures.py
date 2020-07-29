@@ -16,11 +16,11 @@ def beat_extraction(short_features, window_size, plot=False):
     """
     This function extracts an estimate of the beat rate for a musical signal.
     ARGUMENTS:
-     - st_features:     a np array (n_feats x numOfShortTermWindows)
-     - win_len:        window size in seconds
+     - short_features:     a np array (n_feats x numOfShortTermWindows)
+     - window_size:        window size in seconds
     RETURNS:
-     - BPM:            estimates of beats per minute
-     - Ratio:          a confidence measure
+     - bpm:            estimates of beats per minute
+     - ratio:          a confidence measure
     """
 
     # Features that are related to the beat tracking task:
@@ -66,7 +66,7 @@ def beat_extraction(short_features, window_size, plot=False):
     bpms = 60 / (hist_centers * window_size)
     bpm = bpms[max_indices]
     # ... and the beat ratio:
-    ratio = hist_all[max_indices] / hist_all.sum()
+    ratio = hist_all[max_indices] / (hist_all.sum() + eps)
 
     if plot:
         # filter out >500 beats from plotting:
@@ -88,8 +88,8 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
     """
 
     short_features, short_feature_names = \
-        ShortTermFeatures.feature_extraction(signal, sampling_rate, short_window,
-                                             short_step)
+        ShortTermFeatures.feature_extraction(signal, sampling_rate,
+                                             short_window, short_step)
 
     n_stats = 2
     n_feats = len(short_features)
@@ -117,7 +117,9 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
             mid_features[i].append(np.mean(cur_st_feats))
             mid_features[i + n_feats].append(np.std(cur_st_feats))
             cur_position += mt_step_ratio
-    return np.array(mid_features), short_features, mid_feature_names
+    mid_features = np.array(mid_features)
+    mid_features = np.nan_to_num(mid_features)
+    return mid_features, short_features, mid_feature_names
 
 
 """ Feature Extraction Wrappers
@@ -142,9 +144,9 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
     Therefore ONE FEATURE VECTOR is extracted for each WAV file.
 
     ARGUMENTS:
-        - dirName:        the path of the WAVE directory
-        - mt_win, mt_step:    mid-term window and step (in seconds)
-        - st_win, st_step:    short-term window and step (in seconds)
+        - folder_path:        the path of the WAVE directory
+        - mid_window, mid_step:    mid-term window and step (in seconds)
+        - short_window, short_step:    short-term window and step (in seconds)
     """
 
     mid_term_features = np.array([])
@@ -164,11 +166,11 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
         if os.stat(file_path).st_size == 0:
             print("   (EMPTY FILE -- SKIPPING)")
             continue        
-        [sampling_rate, signal] = audioBasicIO.read_audio_file(file_path)
+        sampling_rate, signal = audioBasicIO.read_audio_file(file_path)
         if sampling_rate == 0:
             continue        
 
-        t1 = time.clock()        
+        t1 = time.time()        
         signal = audioBasicIO.stereo_to_mono(signal)
         if signal.shape[0] < float(sampling_rate)/5:
             print("  (AUDIO FILE TOO SMALL - SKIPPING)")
@@ -203,7 +205,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
                 mid_term_features = mid_features
             else:
                 mid_term_features = np.vstack((mid_term_features, mid_features))
-            t2 = time.clock()
+            t2 = time.time()
             duration = float(len(signal)) / sampling_rate
             process_times.append((t2 - t1) / duration)
     if len(process_times) > 0:
@@ -259,9 +261,9 @@ def directory_feature_extraction_no_avg(folder_path, mid_window, mid_step,
     files of a particular folder without averaging each file.
 
     ARGUMENTS:
-        - dirName:          the path of the WAVE directory
-        - mt_win, mt_step:    mid-term window and step (in seconds)
-        - st_win, st_step:    short-term window and step (in seconds)
+        - folder_path:          the path of the WAVE directory
+        - mid_window, mid_step:    mid-term window and step (in seconds)
+        - short_window, short_step:    short-term window and step (in seconds)
     RETURNS:
         - X:                A feature matrix
         - Y:                A matrix of file labels
@@ -301,14 +303,17 @@ def directory_feature_extraction_no_avg(folder_path, mid_window, mid_step,
     return mid_features, signal_idx, wav_file_list
 
 
-# The following two feature extraction wrappers extract features for given audio
-# files, however  NO LONG-TERM AVERAGING is performed. Therefore, the output for
-# each audio file is NOT A SINGLE FEATURE VECTOR but a whole feature matrix.
-#
-# Also, another difference between the following two wrappers and the previous
-# is that they NO LONG-TERM AVERAGING IS PERFORMED. In other words, the WAV
-# files in these functions are not used as uniform samples that need to be
-# averaged but as sequences
+"""
+The following two feature extraction wrappers extract features for given audio
+files, however  NO LONG-TERM AVERAGING is performed. Therefore, the output for
+each audio file is NOT A SINGLE FEATURE VECTOR but a whole feature matrix.
+
+Also, another difference between the following two wrappers and the previous
+is that they NO LONG-TERM AVERAGING IS PERFORMED. In other words, the WAV
+files in these functions are not used as uniform samples that need to be
+averaged but as sequences
+"""
+
 
 def mid_feature_extraction_to_file(file_path, mid_window, mid_step,
                                    short_window, short_step, output_file,

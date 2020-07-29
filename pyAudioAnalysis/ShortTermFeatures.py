@@ -5,6 +5,7 @@ from scipy.fftpack import fft
 import matplotlib.pyplot as plt
 from scipy.signal import lfilter
 from scipy.fftpack.realtransforms import dct
+from tqdm import tqdm
 
 eps = 0.00000001
 
@@ -301,7 +302,8 @@ def chroma_features(signal, sampling_rate, num_fft):
     return chroma_names, final_matrix
 
 
-def chromagram(signal, sampling_rate, window, step, plot=False):
+def chromagram(signal, sampling_rate, window, step, plot=False,
+               show_progress=False):
     """
     Short-term FFT mag for spectogram estimation:
     Returns:
@@ -323,25 +325,21 @@ def chromagram(signal, sampling_rate, window, step, plot=False):
     signal = (signal - dc_offset) / (maximum - dc_offset)
 
     num_samples = len(signal)  # total number of signals
-    cur_position = 0
     count_fr = 0
     num_fft = int(window / 2)
-    chromogram = np.array([], dtype=np.float64)
-
-    while cur_position + window - 1 < num_samples:
+    chromogram = np.zeros((int((num_samples-step-window) / step) + 1, 12),
+                          dtype=np.float64)
+    for cur_p in tqdm(range(window, num_samples - step, step),
+                      disable=not show_progress):
         count_fr += 1
-        x = signal[cur_position:cur_position + window]
-        cur_position = cur_position + step
+        x = signal[cur_p:cur_p + window]
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
         chroma_names, chroma_feature_matrix = chroma_features(X, sampling_rate,
                                                               num_fft)
         chroma_feature_matrix = chroma_feature_matrix[:, 0]
-        if count_fr == 1:
-            chromogram = chroma_feature_matrix.T
-        else:
-            chromogram = np.vstack((chromogram, chroma_feature_matrix.T))
+        chromogram[count_fr-1, :] = chroma_feature_matrix.T
     freq_axis = chroma_names
     time_axis = [(t * step) / sampling_rate
                  for t in range(chromogram.shape[0])]
@@ -371,17 +369,19 @@ def chromagram(signal, sampling_rate, window, step, plot=False):
     return chromogram, time_axis, freq_axis
 
 
-def spectrogram(signal, sampling_rate, window, step, plot=False):
+def spectrogram(signal, sampling_rate, window, step, plot=False,
+                show_progress=False):
     """
     Short-term FFT mag for spectogram estimation:
     Returns:
-        a np array (num_fft x numOfShortTermWindows)
+        a np array (numOfShortTermWindows x num_fft)
     ARGUMENTS:
-        signal:      the input signal samples
-        sampling_rate:          the sampling freq (in Hz)
+        signal:         the input signal samples
+        sampling_rate:  the sampling freq (in Hz)
         window:         the short-term window size (in samples)
-        step:        the short-term window step (in samples)
-        plot:        flag, 1 if results are to be ploted
+        step:           the short-term window step (in samples)
+        plot:           flag, 1 if results are to be ploted
+        show_progress flag for showing progress using tqdm
     RETURNS:
     """
     window = int(window)
@@ -393,23 +393,18 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
     signal = (signal - dc_offset) / (maximum - dc_offset)
 
     num_samples = len(signal)  # total number of signals
-    cur_p = 0
     count_fr = 0
     num_fft = int(window / 2)
-    specgram = np.array([], dtype=np.float64)
-
-    while cur_p + window - 1 < num_samples:
+    specgram = np.zeros((int((num_samples-step-window) / step) + 1, num_fft),
+                        dtype=np.float64)
+    for cur_p in tqdm(range(window, num_samples - step, step),
+                      disable=not show_progress):
         count_fr += 1
         x = signal[cur_p:cur_p + window]
-        cur_p = cur_p + step
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
-
-        if count_fr == 1:
-            specgram = X ** 2
-        else:
-            specgram = np.vstack((specgram, X))
+        specgram[count_fr-1, :] = X
 
     freq_axis = [float((f + 1) * sampling_rate) / (2 * num_fft)
                  for f in range(specgram.shape[1])]
@@ -423,7 +418,8 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
         frequency_ticks = range(0, int(num_fft) + fstep, fstep)
         frequency_tick_labels = \
             [str(sampling_rate / 2 -
-                 int((f * sampling_rate) / (2 * num_fft))) for f in frequency_ticks]
+                 int((f * sampling_rate) / (2 * num_fft)))
+             for f in frequency_ticks]
         ax.set_yticks(frequency_ticks)
         ax.set_yticklabels(frequency_tick_labels)
         t_step = int(count_fr / 3)
@@ -437,7 +433,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False):
         imgplot.set_cmap('jet')
         plt.colorbar()
         plt.show()
-
+    print(specgram.shape)
     return specgram, time_axis, freq_axis
 
 

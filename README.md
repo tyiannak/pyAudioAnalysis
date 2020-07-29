@@ -4,12 +4,12 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
 
 ## News
- * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
- * Check the tutorial for the course ["Multimodal Information Processing & Analysis" of the MSc in Data Science in NCSR Demokritos](https://github.com/tyiannak/multimodalAnalysis)
- * Check [pyVisualizeMp3Tags](https://github.com/tyiannak/pyVisualizeMp3Tags) a Python script to visualize mp3 tags and lyrics
+ * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 November 2020
+ * [2020-07-20] Related article: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
+ * [2020-06-05] Read this for an intro to audio data: [Basic Audio Handling](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). 
+ * [2019-11-19] Major lib refactoring. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
-  * pyAudioAnalysis [2018-08-12] now compatible with Python 3
-
+ * [2018-08-12] pyAudioAnalysis now ported to Python 3
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
@@ -24,19 +24,9 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Apply dimensionality reduction to *visualize* audio data and content similarities
 
 ## Installation
- * Clone the source of this library:
- ```
-git clone https://github.com/tyiannak/pyAudioAnalysis.git
-```
- * Install dependencies:
- ```
-pip install -r ./requirements.txt
-```
- * Install using pip:
- ```
-pip install -e .
-```
-(also works with pip3 now)
+ * Clone the source of this library: `git clone https://github.com/tyiannak/pyAudioAnalysis.git`
+ * Install dependencies: `pip install -r ./requirements.txt `
+ * Install using pip: `pip install -e .`
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
@@ -45,8 +35,8 @@ pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. 
 
 ```
 from pyAudioAnalysis import audioTrainTest as aT
-aT.featureAndTrain(["classifierData/music","classifierData/speech"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmSMtemp", False)
-aT.fileClassification("data/doremi.wav", "svmSMtemp","svm")
+aT.extract_features_and_train(["classifierData/music","classifierData/speech"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmSMtemp", False)
+aT.file_classification("data/doremi.wav", "svmSMtemp","svm")
 Result:
 (0.0, array([ 0.90156761,  0.09843239]), ['music', 'speech'])
 ```
