@@ -1029,7 +1029,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
         ax1.set_yticklabels(class_names)
         ax1.plot(np.array(range(len(cls))) * mid_step + mid_step / 2.0, cls)
 
-    if os.path.isfile(gt_file):
+    if '.wav' in filename and os.path.isfile(gt_file):
         if plot_res:
             ax1.plot(np.array(range(len(flags_gt))) *
                      mid_step + mid_step / 2.0, flags_gt, 'r')
