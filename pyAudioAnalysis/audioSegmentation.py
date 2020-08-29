@@ -1010,12 +1010,13 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     class_names = ["speaker{0:d}".format(c) for c in range(num_speakers)]
 
     # load ground-truth if available
-    gt_file = filename.replace('.wav', '.segments')
-    # if groundtruth exists
-    if os.path.isfile(gt_file):
-        seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
-        flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end,
-                                                      seg_labs, mid_step)
+    if '.wav' in filename:
+        gt_file = filename.replace('.wav', '.segments')
+        # if groundtruth exists
+        if os.path.isfile(gt_file):
+            seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+            flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end,
+                                                          seg_labs, mid_step)
 
     if plot_res:
         fig = plt.figure()    
