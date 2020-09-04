@@ -7,3 +7,5 @@ eyeD3==0.8.12
 pydub==0.23.1
 scikit_learn==0.21.3
 tqdm==4.44.1
+plotly==4.1.1
+
