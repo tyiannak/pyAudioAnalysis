@@ -1,14 +1,16 @@
 
 # <img src="icon.png" align="left" height="130"/> A Python library for audio feature extraction, classification, segmentation and applications
 
-*This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki*
+*This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki. For a more generic intro to audio data handling read [this article](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y)*
 
 ## News
- * [2020-06-05] Published medium article [Basic Audio Handling: How to handle and process audio files in command-line and through basic Python programming](https://medium.com/behavioral-signals-ai/basic-audio-handling-d4cc9c70d64d). Please refer to this as introductory material for handling audio data.
- * [2020-03-20] pip package has been updated [version 0.3.0](https://pypi.org/manage/project/pyAudioAnalysis/release/0.3.0/)
- * pyAudioAnalysis master [2019-11-19] contains major refactoring changes mainly in feature extraction. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
+ * If you like this library and [my articles](https://hackernoon.com/u/tyiannak), please support me at the hackernoon [ML Writer of the Year](https://noonies.tech/award/ml-writer-of-the-year) 
+ * [2020-07-20] Related article: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
+ * [2020-06-05] Read [this article titled "Basic Audio Handling"](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for an intro to audio data handing, on [hackernoon](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y).
+ * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 November 2020
+ * [2019-11-19] Major lib refactoring. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * pyAudioAnalysis [2018-08-12] now ported to Python 3
+ * [2018-08-12] pyAudioAnalysis now ported to Python 3
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
@@ -23,19 +25,9 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Apply dimensionality reduction to *visualize* audio data and content similarities
 
 ## Installation
- * Clone the source of this library:
- ```
-git clone https://github.com/tyiannak/pyAudioAnalysis.git
-```
- * Install dependencies:
- ```
-pip install -r ./requirements.txt
-```
- * Install using pip:
- ```
-pip install -e .
-```
-(also works with pip3 now)
+ * Clone the source of this library: `git clone https://github.com/tyiannak/pyAudioAnalysis.git`
+ * Install dependencies: `pip install -r ./requirements.txt `
+ * Install using pip: `pip install -e .`
 
 ## An audio classification example
 > More examples and detailed tutorials can be found [at the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
