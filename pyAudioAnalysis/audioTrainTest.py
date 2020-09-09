@@ -282,7 +282,7 @@ def train_random_forest_regression(features, labels, n_estimators):
 
 def extract_features_and_train(paths, mid_window, mid_step, short_window,
                                short_step, classifier_type, model_name,
-                               compute_beat=False, train_percentage=0.90):
+                               compute_beat=False, train_percentage=0.90, max_files = 1000):
     """
     This function is used as a wrapper to segment-based audio feature extraction
     and classifier training.
@@ -304,7 +304,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     features, class_names, _ = \
         aF.multiple_directory_feature_extraction(paths, mid_window, mid_step,
                                                  short_window, short_step,
-                                                 compute_beat=compute_beat)
+                                                 compute_beat=compute_beat, max_files=max_files)
 
     if len(features) == 0:
         print("trainSVM_feature ERROR: No data found in any input folder!")
