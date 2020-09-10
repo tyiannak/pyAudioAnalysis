@@ -157,7 +157,8 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
     for files in types:
         wav_file_list.extend(glob.glob(os.path.join(folder_path, files)))
 
-    wav_file_list = np.random.shuffle(sorted(wav_file_list))[0:max_files] 
+    wav_file_list = sorted(wav_file_list)[0:max_files] 
+    np.random.shuffle(wav_file_list)
     wav_file_list2, mid_feature_names = [], []
     for i, file_path in enumerate(wav_file_list):
         print("Analyzing file {0:d} of {1:d}: {2:s}".format(i + 1,
