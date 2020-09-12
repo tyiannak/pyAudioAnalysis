@@ -5,22 +5,20 @@
 
 ## News
  * If you like this library and [my articles](https://hackernoon.com/u/tyiannak), please support me at the hackernoon [ML Writer of the Year](https://noonies.tech/award/ml-writer-of-the-year) 
- * [2020-07-20] Related article: [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). 
- * [2020-06-05] Read [this article titled "Basic Audio Handling"](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for an intro to audio data handing, on [hackernoon](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y).
+  * [2020-09-12] Read [this hackernoon article titled "Intro to audio analysis"](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) for an intro to theory and practice of audio feature extraction, classification and segmentation.
  * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 November 2020
- * [2019-11-19] Major lib refactoring. Please report possible issues that have not been fixed, or inconsistencies in the documentation.  
+ * [2019-11-19] Major lib refactoring. Please report any issues or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
  * [2018-08-12] pyAudioAnalysis now ported to Python 3
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
  * Extract audio *features* and representations (e.g. mfccs, spectrogram, chromagram)
- * *Classify* unknown sounds
  * *Train*, parameter tune and *evaluate* classifiers of audio segments
+ * *Classify* unknown sounds
  * *Detect* audio events and exclude silence periods from long recordings
  * Perform *supervised segmentation* (joint segmentation - classification)
- * Perform *unsupervised segmentation* (e.g. speaker diarization)
- * Extract audio *thumbnails*
+ * Perform *unsupervised segmentation* (e.g. speaker diarization) and extract audio *thumbnails*
  * Train and use *audio regression* models (example application: emotion recognition)
  * Apply dimensionality reduction to *visualize* audio data and content similarities
 
@@ -45,7 +43,13 @@ Result:
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
 ## Further reading
-Apart from the current README and [the wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki), a more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). *Please use the following citation when citing pyAudioAnalysis in your research work*:
+
+Apart from this README file, to bettern understand how to use this library one should read the following:
+  * [Audio Handling Basics: Process Audio Files In Command-Line or Python](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y), if you want to learn how to handle audio files from command line, and some basic programming on audio signal processing. Start with that if you don't know anything about audio. 
+  * [Intro to Audio Analysis: Recognizing Sounds Using Machine Learning](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) This goes a bit deeper than the previous article, by providing a complete intro to theory and practice of audio feature extraction, classification and segmentation (includes many Python examples).
+ * [The library's wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
+ * [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). An interesting use-case of using this lib to train a real-time music mood estimator.
+  * A more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). *Please use the following citation when citing pyAudioAnalysis in your research work*:
 ```
 @article{giannakopoulos2015pyaudioanalysis,
   title={pyAudioAnalysis: An Open-Source Python Library for Audio Signal Analysis},
