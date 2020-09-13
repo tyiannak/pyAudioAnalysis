@@ -10,6 +10,14 @@ from tqdm import tqdm
 eps = 0.00000001
 
 
+def dc_normalize(sig_array):
+    """Removes DC and normalizes to -1, 1 range"""
+    sig_array_norm = sig_array.copy()
+    sig_array_norm -= sig_array_norm.mean()
+    sig_array_norm /= abs(sig_array_norm).max() + 1e-10
+    return sig_array_norm
+
+
 def zero_crossing_rate(frame):
     """Computes zero crossing rate of frame"""
     count = len(frame)
@@ -320,9 +328,7 @@ def chromagram(signal, sampling_rate, window, step, plot=False,
     step = int(step)
     signal = np.double(signal)
     signal = signal / (2.0 ** 15)
-    dc_offset = signal.mean()
-    maximum = (np.abs(signal)).max()
-    signal = (signal - dc_offset) / (maximum - dc_offset)
+    signal = dc_normalize(signal)
 
     num_samples = len(signal)  # total number of signals
     count_fr = 0
@@ -388,9 +394,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
     step = int(step)
     signal = np.double(signal)
     signal = signal / (2.0 ** 15)
-    dc_offset = signal.mean()
-    maximum = (np.abs(signal)).max()
-    signal = (signal - dc_offset) / (maximum - dc_offset)
+    signal = dc_normalize(signal)
 
     num_samples = len(signal)  # total number of signals
     count_fr = 0
@@ -441,10 +445,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
 def speed_feature(signal, sampling_rate, window, step):
     signal = np.double(signal)
     signal = signal / (2.0 ** 15)
-    dc_offset = signal.mean()
-    maximum = (np.abs(signal)).max()
-    signal = (signal - dc_offset) / maximum
-    # print (np.abs(signal)).max()
+    signal = dc_normalize(signal)
 
     num_samples = len(signal)  # total number of signals
     cur_p = 0
@@ -554,9 +555,8 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
     # signal normalization
     signal = np.double(signal)
     signal = signal / (2.0 ** 15)
-    dc_offset = signal.mean()
-    signal_max = (np.abs(signal)).max()
-    signal = (signal - dc_offset) / (signal_max + 0.0000000001)
+
+    signal = dc_normalize(signal)
 
     number_of_samples = len(signal)  # total number of samples
     current_position = 0
