@@ -4,7 +4,6 @@ import numpy as np
 import os
 import glob
 import pickle as cPickle
-import signal
 import csv
 import ntpath
 from pyAudioAnalysis import MidTermFeatures as aF
@@ -18,13 +17,6 @@ import plotly
 import plotly.graph_objs as go
 import sklearn.metrics
 
-
-def signal_handler(signal, frame):
-    print('You pressed Ctrl+C! - EXIT')
-    os.system("stty -cbreak echo")
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
 
 shortTermWindow = 0.050
 shortTermStep = 0.050
