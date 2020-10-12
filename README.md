@@ -44,7 +44,7 @@ In addition, command-line support is provided for all functionalities. E.g. the 
 
 ## Further reading
 
-Apart from this README file, to bettern understand how to use this library one should read the following:
+Apart from this README file, to better understand how to use this library one should read the following:
   * [Audio Handling Basics: Process Audio Files In Command-Line or Python](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y), if you want to learn how to handle audio files from command line, and some basic programming on audio signal processing. Start with that if you don't know anything about audio. 
   * [Intro to Audio Analysis: Recognizing Sounds Using Machine Learning](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) This goes a bit deeper than the previous article, by providing a complete intro to theory and practice of audio feature extraction, classification and segmentation (includes many Python examples).
  * [The library's wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
