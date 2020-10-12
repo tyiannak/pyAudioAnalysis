@@ -26,7 +26,7 @@ cp models/* ~/ResearchData/Audio\ Dataset/pyAudioAnalysisData/models
 ``` 
  
 ## Tests:
-For testing that the current version of the library is functionable just run:
+For testing that the current version of the library is functional just run:
 
 ```
 python3 script_tests.py 
