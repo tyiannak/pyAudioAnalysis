@@ -4,7 +4,6 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scikits.talkbox import lpc
 from scipy.fftpack import fft
 from scipy.fftpack.realtransforms import dct
 from scipy.signal import lfilter
@@ -511,9 +510,9 @@ def phormants(x, sampling_rate):
     x1 = x * w
     x1 = lfilter([1], [1., 0.63], x1)
 
-    # Get LPC.
+    # Get LPC. -- lpc() is an undefined name
     ncoeff = 2 + sampling_rate / 1000
-    A, e, k = lpc(x1, ncoeff)
+    A, e, k = lpc(x1, ncoeff)  # noqa: F821
     # A, e, k = lpc(x1, 8)
 
     # Get roots.
