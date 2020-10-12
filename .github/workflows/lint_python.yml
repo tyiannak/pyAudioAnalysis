@@ -28,3 +28,5 @@ jobs:
       - run: isort --profile black . || true
       - run: pip install -r requirements.txt || true
       - run: pytest . || true
+      - run: python3 tests/script_tests.py
+      - run: cd tests ; python3 script_tests.py
