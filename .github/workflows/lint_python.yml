@@ -28,4 +28,5 @@ jobs:
       - run: isort --profile black . || true
       - run: pip install -r requirements.txt
       - run: pytest . || true
+      - run: sudo apt update ; sudo apt install ffmpeg
       - run: cd tests ; python3 script_tests.py
