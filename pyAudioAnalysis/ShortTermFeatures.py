@@ -1,10 +1,13 @@
 from __future__ import print_function
+
 import math
-import numpy as np
-from scipy.fftpack import fft
+
 import matplotlib.pyplot as plt
-from scipy.signal import lfilter
+import numpy as np
+from scikits.talkbox import lpc
+from scipy.fftpack import fft
 from scipy.fftpack.realtransforms import dct
+from scipy.signal import lfilter
 from tqdm import tqdm
 
 eps = 0.00000001
@@ -659,7 +662,7 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
         else:
             # delta features
             if count_fr > 1:
-                delta = feature_vector - feature_vector_prev
+                delta = feature_vector - feature_vector_prev  # noqa: F821
                 feature_vector_2 = np.concatenate((feature_vector, delta))
             else:
                 feature_vector_2 = np.concatenate((feature_vector,

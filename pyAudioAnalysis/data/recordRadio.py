@@ -1,6 +1,12 @@
+from __future__ import print_function
 import sys, os, gi, time
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
+
+try:
+    raw_input
+except NameError:
+    raw_input = input
 
 GObject.threads_init()
 Gst.init(None)
@@ -110,7 +116,7 @@ def recordStation(stationName, outputName, sleepTime = -1, Listen = False):
 	r.listen = Listen
 	r.start()
 
-	print r.bus()
+	print(r.bus())
 	if sleepTime<=0:
 		raw_input('Press [Enter] to stop')
 	else:
