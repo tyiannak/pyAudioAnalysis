@@ -6,6 +6,7 @@ hmmlearn==0.2.2
 eyeD3==0.9.5
 pydub==0.24.0
 scikit_learn==0.23.2
+scikits.talkbox
 tqdm==4.46.0
 plotly==4.1.1
 
