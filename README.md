@@ -32,13 +32,14 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
 
 pyAudioAnalysis provides easy-to-call wrappers to execute audio analysis tasks. Eg, this code first trains an audio segment classifier, given a set of WAV files stored in folders (each folder representing a different class) and then the trained classifier is used to classify an unknown audio WAV file
 
-```
+```python
 from pyAudioAnalysis import audioTrainTest as aT
 aT.extract_features_and_train(["classifierData/music","classifierData/speech"], 1.0, 1.0, aT.shortTermWindow, aT.shortTermStep, "svm", "svmSMtemp", False)
 aT.file_classification("data/doremi.wav", "svmSMtemp","svm")
-Result:
-(0.0, array([ 0.90156761,  0.09843239]), ['music', 'speech'])
 ```
+
+>Result:
+(0.0, array([ 0.90156761,  0.09843239]), ['music', 'speech'])
 
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
 
@@ -50,7 +51,7 @@ Apart from this README file, to bettern understand how to use this library one s
  * [The library's wiki](https://github.com/tyiannak/pyAudioAnalysis/wiki)
  * [How to Use Machine Learning to Color Your Lighting Based on Music Mood](https://hackernoon.com/how-to-use-machine-learning-to-color-your-lighting-based-on-music-mood-bi163u8l). An interesting use-case of using this lib to train a real-time music mood estimator.
   * A more general and theoretic description of the adopted methods (along with several experiments on particular use-cases) is presented [in this publication](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144610). *Please use the following citation when citing pyAudioAnalysis in your research work*:
-```
+```python
 @article{giannakopoulos2015pyaudioanalysis,
   title={pyAudioAnalysis: An Open-Source Python Library for Audio Signal Analysis},
   author={Giannakopoulos, Theodoros},
