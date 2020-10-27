@@ -1,13 +1,14 @@
 from __future__ import print_function
 import math
 import numpy as np
+import sys
 from scipy.fftpack import fft
 import matplotlib.pyplot as plt
 from scipy.signal import lfilter
 from scipy.fftpack.realtransforms import dct
 from tqdm import tqdm
 
-eps = 0.00000001
+eps = sys.float_info.epsilon
 
 
 def dc_normalize(sig_array):
@@ -59,7 +60,12 @@ def spectral_centroid_spread(fft_magnitude, sampling_rate):
           (sampling_rate / (2.0 * len(fft_magnitude)))
 
     Xt = fft_magnitude.copy()
-    Xt = Xt / Xt.max()
+    Xt_max = Xt.max()
+    if Xt_max == 0:
+        Xt = Xt / eps
+    else:
+        Xt = Xt / Xt_max
+
     NUM = np.sum(ind * Xt)
     DEN = np.sum(Xt) + eps
 
@@ -294,7 +300,12 @@ def chroma_features(signal, sampling_rate, num_fft):
     # for i in range(12):
     #    finalC[i] = np.sum(C[i:C.shape[0]:12])
     final_matrix = np.matrix(np.sum(C2, axis=0)).T
-    final_matrix /= spec.sum()
+
+    spec_sum = spec.sum()
+    if spec_sum == 0:
+        final_matrix /= eps
+    else:
+        final_matrix /= spec_sum
 
     #    ax = plt.gca()
     #    plt.hold(False)
