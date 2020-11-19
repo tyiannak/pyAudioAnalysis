@@ -326,16 +326,18 @@ def mid_feature_extraction_to_file(file_path, mid_window, mid_step,
     a) read the content of a WAV file
     b) perform mid-term feature extraction on that signal
     c) write the mid-term feature sequences to a np file
+    d) optionally write contents to csv file as well
+    e) optionally write short-term features in csv and np file
     """
     sampling_rate, signal = audioBasicIO.read_audio_file(file_path)
     signal = audioBasicIO.stereo_to_mono(signal)
+    mid_features, short_features, _ = \
+        mid_feature_extraction(signal, sampling_rate,
+                               round(sampling_rate * mid_window),
+                               round(sampling_rate * mid_step),
+                               round(sampling_rate * short_window),
+                               round(sampling_rate * short_step))
     if store_short_features:
-        mid_features, short_features, _ = \
-            mid_feature_extraction(signal, sampling_rate,
-                                   round(sampling_rate * mid_window),
-                                   round(sampling_rate * mid_step),
-                                   round(sampling_rate * short_window),
-                                   (sampling_rate * short_step))
         # save st features to np file
         np.save(output_file + "_st", short_features)
         if plot:
@@ -345,21 +347,15 @@ def mid_feature_extraction_to_file(file_path, mid_window, mid_step,
             np.savetxt(output_file + "_st.csv", short_features.T, delimiter=",")
             if plot:
                 print("Short-term CSV file: " + output_file + "_st.csv saved")
-    else:
-        mid_features, _, _ = \
-            mid_feature_extraction(signal, sampling_rate,
-                                   round(sampling_rate * mid_window),
-                                   round(sampling_rate * mid_step),
-                                   round(sampling_rate * short_window),
-                                   round(sampling_rate * short_step))
-        # save mt features to np file
-        np.save(output_file, mid_features)
+
+    # save mt features to np file
+    np.save(output_file + "_mt", mid_features)
+    if plot:
+        print("Mid-term np file: " + output_file + "_mt.npy saved")
+    if store_csv:
+        np.savetxt(output_file + "_mt.csv", mid_features.T, delimiter=",")
         if plot:
-            print("Mid-term np file: " + output_file + ".npy saved")
-        if store_csv:
-            np.savetxt(output_file + ".csv", mid_features.T, delimiter=",")
-            if plot:
-                print("Mid-term CSV file: " + output_file + ".csv saved")
+            print("Mid-term CSV file: " + output_file + "_mt.csv saved")
 
 
 def mid_feature_extraction_file_dir(folder_path, mid_window, mid_step,
