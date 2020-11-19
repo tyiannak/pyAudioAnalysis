@@ -93,7 +93,9 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
 
     n_stats = 2
     n_feats = len(short_features)
-    mid_window_ratio = int(round(mid_window / short_step))
+    #mid_window_ratio = int(round(mid_window / short_step))
+    mid_window_ratio = round((mid_window -
+                              (short_window - short_step)) / short_step)
     mt_step_ratio = int(round(mid_step / short_step))
 
     mid_features, mid_feature_names = [], []
