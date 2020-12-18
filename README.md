@@ -4,7 +4,6 @@
 *This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki. For a more generic intro to audio data handling read [this article](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y)*
 
 ## News
- * If you like this library and [my articles](https://hackernoon.com/u/tyiannak), please support me at the hackernoon [ML Writer of the Year](https://noonies.tech/award/ml-writer-of-the-year) 
   * [2020-09-12] Read [this hackernoon article titled "Intro to audio analysis"](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) for an intro to theory and practice of audio feature extraction, classification and segmentation.
  * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 November 2020
  * [2019-11-19] Major lib refactoring. Please report any issues or inconsistencies in the documentation.  
@@ -69,4 +68,5 @@ For Matlab-related audio analysis material check  [this book](http://www.amazon.
 <img src="https://tyiannak.github.io/files/3.JPG" align="left" height="100"/>
 
 [Theodoros Giannakopoulos](https://tyiannak.github.io),
-Director of Machine Learning at [Behavioral Signals](https://behavioralsignals.com)
+Principal Researcher of Multimodal Machine Learning at the [Multimedia Analysis Group of the Computational Intelligence Lab (MagCIL)](https://labs-repos.iit.demokritos.gr/MagCIL/index.html) of the Institute of Informatics and Telecommunications, of the National Center for Scientific Research "Demokritos"
+
