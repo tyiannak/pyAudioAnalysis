@@ -8,7 +8,7 @@ import ntpath
 import shutil
 import numpy as np
 from pydub import AudioSegment
-
+from scipy.io import wavfile
 
 def convert_dir_mp3_to_wav(audio_folder, sampling_rate, num_channels,
                            use_tags=False):
@@ -95,7 +95,9 @@ def read_audio_file(input_file):
         extension = os.path.splitext(input_file)[1].lower()
         if extension in ['.aif', '.aiff']:
             sampling_rate, signal = read_aif(input_file)
-        elif extension in [".mp3", ".wav", ".au", ".ogg"]:
+        elif extension in ['.wav']:
+            sampling_rate, signal = wavfile.read(input_file) # from scipy.io
+        elif extension in [".mp3", ".au", ".ogg"]:
             sampling_rate, signal = read_audio_generic(input_file)
         else:
             print("Error: unknown file type {extension}")
@@ -128,7 +130,7 @@ def read_aif(path):
 def read_audio_generic(input_file):
     """
     Function to read audio files with the following extensions
-    [".mp3", ".wav", ".au", ".ogg"]
+    [".mp3", ".au", ".ogg"], containing PCM (int16 or int32) data 
     """
     sampling_rate = -1
     signal = np.array([])
