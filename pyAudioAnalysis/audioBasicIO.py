@@ -2,7 +2,6 @@ from __future__ import print_function
 import os
 import glob
 import aifc
-import numpy
 import eyed3
 import ntpath
 import shutil
@@ -120,7 +119,7 @@ def read_aif(path):
         with aifc.open(path, 'r') as s:
             nframes = s.getnframes()
             strsig = s.readframes(nframes)
-            signal = numpy.fromstring(strsig, numpy.short).byteswap()
+            signal = np.fromstring(strsig, np.short).byteswap()
             sampling_rate = s.getframerate()
     except:
         print("Error: read aif file. (DECODING FAILED)")
@@ -138,16 +137,16 @@ def read_audio_generic(input_file):
         audiofile = AudioSegment.from_file(input_file)
         data = np.array([])
         if audiofile.sample_width == 2:
-            data = numpy.fromstring(audiofile._data, numpy.int16)
+            data = np.fromstring(audiofile._data, np.int16)
         elif audiofile.sample_width == 4:
-            data = numpy.fromstring(audiofile._data, numpy.int32)
+            data = np.fromstring(audiofile._data, np.int32)
 
         if data.size > 0:
             sampling_rate = audiofile.frame_rate
             temp_signal = []
             for chn in list(range(audiofile.channels)):
                 temp_signal.append(data[chn::audiofile.channels])
-            signal = numpy.array(temp_signal).T
+            signal = np.array(temp_signal).T
     except:
         print("Error: file not found or other I/O error. (DECODING FAILED)")
     return sampling_rate, signal
