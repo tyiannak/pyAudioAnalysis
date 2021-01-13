@@ -2,13 +2,12 @@ from __future__ import print_function
 import os
 import glob
 import aifc
-import numpy
 import eyed3
 import ntpath
 import shutil
 import numpy as np
 from pydub import AudioSegment
-
+from scipy.io import wavfile
 
 def convert_dir_mp3_to_wav(audio_folder, sampling_rate, num_channels,
                            use_tags=False):
@@ -95,7 +94,9 @@ def read_audio_file(input_file):
         extension = os.path.splitext(input_file)[1].lower()
         if extension in ['.aif', '.aiff']:
             sampling_rate, signal = read_aif(input_file)
-        elif extension in [".mp3", ".wav", ".au", ".ogg"]:
+        elif extension in ['.wav']:
+            sampling_rate, signal = wavfile.read(input_file) # from scipy.io
+        elif extension in [".mp3", ".au", ".ogg"]:
             sampling_rate, signal = read_audio_generic(input_file)
         else:
             print("Error: unknown file type {extension}")
@@ -118,7 +119,7 @@ def read_aif(path):
         with aifc.open(path, 'r') as s:
             nframes = s.getnframes()
             strsig = s.readframes(nframes)
-            signal = numpy.fromstring(strsig, numpy.short).byteswap()
+            signal = np.fromstring(strsig, np.short).byteswap()
             sampling_rate = s.getframerate()
     except:
         print("Error: read aif file. (DECODING FAILED)")
@@ -128,7 +129,7 @@ def read_aif(path):
 def read_audio_generic(input_file):
     """
     Function to read audio files with the following extensions
-    [".mp3", ".wav", ".au", ".ogg"]
+    [".mp3", ".au", ".ogg"], containing PCM (int16 or int32) data 
     """
     sampling_rate = -1
     signal = np.array([])
@@ -136,16 +137,16 @@ def read_audio_generic(input_file):
         audiofile = AudioSegment.from_file(input_file)
         data = np.array([])
         if audiofile.sample_width == 2:
-            data = numpy.fromstring(audiofile._data, numpy.int16)
+            data = np.fromstring(audiofile._data, np.int16)
         elif audiofile.sample_width == 4:
-            data = numpy.fromstring(audiofile._data, numpy.int32)
+            data = np.fromstring(audiofile._data, np.int32)
 
         if data.size > 0:
             sampling_rate = audiofile.frame_rate
             temp_signal = []
             for chn in list(range(audiofile.channels)):
                 temp_signal.append(data[chn::audiofile.channels])
-            signal = numpy.array(temp_signal).T
+            signal = np.array(temp_signal).T
     except:
         print("Error: file not found or other I/O error. (DECODING FAILED)")
     return sampling_rate, signal
