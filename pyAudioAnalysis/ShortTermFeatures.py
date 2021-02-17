@@ -419,6 +419,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
+
         if X.shape[0] != specgram.shape[1]:
             align = np.zeros(specgram.shape[1]-X.shape[0], dtype=np.float64)
             X = np.append(X, align)
@@ -431,8 +432,14 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
                  for t in range(specgram.shape[0])]
 
     if plot:
-        fig, ax = plt.subplots()
-        imgplot = plt.imshow(specgram.transpose()[::-1, :], aspect="auto")
+        spT         = specgram.transpose()[::-1, :]
+        amin        = 1e-10
+        magnitude   = spT**2
+        ref_value   = np.max(magnitude)
+        log_specgram = 10.0 * np.log10(np.maximum(amin, magnitude))
+        log_specgram -= 10.0 * np.log10(np.maximum(amin, ref_value))
+        fig, ax     = plt.subplots(nrows=1,ncols=1, figsize=(10,4))
+        imgplot     = plt.imshow(log_specgram, aspect="auto") 
         fstep = int(num_fft / 5.0)
         frequency_ticks = range(0, int(num_fft) + fstep, fstep)
         frequency_tick_labels = \
