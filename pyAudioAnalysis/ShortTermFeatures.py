@@ -419,6 +419,10 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
         X = abs(fft(x))
         X = X[0:num_fft]
         X = X / len(X)
+        if X.shape[0] != specgram.shape[1]:
+            align = np.zeros(specgram.shape[1]-X.shape[0], dtype=np.float64)
+            X = np.append(X, align)
+
         specgram[count_fr-1, :] = X
 
     freq_axis = [float((f + 1) * sampling_rate) / (2 * num_fft)
@@ -428,7 +432,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
 
     if plot:
         fig, ax = plt.subplots()
-        imgplot = plt.imshow(specgram.transpose()[::-1, :])
+        imgplot = plt.imshow(specgram.transpose()[::-1, :], aspect="auto")
         fstep = int(num_fft / 5.0)
         frequency_ticks = range(0, int(num_fft) + fstep, fstep)
         frequency_tick_labels = \
