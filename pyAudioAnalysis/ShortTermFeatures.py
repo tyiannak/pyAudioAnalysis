@@ -459,7 +459,6 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
         imgplot.set_cmap('jet')
         plt.colorbar()
         plt.show()
-    print(specgram.shape)
     return specgram, time_axis, freq_axis
 
 
