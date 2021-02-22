@@ -693,3 +693,98 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
 
     features = np.concatenate(features, 1)
     return features, feature_names
+
+
+def feature_extraction_lengthwise(signal, sampling_rate, window, step):
+    """
+    This function implements the shor-term windowing process lengthwise the audio signal.
+    For each short-term window is add to a set of features is extracted.
+    This results to a sequence of feature vectors, stored in a np matrix.
+
+    ARGUMENTS
+        signal:         the input signal samples
+        sampling_rate:  the sampling freq (in Hz)
+        window:         the short-term window size (in samples)
+        step:           the short-term window step (in samples)
+
+    RETURNS
+        features (numpy.ndarray):        contains features
+                                         (n_feats x numOfShortTermWindows)
+        feature_names (list of strings): contains feature names
+    """
+
+    window = int(window)
+    step = int(step)
+    if (len(signal)<1) or (len(signal) < window) or (len(signal) < step):
+        raise ValueError(f'Error in dimension signal len={len(signal)} window={window} step={step}')
+
+    # signal normalization
+    signal = np.double(signal)
+    signal = signal / (2.0 ** 15)
+
+    signal = dc_normalize(signal)
+
+    number_of_samples = len(signal)  # total number of samples
+    current_position = 0
+    count_fr = 0
+    num_fft = int(window / 2)
+
+
+    # define list of feature names
+    feature_names = ["zcr", "energy", "energy_entropy"]
+    feature_names += ["spectral_centroid", "spectral_spread"]
+    feature_names.append("spectral_entropy")
+    feature_names.append("spectral_flux")
+    feature_names.append("spectral_rolloff")
+
+
+    feature_vector = np.zeros((len(feature_names), number_of_samples))
+    # for each short-term window to end of signal
+    while current_position + window - 1 < number_of_samples:
+        count_fr += 1
+        # get current window
+        x = signal[current_position:current_position + window]
+
+        # update window position
+        current_position = current_position + step
+
+        # get fft magnitude
+        fft_magnitude = abs(fft(x))
+
+        # normalize fft
+        fft_magnitude = fft_magnitude[0:num_fft]
+        fft_magnitude = fft_magnitude / len(fft_magnitude)
+
+        # keep previous fft mag (used in spectral flux)
+        if count_fr == 1:
+            fft_magnitude_previous = fft_magnitude.copy()
+
+        # zero crossing rate
+        feature_vector[0,current_position:current_position + window] = zero_crossing_rate(x)
+
+        # short-term energy
+        feature_vector[1,current_position:current_position + window] = energy(x)
+
+        # short-term entropy of energy
+        feature_vector[2,current_position:current_position + window] = energy_entropy(x)
+
+        # sp centroid/spread
+        [feature_vector[3,current_position:current_position + window], 
+         feature_vector[4,current_position:current_position + window]] = \
+            spectral_centroid_spread(fft_magnitude,
+                                     sampling_rate)
+
+        # spectral entropy
+        feature_vector[5,current_position:current_position + window] = \
+            spectral_entropy(fft_magnitude)
+
+        # spectral flux
+        feature_vector[6,current_position:current_position + window] = \
+            spectral_flux(fft_magnitude,
+                          fft_magnitude_previous)
+
+        # spectral rolloff
+        feature_vector[7,current_position:current_position + window] = \
+            spectral_rolloff(fft_magnitude, 0.90)
+
+    return feature_vector, feature_names
