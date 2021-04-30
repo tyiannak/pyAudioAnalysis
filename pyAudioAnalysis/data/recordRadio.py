@@ -112,7 +112,7 @@ def recordStation(stationName, outputName, sleepTime = -1, Listen = False):
 
 	print(r.bus())
 	if sleepTime<=0:
-		raw_input('Press [Enter] to stop')
+		input('Press [Enter] to stop')
 	else:
 		time.sleep(sleepTime)
 	r.stop()
