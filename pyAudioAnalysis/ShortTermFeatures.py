@@ -6,6 +6,7 @@ from scipy.fftpack import fft
 import matplotlib.pyplot as plt
 from scipy.signal import lfilter
 from scipy.fftpack.realtransforms import dct
+from scikits.talkbox import lpc
 from tqdm import tqdm
 
 eps = sys.float_info.epsilon
@@ -604,6 +605,7 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
         feature_names = feature_names_2
 
     features = []
+    feature_vector_prev = None
     # for each short-term window to end of signal
     while current_position + window - 1 < number_of_samples:
         count_fr += 1
@@ -669,7 +671,7 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
             features.append(feature_vector)
         else:
             # delta features
-            if count_fr > 1:
+            if count_fr > 1 and feature_vector_prev:
                 delta = feature_vector - feature_vector_prev
                 feature_vector_2 = np.concatenate((feature_vector, delta))
             else:
