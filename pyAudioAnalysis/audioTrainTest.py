@@ -14,6 +14,7 @@ import sklearn.svm
 import sklearn.decomposition
 import sklearn.ensemble
 import plotly
+import plotly.subplots
 import plotly.graph_objs as go
 import sklearn.metrics
 
@@ -967,19 +968,18 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
 
             prob_positive = p[probs_names.index(positive_class)]
             probs_positive.append(prob_positive)
-
     pre, rec, thr_prre = sklearn.metrics.precision_recall_curve(y_true_binary,
                                                                 probs_positive)
     fpr, tpr, thr_roc = sklearn.metrics.roc_curve(y_true_binary, probs_positive)
     cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
     rec_c,  pre_c, f1_c = compute_class_rec_pre_f1(cm)
-    f1 = (sklearn.metrics.f1_score(y_true, y_pred, average='micro'))
+    f1 = (sklearn.metrics.f1_score(y_true, y_pred, average='macro'))
     acc = (sklearn.metrics.accuracy_score(y_true, y_pred))
     print(cm)
     print(rec_c, pre_c, f1_c, f1, acc)
     if plot:
         titles = ["Confusion matrix, acc = {0:.1f}%, "
-                  " F1 (micro): {1:.1f}%".format(100 * acc, 100 * f1),
+                  " F1 (macro): {1:.1f}%".format(100 * acc, 100 * f1),
                   "Class-wise Performance measures",
                   "Pre vs Rec for " + positive_class,
                   "ROC for " + positive_class]
