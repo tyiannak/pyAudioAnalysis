@@ -556,7 +556,7 @@ def feature_extraction(signal, sampling_rate, window, step, deltas=True):
     RETURNS
         features (numpy.ndarray):        contains features
                                          (n_feats x numOfShortTermWindows)
-        feature_names (numpy.ndarray):   contains feature names
+        feature_names (python list):     contains feature names
                                          (n_feats x numOfShortTermWindows)
     """
 
