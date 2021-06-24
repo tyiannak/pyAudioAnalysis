@@ -592,7 +592,7 @@ def mid_term_file_classification(input_file, model_name, model_type,
     #     load_ground_truth(gt_file, labels, class_names, mid_step, plot_results)
     #
     # return labels, class_names, accuracy, cm
-    return segs, classes
+    return segs, classes, class_names
 
 
 def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
