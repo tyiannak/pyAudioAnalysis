@@ -8,7 +8,6 @@
  * [2020-09-12] Read [this hackernoon article titled "Intro to audio analysis"](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) for an intro to theory and practice of audio feature extraction, classification and segmentation.
  * [2019-11-19] Major lib refactoring. Please report any issues or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
- * [2018-08-12] pyAudioAnalysis now ported to Python 3
 
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
