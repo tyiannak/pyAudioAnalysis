@@ -1,10 +1,10 @@
 
 # <img src="icon.png" align="left" height="130"/> A Python library for audio feature extraction, classification, segmentation and applications
 
-*This doc contains general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki. For a more generic intro to audio data handling read [this article](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y)*
+*This is general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki and [here](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for a more generic intro to audio data handling*
 
 ## News
- * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 30 June 2021
+ * Special issue in [Pattern Recognition in Multimedia Signal Analysis](https://www.mdpi.com/journal/applsci/special_issues/Multimedia_Signal), Deadline 20 January 2022
  * [2020-09-12] Read [this hackernoon article titled "Intro to audio analysis"](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl) for an intro to theory and practice of audio feature extraction, classification and segmentation.
  * [2019-11-19] Major lib refactoring. Please report any issues or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a python script for realtime recording and analysis of audio data
