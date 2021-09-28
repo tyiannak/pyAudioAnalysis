@@ -202,6 +202,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
             if compute_beat:
                 mid_features = np.append(mid_features, beat)
                 mid_features = np.append(mid_features, beat_conf)
+                mid_feature_names += ["bpm","ratio"]
             if len(mid_term_features) == 0:
                 # append feature vector
                 mid_term_features = mid_features
