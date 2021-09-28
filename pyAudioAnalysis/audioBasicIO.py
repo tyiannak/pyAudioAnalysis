@@ -44,11 +44,12 @@ def convert_dir_mp3_to_wav(audio_folder, sampling_rate, num_channels,
                 filename = f.replace(".mp3", ".wav")
         else:
             filename = f.replace(".mp3", ".wav")
-        command = "avconv -i \"" + f + "\" -ar " + str(sampling_rate) + \
-                  " -ac " + str(num_channels) + "" + filename + "\""
+        command = "ffmpeg -i \"" + f + "\" -ar " + str(sampling_rate) + \
+                  " -ac " + str(num_channels) + " \"" + filename + "\""
         print(command)
-        os.system(command.decode('unicode_escape').encode('ascii', 'ignore')
-                  .replace("\0", ""))
+        os.system(
+            command.encode('ascii', 'ignore').decode('unicode_escape').replace(
+                "\0", ""))
 
 
 def convert_dir_fs_wav_to_wav(audio_folder, sampling_rate, num_channels):
