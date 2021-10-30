@@ -618,6 +618,7 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
         # for each param value
         cm = np.zeros((n_classes, n_classes))
         for e in range(n_exp):
+            y_pred, y_real = [], []
             # for each cross-validation iteration:
             print("Param = {0:.5f} - classifier Evaluation "
                   "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
@@ -639,15 +640,16 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
                 classifier = train_extra_trees(f_train, C)
 
             cmt = np.zeros((n_classes, n_classes))
+
             for c1 in range(n_classes):
                 n_test_samples = len(f_test[c1])
                 res = np.zeros((n_test_samples, 1))
                 for ss in range(n_test_samples):
-                    res[ss], _ = classifier_wrapper(classifier,
-                                                    classifier_name,
-                                                    f_test[c1][ss])
+                    y_pred.append(classifier_wrapper(classifier,
+                                                     classifier_name, 
+                                                     f_test[c1][ss])[0])
                 for c2 in range(n_classes):
-                    cmt[c1][c2] = float(len(np.nonzero(res == c2)[0]))
+                    cmt[c1][c2] = float(len(np.nonzero(y_pred == c2)[0]))
             cm = cm + cmt
         cm = cm + 0.0000000010
         rec = np.zeros((cm.shape[0], ))
