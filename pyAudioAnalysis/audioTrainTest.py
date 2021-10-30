@@ -652,14 +652,13 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
             cmt = sklearn.metrics.confusion_matrix(y_real, y_pred)
             cm = cm + cmt
         cm = cm + 0.0000000010
-        rec = np.zeros((cm.shape[0], ))
-        pre = np.zeros((cm.shape[0], ))
 
-        for ci in range(cm.shape[0]):
-            rec[ci] = cm[ci, ci] / np.sum(cm[ci, :])
-            pre[ci] = cm[ci, ci] / np.sum(cm[:, ci])
+        rec = np.array([cm[ci, ci] / np.sum(cm[ci, :]) for ci in range(cm.shape[0])]) 
+        pre = np.array([cm[ci, ci] / np.sum(cm[:, ci]) for ci in range(cm.shape[0])])
+
         pre_class_all.append(pre)
         rec_classes_all.append(rec)
+
         f1 = 2 * rec * pre / (rec + pre)
         f1_classes_all.append(f1)
         ac_all.append(np.sum(np.diagonal(cm)) / np.sum(cm))
