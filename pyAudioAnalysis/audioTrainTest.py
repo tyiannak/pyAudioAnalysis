@@ -648,8 +648,8 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
                     y_pred.append(classifier_wrapper(classifier,
                                                      classifier_name, 
                                                      f_test[c1][ss])[0])
-                for c2 in range(n_classes):
-                    cmt[c1][c2] = float(len(np.nonzero(y_pred == c2)[0]))
+                    y_real.append(c1)
+            cmt = sklearn.metrics.confusion_matrix(y_real, y_pred)
             cm = cm + cmt
         cm = cm + 0.0000000010
         rec = np.zeros((cm.shape[0], ))
