@@ -328,25 +328,26 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
 
     print("Selected params: {0:.5f}".format(best_param))
 
-    features_norm, mean, std = normalize_features(features)
-    mean = mean.tolist()
-    std = std.tolist()
+    features, labels = features_to_matrix(features)
+    scaler = StandardScaler()
+    scaler.fit(features)
+    mean = scaler.mean_.tolist()
+    std = scaler.var_.tolist()
 
     # STEP C: Save the classifier to file
     if classifier_type == "svm":
-        classifier = train_svm(features_norm, best_param)
+        classifier = train_svm(features, labels, best_param)
     elif classifier_type == "svm_rbf":
-        classifier = train_svm(features_norm, best_param, kernel='rbf')
+        classifier = train_svm(features, labels, best_param, kernel='rbf')
     elif classifier_type == "randomforest":
-        classifier = train_random_forest(features_norm, best_param)
+        classifier = train_random_forest(features, labels, best_param)
     elif classifier_type == "gradientboosting":
-        classifier = train_gradient_boosting(features_norm, best_param)
+        classifier = train_gradient_boosting(features, labels, best_param)
     elif classifier_type == "extratrees":
-        classifier = train_extra_trees(features_norm, best_param)
+        classifier = train_extra_trees(features, labels, best_param)
 
     if classifier_type == "knn":
-        feature_matrix, labels = features_to_matrix(features_norm)
-        feature_matrix = feature_matrix.tolist()
+        feature_matrix = features.tolist()
         labels = labels.tolist()
         save_path = model_name
         save_parameters(save_path, feature_matrix, labels, mean, std,
@@ -600,8 +601,7 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
             scaler = StandardScaler()
             scaler.fit(X_train)
             X_train = scaler.transform(X_train)
-#            f_train, f_test = random_split_features(features_norm,
-#                                                    train_percentage)
+
             # train multi-class svms:
             if classifier_name == "svm":
                 classifier = train_svm(X_train, y_train, C)
