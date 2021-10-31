@@ -17,6 +17,8 @@ import plotly
 import plotly.subplots
 import plotly.graph_objs as go
 import sklearn.metrics
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 
 shortTermWindow = 0.050
@@ -136,25 +138,22 @@ def random_split_features(features, percentage):
     return f_train, f_test
 
 
-def train_knn(features, neighbors):
+def train_knn(features, labels, neighbors):
     """
     Train a kNN  classifier.
     ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements 
-                            contain np matrices of features.
-                            each matrix features[i] of class i is 
-                            [n_samples x numOfDimensions]
+        - features:         a feature matrix [n_samples x numOfDimensions]
+        - labels:           a label matrix: [n_samples x 1]
         - neighbors:                parameter K
     RETURNS:
         - kNN:              the trained kNN variable
 
     """
-    feature_matrix, labels = features_to_matrix(features)
-    knn = Knn(feature_matrix, labels, neighbors)
+    knn = Knn(features, labels, neighbors)
     return knn
 
 
-def train_svm(features, c_param, kernel='linear'):
+def train_svm(features, labels, c_param, kernel='linear'):
     """
     Train a multi-class probabilitistic SVM classifier.
     Note:     This function is simply a wrapper to the sklearn functionality 
@@ -163,10 +162,9 @@ def train_svm(features, c_param, kernel='linear'):
               feature extraction and the SVM training
               (and parameter tuning) processes.
     ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements 
-                            containt np matrices of features  each matrix 
-                            features[i] of class i is 
-                            [n_samples x numOfDimensions]
+        - features:         a feature matrix [n_samples x numOfDimensions]
+        - labels:           a label matrix: [n_samples x 1]
+        - n_estimators:     number of trees in the forest
         - c_param:           SVM parameter C (cost of constraints violation)
     RETURNS:
         - svm:              the trained SVM variable
@@ -175,16 +173,13 @@ def train_svm(features, c_param, kernel='linear'):
         This function trains a linear-kernel SVM for a given C value.
         For a different kernel, other types of parameters should be provided.
     """
-
-    feature_matrix, labels = features_to_matrix(features)
     svm = sklearn.svm.SVC(C=c_param, kernel=kernel, probability=True,
                           gamma='auto')
-    svm.fit(feature_matrix, labels)
-
+    svm.fit(features, labels)
     return svm
 
 
-def train_random_forest(features, n_estimators):
+def train_random_forest(features, labels, n_estimators):
     """
     Train a multi-class random forest classifier.
     Note:     This function is simply a wrapper to the sklearn functionality
@@ -193,24 +188,21 @@ def train_random_forest(features, n_estimators):
               the feature extraction and the model training (and parameter
               tuning) processes.
     ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements
-                            containt np matrices of features
-                            each matrix features[i] of class i is
-                            [n_samples x numOfDimensions]
+        - features:         a feature matrix [n_samples x numOfDimensions]
+        - labels:           a label matrix: [n_samples x 1]
+        - n_estimators:     number of trees in the forest
         - n_estimators:     number of trees in the forest
     RETURNS:
         - rf:               the trained random forest
 
     """
-
-    feature_matrix, labels = features_to_matrix(features)
     rf = sklearn.ensemble.RandomForestClassifier(n_estimators=n_estimators)
-    rf.fit(feature_matrix, labels)
+    rf.fit(features, labels)
 
     return rf
 
 
-def train_gradient_boosting(features, n_estimators):
+def train_gradient_boosting(features, labels, n_estimators):
     """
     Train a gradient boosting classifier
     Note:     This function is simply a wrapper to the sklearn functionality
@@ -219,22 +211,19 @@ def train_gradient_boosting(features, n_estimators):
               the feature extraction and the model training (and parameter
               tuning) processes.
     ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements containt
-                            np matrices of features. each matrix features[i]
-                            of class i is [n_samples x numOfDimensions]
+        - features:         a feature matrix [n_samples x numOfDimensions]
+        - labels:           a label matrix: [n_samples x 1]
+        - n_estimators:     number of trees in the forest
         - n_estimators:     number of trees in the forest
     RETURNS:
         - rf:              the trained model
     """
-
-    feature_matrix, labels = features_to_matrix(features)
     rf = sklearn.ensemble.GradientBoostingClassifier(n_estimators=n_estimators)
-    rf.fit(feature_matrix, labels)
-
+    rf.fit(features, labels)
     return rf
 
 
-def train_extra_trees(features, n_estimators):
+def train_extra_trees(features, labels, n_estimators):
     """
     Train an extra tree
     Note:     This function is simply a wrapper to the sklearn functionality
@@ -243,19 +232,14 @@ def train_extra_trees(features, n_estimators):
               the feature extraction and the model training (and parameter
               tuning) processes.
     ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements
-                            containt np matrices of features
-                            each matrix features[i] of class i is
-                            [n_samples x numOfDimensions]
+        - features:         a feature matrix [n_samples x numOfDimensions]
+        - labels:           a label matrix: [n_samples x 1]
         - n_estimators:     number of trees in the forest
     RETURNS:
         - et:               the trained model
     """
-
-    feature_matrix, labels = features_to_matrix(features)
     et = sklearn.ensemble.ExtraTreesClassifier(n_estimators=n_estimators)
-    et.fit(feature_matrix,labels)
-
+    et.fit(features, labels)
     return et
 
 
@@ -326,7 +310,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     elif classifier_type == "extratrees":
         classifier_par = np.array([10, 25, 50, 100, 200, 500])
 
-    # get optimal classifeir parameter:
+    # get optimal classifier parameter:
     temp_features = []
     for feat in features:
         temp = []
@@ -586,8 +570,9 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
          selected performance measure
     """
 
-    # feature normalization:
-    features_norm, MEAN, STD = normalize_features(features)
+    # transcode list of feature matrices to X, y (sklearn)
+    X, y = features_to_matrix(features)
+    
     # features_norm = features;
     n_classes = len(features)
     ac_all = []
@@ -598,21 +583,8 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
     cms_all = []
 
     # compute total number of samples:
-    n_samples_total = 0
-    for f in features:
-        n_samples_total += f.shape[0]
-    if n_samples_total > 10000 and n_exp > 2:
-        n_exp = 2
-        print("Number of training experiments changed to 2 due to "
-              "very high number of samples")
-    elif n_samples_total > 2000 and n_exp > 5:
-        n_exp = 5
-        print("Number of training experiments changed to 5 due to "
-              "high number of samples")
-    elif n_samples_total > 1000 and n_exp > 10:
-        n_exp = 10
-        print("Number of training experiments changed to 10 due to "
-              "high number of samples")
+    n_samples_total = X.shape[0]
+    n_exp = 10
 
     for Ci, C in enumerate(params):
         # for each param value
@@ -623,38 +595,41 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
             print("Param = {0:.5f} - classifier Evaluation "
                   "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
             # split features:
-            f_train, f_test = random_split_features(features_norm,
-                                                    train_percentage)
+            X_train, X_test, y_train, y_test = \
+                train_test_split(X, y, test_size=1-train_percentage)
+            scaler = StandardScaler()
+            scaler.fit(X_train)
+            X_train = scaler.transform(X_train)
+#            f_train, f_test = random_split_features(features_norm,
+#                                                    train_percentage)
             # train multi-class svms:
             if classifier_name == "svm":
-                classifier = train_svm(f_train, C)
+                classifier = train_svm(X_train, y_train, C)
             elif classifier_name == "svm_rbf":
-                classifier = train_svm(f_train, C, kernel='rbf')
+                classifier = train_svm(X_train, y_train, C, kernel='rbf')
             elif classifier_name == "knn":
-                classifier = train_knn(f_train, C)
+                classifier = train_knn(X_train, y_train, C)
             elif classifier_name == "randomforest":
-                classifier = train_random_forest(f_train, C)
+                classifier = train_random_forest(X_train, y_train, C)
             elif classifier_name == "gradientboosting":
-                classifier = train_gradient_boosting(f_train, C)
+                classifier = train_gradient_boosting(X_train, y_train, C)
             elif classifier_name == "extratrees":
-                classifier = train_extra_trees(f_train, C)
+                classifier = train_extra_trees(X_train, y_train,C)
 
             cmt = np.zeros((n_classes, n_classes))
-
-            for c1 in range(n_classes):
-                n_test_samples = len(f_test[c1])
-                res = np.zeros((n_test_samples, 1))
-                for ss in range(n_test_samples):
-                    y_pred.append(classifier_wrapper(classifier,
-                                                     classifier_name, 
-                                                     f_test[c1][ss])[0])
-                    y_real.append(c1)
-            cmt = sklearn.metrics.confusion_matrix(y_real, y_pred)
+            X_test = scaler.transform(X_test)
+            for i_test_sample in range(X_test.shape[0]):
+                y_pred.append(classifier_wrapper(classifier,
+                                                 classifier_name, 
+                                                 X_test[i_test_sample, :])[0])
+            cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
             cm = cm + cmt
         cm = cm + 0.0000000010
 
-        rec = np.array([cm[ci, ci] / np.sum(cm[ci, :]) for ci in range(cm.shape[0])]) 
-        pre = np.array([cm[ci, ci] / np.sum(cm[:, ci]) for ci in range(cm.shape[0])])
+        rec = np.array([cm[ci, ci] / np.sum(cm[ci, :]) 
+                        for ci in range(cm.shape[0])]) 
+        pre = np.array([cm[ci, ci] / np.sum(cm[:, ci]) 
+                        for ci in range(cm.shape[0])])
 
         pre_class_all.append(pre)
         rec_classes_all.append(rec)
