@@ -323,8 +323,9 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
         temp_features.append(np.array(temp))
     features = temp_features
 
-    best_param = evaluate_classifier(features, class_names, 100, classifier_type,
-                                     classifier_par, 0, train_percentage)
+    best_param = evaluate_classifier(features, class_names, classifier_type,
+                                     classifier_par, 0, n_exp=-1,
+                                     train_percentage=train_percentage)
 
     print("Selected params: {0:.5f}".format(best_param))
 
@@ -550,15 +551,14 @@ def load_model(model_name, is_regression=False):
                short_window, short_step, compute_beat
 
 
-def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
-                        parameter_mode, train_percentage=0.90):
+def evaluate_classifier(features, class_names, classifier_name, params,
+                        parameter_mode, n_exp=-1, train_percentage=0.90):
     """
     ARGUMENTS:
         features:     a list ([numOfClasses x 1]) whose elements containt
                       np matrices of features. Each matrix features[i] of
                       class i is [n_samples x numOfDimensions]
         class_names:    list of class names (strings)
-        n_exp:        number of cross-validation experiments
         classifier_name: svm or knn or randomforest
         params:        list of classifier parameters (for parameter
                        tuning during cross-validation)
@@ -566,6 +566,11 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
                              classification ACCURACY
                           1: choose parameters that lead to maximum overall
                           f1 MEASURE
+        n_exp:        number of cross-validation experiments 
+                      (use -1 for auto calculation based on the num of samples)
+        train_percentage: percentage of training (vs validation) data
+                          default 0.90
+
     RETURNS:
          bestParam:    the value of the input parameter that optimizes the
          selected performance measure
@@ -585,7 +590,8 @@ def evaluate_classifier(features, class_names, n_exp, classifier_name, params,
 
     # compute total number of samples:
     n_samples_total = X.shape[0]
-    n_exp = 10
+    if n_exp == -1:
+        n_exp = int(10000 / n_samples_total) + 1
 
     for Ci, C in enumerate(params):
         # for each param value
