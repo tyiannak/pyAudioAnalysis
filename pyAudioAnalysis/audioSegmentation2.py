@@ -532,6 +532,7 @@ def mid_term_file_classification(input_file, model_name, model_type,
                             class ID of the i-th segment
     """
     labels = []
+    probabilities = []
     accuracy = 0.0
     class_names = []
     cm = np.array([])
@@ -579,20 +580,22 @@ def mid_term_file_classification(input_file, model_name, model_type,
         label_predicted, posterior = \
             at.classifier_wrapper(classifier, model_type, feature_vector)
         labels.append(label_predicted)
+        probabilities.append(posterior)
 
         # update probability matrix
         posterior_matrix.append(np.max(posterior))
     labels = np.array(labels)
+    probabilities = np.array(probabilities)
 
     # convert fix-sized flags to segments and classes
     segs, classes = labels_to_segments(labels, mid_step)
-    segs[-1] = len(signal) / float(sampling_rate)
+    #segs[-1] = len(signal) / float(sampling_rate)
     # Load grount-truth:
     # labels_gt, class_names_gt, accuracy, cm = \
     #     load_ground_truth(gt_file, labels, class_names, mid_step, plot_results)
     #
     # return labels, class_names, accuracy, cm
-    return segs, classes, class_names
+    return segs, classes, probabilities, class_names
 
 
 def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
