@@ -331,9 +331,9 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
 
     features, labels = features_to_matrix(features)
     scaler = StandardScaler()
-    scaler.fit(features)
+    features = scaler.fit_transform(features)
     mean = scaler.mean_.tolist()
-    std = scaler.var_.tolist()
+    std = scaler.scale_.tolist()
 
     # STEP C: Save the classifier to file
     if classifier_type == "svm":
@@ -458,10 +458,11 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
+#        features_norm, mean, std = normalize_features([f_final[iRegression]])
         scaler = StandardScaler()
-        features_norm = scaler.fit_transform(features)
+        features_norm = scaler.fit_transform(f_final[iRegression])
         mean = scaler.mean_.tolist()
-        std = scaler.var_.tolist()
+        std = scaler.scale_.tolist()
 
         # STEP C: Save the model to file
         if model_type == "svm":
@@ -1043,7 +1044,6 @@ def file_classification(input_file, model_name, model_type):
         mid_features = np.append(mid_features, beat)
         mid_features = np.append(mid_features, beat_conf)
     feature_vector = (mid_features - mean) / std    # normalization
-
     # classification
     class_id, probability = classifier_wrapper(classifier, model_type,
                                                feature_vector)
