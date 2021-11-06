@@ -329,13 +329,17 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
 
     print("Selected params: {0:.5f}".format(best_param))
 
+
+    # STEP C: Train and Save the classifier to file
+
+    # First Use mean/std standard feature scaling:
     features, labels = features_to_matrix(features)
     scaler = StandardScaler()
     features = scaler.fit_transform(features)
     mean = scaler.mean_.tolist()
     std = scaler.scale_.tolist()
 
-    # STEP C: Save the classifier to file
+    # Then train the final classifier
     if classifier_type == "svm":
         classifier = train_svm(features, labels, best_param)
     elif classifier_type == "svm_rbf":
@@ -347,6 +351,9 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     elif classifier_type == "extratrees":
         classifier = train_extra_trees(features, labels, best_param)
 
+    # And save the model to a file, along with 
+    # - the scaling -mean/std- vectors)
+    # - the feature extraction parameters
     if classifier_type == "knn":
         feature_matrix = features.tolist()
         labels = labels.tolist()
@@ -458,7 +465,6 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
-#        features_norm, mean, std = normalize_features([f_final[iRegression]])
         scaler = StandardScaler()
         features_norm = scaler.fit_transform(f_final[iRegression])
         mean = scaler.mean_.tolist()
@@ -581,7 +587,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
 
     # transcode list of feature matrices to X, y (sklearn)
     X, y = features_to_matrix(features)
-    
+
     # features_norm = features;
     n_classes = len(features)
     ac_all = []
@@ -591,7 +597,9 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     f1_classes_all = []
     cms_all = []
 
-    # compute total number of samples:
+    # dynamically compute total number of samples:
+    # (so that if number of samples is >10K only one train-val repetition
+    # is performed)
     n_samples_total = X.shape[0]
     if n_exp == -1:
         n_exp = int(10000 / n_samples_total) + 1
@@ -607,6 +615,8 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             # split features:
             X_train, X_test, y_train, y_test = \
                 train_test_split(X, y, test_size=1-train_percentage)
+
+            # mean/std scale the features:
             scaler = StandardScaler()
             scaler.fit(X_train)
             X_train = scaler.transform(X_train)
@@ -625,6 +635,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             elif classifier_name == "extratrees":
                 classifier = train_extra_trees(X_train, y_train,C)
 
+            # get predictions and compute current comfusion matrix
             cmt = np.zeros((n_classes, n_classes))
             X_test = scaler.transform(X_test)
             for i_test_sample in range(X_test.shape[0]):
@@ -706,9 +717,10 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
          the selected performance measure
     """
 
-    # feature normalization:
+    # mean/std feature scaling:
     scaler = StandardScaler()
     features_norm = scaler.fit_transform(features)
+    
     n_samples = labels.shape[0]
     per_train = 0.9
     errors_all = []
