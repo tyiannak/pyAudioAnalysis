@@ -3,6 +3,8 @@ import shutil, struct, simplejson
 from scipy.spatial import distance
 from pylab import *
 import ntpath
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 import sklearn

@@ -11,15 +11,17 @@ import pickle as cpickle
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import sklearn.discriminant_analysis
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import audioTrainTest as at
-from pyAudioAnalysis import MidTermFeatures as mtf
-from pyAudioAnalysis import ShortTermFeatures as stf
 from sklearn.preprocessing import StandardScaler
+import sys
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
+import pyAudioAnalysis.audioBasicIO as audioBasicIO
+import pyAudioAnalysis.audioTrainTest as at
+import pyAudioAnalysis.MidTermFeatures as mtf
+import pyAudioAnalysis.ShortTermFeatures as stf
+
 
 """ General utility functions """
-
-
 def smooth_moving_avg(signal, window=11):
     window = int(window)
     if signal.ndim != 1:
@@ -722,8 +724,12 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     # normalize and train the respective svm probabilistic model
 
     # (ONSET vs SILENCE)
-    features_norm, mean, std = at.normalize_features(features)
-    svm = at.train_svm(features_norm, 1.0)
+    features, labels = at.features_to_matrix(features)
+    scaler = StandardScaler()
+    features_norm = scaler.fit_transform(features)
+    mean = scaler.mean_
+    std = scaler.scale_
+    svm = at.train_svm(features_norm, labels, 1.0)
 
     # Step 3: compute onset probability based on the trained svm
     prob_on_set = []

@@ -4,6 +4,9 @@ import time
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
 from pyAudioAnalysis import utilities
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import ShortTermFeatures
