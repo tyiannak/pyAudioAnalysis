@@ -15,6 +15,7 @@ from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import audioTrainTest as at
 from pyAudioAnalysis import MidTermFeatures as mtf
 from pyAudioAnalysis import ShortTermFeatures as stf
+from sklearn.preprocessing import StandardScaler
 
 """ General utility functions """
 
@@ -45,8 +46,8 @@ def self_similarity_matrix(feature_vectors):
     RETURNS:
      - sim_matrix:         the self-similarity matrix (nVectors x nVectors)
     """
-    norm_feature_vectors, mean, std = at.normalize_features([feature_vectors.T])
-    norm_feature_vectors = norm_feature_vectors[0].T
+    scaler = StandardScaler()
+    norm_feature_vectors = scaler.fit_transform(feature_vectors.T).T
     sim_matrix = 1.0 - distance.squareform(
         distance.pdist(norm_feature_vectors.T, 'cosine'))
     return sim_matrix
