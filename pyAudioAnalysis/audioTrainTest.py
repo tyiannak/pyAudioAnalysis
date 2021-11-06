@@ -110,34 +110,6 @@ def regression_wrapper(model, model_type, test_sample):
     #    TODO
 
 
-def random_split_features(features, percentage):
-    """
-    def randSplitFeatures(features):
-
-    This function splits a feature set for training and testing.
-
-    ARGUMENTS:
-        - features:         a list ([numOfClasses x 1]) whose elements 
-                            containt np matrices of features.
-                            each matrix features[i] of class i is 
-                            [n_samples x numOfDimensions]
-        - per_train:        percentage
-    RETURNS:
-        - featuresTrains:   a list of training data for each class
-        - f_test:           a list of testing data for each class
-    """
-
-    f_train = []
-    f_test = []
-    for index, feat in enumerate(features):
-        n_samples, _ = feat.shape
-        randperm = np.random.permutation(range(n_samples))
-        n_train = int(round(percentage * n_samples))
-        f_train.append(feat[randperm[0:n_train]])
-        f_test.append(feat[randperm[n_train::]])
-    return f_train, f_test
-
-
 def train_knn(features, labels, neighbors):
     """
     Train a kNN  classifier.
