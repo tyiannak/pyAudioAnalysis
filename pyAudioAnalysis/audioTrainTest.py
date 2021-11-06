@@ -434,7 +434,6 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
             print("ERROR: No data found in any input folder!")
             return
 
-    # TODO: ARRF WRITE????
     # STEP B: classifier Evaluation and Parameter Selection:
     if model_type == "svm" or model_type == "svm_rbf":
         model_params = np.array([0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5,
@@ -459,19 +458,22 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
-        features_norm, mean, std = normalize_features([f_final[iRegression]])
+        scaler = StandardScaler()
+        features_norm = scaler.fit_transform(features)
+        mean = scaler.mean_.tolist()
+        std = scaler.var_.tolist()
 
         # STEP C: Save the model to file
         if model_type == "svm":
-            classifier, _ = train_svm_regression(features_norm[0],
+            classifier, _ = train_svm_regression(features_norm,
                                                  regression_labels[iRegression],
                                                  bestParam)
         if model_type == "svm_rbf":
-            classifier, _ = train_svm_regression(features_norm[0],
+            classifier, _ = train_svm_regression(features_norm,
                                                  regression_labels[iRegression],
                                                  bestParam, kernel='rbf')
         if model_type == "randomforest":
-            classifier, _ = train_random_forest_regression(features_norm[0],
+            classifier, _ = train_random_forest_regression(features_norm,
                                                            regression_labels[
                                                             iRegression],
                                                            bestParam)
@@ -704,8 +706,8 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
     """
 
     # feature normalization:
-    features_norm, mean, std = normalize_features([features])
-    features_norm = features_norm[0]
+    scaler = StandardScaler()
+    features_norm = scaler.fit_transform(features)
     n_samples = labels.shape[0]
     per_train = 0.9
     errors_all = []
