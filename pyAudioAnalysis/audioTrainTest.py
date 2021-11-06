@@ -465,6 +465,8 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         best_params.append(bestParam)
         print("Selected params: {0:.5f}".format(bestParam))
 
+        # scale the features (mean-std) and keep the mean/std parameters
+        # to be saved with the model
         scaler = StandardScaler()
         features_norm = scaler.fit_transform(f_final[iRegression])
         mean = scaler.mean_.tolist()
@@ -485,6 +487,9 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
                                                             iRegression],
                                                            bestParam)
 
+        # Save the model to a file, along with 
+        # - the scaling -mean/std- vectors)
+        # - the feature extraction parameters
         if model_type == "svm" or model_type == "svm_rbf" \
                 or model_type == "randomforest":
             with open(model_name + "_" + r, 'wb') as fid:
@@ -720,7 +725,7 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
     # mean/std feature scaling:
     scaler = StandardScaler()
     features_norm = scaler.fit_transform(features)
-    
+
     n_samples = labels.shape[0]
     per_train = 0.9
     errors_all = []
