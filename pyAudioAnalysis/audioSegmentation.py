@@ -913,8 +913,9 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:limit, index] = p1 + 1e-4
             mt_feats_to_red_2[limit::, index] = p2 + 1e-4
         mt_feats_to_red = mt_feats_to_red_2
-        mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
-        mt_feats_to_red = mt_feats_to_red[0].T
+        scaler = StandardScaler()
+        mt_feats_to_red = scaler.fit_transform(mt_feats_to_red.T).T
+#        mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
         labels = np.zeros((mt_feats_to_red.shape[1], ))
         lda_step = 1.0
         lda_step_ratio = lda_step / short_window
