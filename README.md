@@ -6,7 +6,7 @@
 ## News
  * [2021-08-30] New article: [Deep Multimodal Emotion Recognition on Human Speech: A Review](https://www.mdpi.com/2076-3417/11/17/7962)
  * [2021-08-06] [deep-audio-features](https://github.com/tyiannak/deep_audio_features) deep audio classification and feature extraction using CNNs and Pytorch 
- * [2020-09-12] ["Intro to audio analysis"](https://hackernoon.com/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-qy2r3ufl): intro to  audio feature extraction, classification and segmentation
+ * [2020-09-12] ["Intro to audio analysis"](https://medium.com/behavioral-signals-ai/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-20fd646a0ec5): intro to  audio feature extraction, classification and segmentation
  * [2019-11-19] Major lib refactoring. Please report any issues or inconsistencies in the documentation.  
  * Check out [paura](https://github.com/tyiannak/paura) a Python script for realtime recording and analysis of audio data
 
