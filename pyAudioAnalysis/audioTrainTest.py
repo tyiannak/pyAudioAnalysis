@@ -264,8 +264,6 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     n_feats = features[0].shape[1]
     feature_names = ["features" + str(d + 1) for d in range(n_feats)]
 
-    write_train_data_arff(model_name, features, class_names, feature_names)
-
     for i, feat in enumerate(features):
         if len(feat) == 0:
             print("trainSVM_feature ERROR: " + paths[i] +
@@ -1124,24 +1122,6 @@ def lda(data, labels, red_dim):
 
     new_data = np.dot(data, w)
     return new_data, w
-
-
-def write_train_data_arff(model_name, features, classNames, feature_names):
-    f = open(model_name + ".arff", 'w')
-    f.write('@RELATION ' + model_name + '\n')
-    for fn in feature_names:
-        f.write('@ATTRIBUTE ' + fn + ' NUMERIC\n')
-    f.write('@ATTRIBUTE class {')
-    for c in range(len(classNames)-1):
-        f.write(classNames[c] + ',')
-    f.write(classNames[-1] + '}\n\n')
-    f.write('@DATA\n')
-    for c, fe in enumerate(features):
-        for i in range(fe.shape[0]):
-            for j in range(fe.shape[1]):
-                f.write("{0:f},".format(fe[i, j]))
-            f.write(classNames[c]+"\n")
-    f.close()
 
 
 def train_speaker_models():
