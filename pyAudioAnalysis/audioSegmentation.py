@@ -804,8 +804,8 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     return seg_limits
 
 
-def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
-                        short_window=0.05, lda_dim=25, plot_res=False):
+def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
+                        short_window=0.1, lda_dim=5, plot_res=False):
     """
     ARGUMENTS:
         - filename:        the name of the WAV file to be analyzed
@@ -835,7 +835,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
                                    mid_step * sampling_rate,
                                    round(sampling_rate * short_window),
                                    round(sampling_rate * short_window * 0.5))
-
+    
     mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
                                   len(class_names_fm), mid_feats.shape[1]))
     for index in range(mid_feats.shape[1]):
@@ -848,7 +848,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
         mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
         mid_term_features[start:end, index] = p1 + 1e-4
         mid_term_features[end::, index] = p2 + 1e-4
-
+#    mid_term_features = mid_term_features[-len(class_names_all)-len(class_names_fm):, :]
     # normalize features:
     scaler = StandardScaler()
     mid_feats_norm = scaler.fit_transform(mid_feats.T)
@@ -913,7 +913,6 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:limit, index] = p1 + 1e-4
             mt_feats_to_red_2[limit::, index] = p2 + 1e-4
         mt_feats_to_red = mt_feats_to_red_2
-        mt_feats_to_red = mt_feats_to_red[feature_selected, :]
         mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
         mt_feats_to_red = mt_feats_to_red[0].T
         labels = np.zeros((mt_feats_to_red.shape[1], ))
@@ -923,9 +922,11 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
             labels[index] = int(index * short_window / lda_step_ratio)
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=lda_dim)
-        clf.fit(mt_feats_to_red.T, labels)
-        mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
-
+        print(mt_feats_to_red, labels)
+        mid_feats_norm = clf.fit_transform(mt_feats_to_red.T, labels).T
+        #clf.fit(mt_feats_to_red.T, labels)
+        #mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
+    print(mid_feats_norm.shape)
     if n_speakers <= 0:
         s_range = range(2, 10)
     else:
@@ -988,22 +989,22 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     # (important: need to retrieve the outlier windows:
     # this is achieved by giving them the value of their
     # nearest non-outlier window)
-    cls = np.zeros((n_wins,))
-    for index in range(n_wins):
-        j = np.argmin(np.abs(index-i_non_outliers))
-        cls[index] = cluster_labels[imax][j]
-        
+#    print(cls)
+#    cls = np.zeros((n_wins,))
+#    for index in range(n_wins):
+#        j = np.argmin(np.abs(index-i_non_outliers))
+#        cls[index] = cluster_labels[imax][j]
     # Post-process method 1: hmm smoothing
-    for index in range(1):
-        # hmm training
-        start_prob, transmat, means, cov = \
-            train_hmm_compute_statistics(mt_feats_norm_or.T, cls)
-        hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
-        hmm.startprob_ = start_prob
-        hmm.transmat_ = transmat            
-        hmm.means_ = means; hmm.covars_ = cov
-        cls = hmm.predict(mt_feats_norm_or)                    
-    
+    if lda_dim <= 0 :
+        for index in range(1):
+            # hmm training
+            start_prob, transmat, means, cov = \
+                train_hmm_compute_statistics(mt_feats_norm_or.T, cls)
+            hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
+            hmm.startprob_ = start_prob
+            hmm.transmat_ = transmat            
+            hmm.means_ = means; hmm.covars_ = cov
+            cls = hmm.predict(mt_feats_norm_or)                        
     # Post-process method 2: median filtering:
     cls = scipy.signal.medfilt(cls, 5)
 
