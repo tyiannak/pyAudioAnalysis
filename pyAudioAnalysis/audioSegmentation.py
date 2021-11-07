@@ -915,7 +915,6 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
         mt_feats_to_red = mt_feats_to_red_2
         scaler = StandardScaler()
         mt_feats_to_red = scaler.fit_transform(mt_feats_to_red.T).T
-#        mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
         labels = np.zeros((mt_feats_to_red.shape[1], ))
         lda_step = 1.0
         lda_step_ratio = lda_step / short_window
@@ -923,11 +922,9 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
             labels[index] = int(index * short_window / lda_step_ratio)
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=lda_dim)
-        print(mt_feats_to_red, labels)
         mid_feats_norm = clf.fit_transform(mt_feats_to_red.T, labels).T
         #clf.fit(mt_feats_to_red.T, labels)
         #mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
-    print(mid_feats_norm.shape)
     if n_speakers <= 0:
         s_range = range(2, 10)
     else:
