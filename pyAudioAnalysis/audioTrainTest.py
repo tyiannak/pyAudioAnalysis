@@ -6,8 +6,6 @@ import glob
 import pickle as cPickle
 import csv
 import ntpath
-from pyAudioAnalysis import MidTermFeatures as aF
-from pyAudioAnalysis import audioBasicIO
 from scipy import linalg as la
 from scipy.spatial import distance
 import sklearn.svm
@@ -19,6 +17,10 @@ import plotly.graph_objs as go
 import sklearn.metrics
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
+from pyAudioAnalysis import MidTermFeatures as aF
+from pyAudioAnalysis import audioBasicIO
 
 
 shortTermWindow = 0.050
