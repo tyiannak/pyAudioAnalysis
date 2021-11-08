@@ -3,6 +3,7 @@ import shutil, struct, simplejson
 from scipy.spatial import distance
 from pylab import *
 import ntpath
+import os
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "../"))
 from pyAudioAnalysis import MidTermFeatures as aF
@@ -115,10 +116,13 @@ def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
         os.mkdir(dirChordial)
     jsonPath         = dirChordial + os.sep + "matrix.json"
     namesPath        = dirChordial + os.sep + "Names.csv"
- 
+    print(jsonPath)
     jsonSMMatrix = simplejson.dumps(SM2.tolist())
-    f = open(jsonPath,'w'); f.write(jsonSMMatrix);  f.close()
-    f = open(namesPath,'w'); f.write("name,color\n"); 
+    f = open(jsonPath,'w')
+    f.write(jsonSMMatrix) 
+    f.close()
+    f = open(namesPath,'w')
+    f.write("name,color\n")
     for i, n in enumerate(names):
         f.write("{0:s},{1:s}\n".format(n,"#"+str(colors[i])))
     f.close()
