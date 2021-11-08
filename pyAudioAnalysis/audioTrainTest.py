@@ -794,41 +794,6 @@ def print_confusion_matrix(cm, class_names):
         print("")
 
 
-def normalize_features(features):
-    """
-    This function normalizes a feature set to 0-mean and 1-std.
-    Used in most classifier trainning cases.
-
-    ARGUMENTS:
-        - features:    list of feature matrices (each one of them is a np
-                       matrix)
-    RETURNS:
-        - features_norm:    list of NORMALIZED feature matrices
-        - mean:        mean vector
-        - std:        std vector
-    """
-    temp_feats = np.array([])
-
-    for count, f in enumerate(features):
-        if f.shape[0] > 0:
-            if count == 0:
-                temp_feats = f
-            else:
-                temp_feats = np.vstack((temp_feats, f))
-            count += 1
-
-    mean = np.mean(temp_feats, axis=0) + 1e-14
-    std = np.std(temp_feats, axis=0) + 1e-14
-
-    features_norm = []
-    for f in features:
-        ft = f.copy()
-        for n_samples in range(f.shape[0]):
-            ft[n_samples, :] = (ft[n_samples, :] - mean) / std
-        features_norm.append(ft)
-    return features_norm, mean, std
-
-
 def features_to_matrix(features):
     """
     features_to_matrix(features)
