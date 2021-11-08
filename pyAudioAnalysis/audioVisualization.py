@@ -11,6 +11,7 @@ import sklearn
 import sklearn.discriminant_analysis
 import os
 import sys
+from sklearn.preprocessing import StandardScaler
 
 
 def generateColorMap():
@@ -160,8 +161,9 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         names_to_viz = [ntpath.basename(w).replace('.wav', '')
                         for w in wav_files];
 
-        (F, MEAN, STD) = aT.normalize_features([all_mt_feat])
-        F = np.concatenate(F)
+
+        scaler = StandardScaler()
+        F = scaler.fit_transform(all_mt_feat)
         
         # check that the new PCA dimension is at most equal
         # to the number of samples
@@ -206,8 +208,8 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
                     YsNew[indices] = i
             ldaLabels = YsNew
 
-        (F, MEAN, STD) = aT.normalize_features([all_mt_feat])
-        F = np.array(F[0])
+        scaler = StandardScaler()
+        F = scaler.fit_transform(all_mt_feat)
 
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=10)
