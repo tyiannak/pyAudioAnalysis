@@ -12,6 +12,7 @@ import sklearn
 import sklearn.discriminant_analysis
 import sys
 from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 
 
 def generateColorMap():
@@ -220,10 +221,7 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 
     SMgroup = 1.0 - distance.squareform(distance.pdist(finalDimsGroup,
                                                        'cosine'))
-    for i in range(SMgroup.shape[0]):
-        SMgroup[i,i] = 0.0
 
-    import plotly.express as px
     data=SMgroup
     fig = px.imshow(data,
                 labels=dict(x="Day of Week", y="Time of Day", color="Productivity"),
@@ -232,6 +230,4 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
                )
     fig.update_xaxes(side="top")
     fig.show()
-
-
 
