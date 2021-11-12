@@ -139,7 +139,7 @@ def mid_feature_extraction(signal, sampling_rate, mid_window, mid_step,
 
 def directory_feature_extraction(folder_path, mid_window, mid_step,
                                  short_window, short_step,
-                                 compute_beat=True):
+                                 compute_beat=True, max_files=1000):
     """
     This function extracts the mid-term features of the WAVE files of a 
     particular folder.
@@ -162,7 +162,8 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
     for files in types:
         wav_file_list.extend(glob.glob(os.path.join(folder_path, files)))
 
-    wav_file_list = sorted(wav_file_list)    
+    wav_file_list = sorted(wav_file_list)[0:max_files] 
+    np.random.shuffle(wav_file_list)
     wav_file_list2, mid_feature_names = [], []
     for i, file_path in enumerate(wav_file_list):
         print("Analyzing file {0:d} of {1:d}: {2:s}".format(i + 1,
@@ -223,7 +224,7 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
 
 def multiple_directory_feature_extraction(path_list, mid_window, mid_step,
                                           short_window, short_step,
-                                          compute_beat=False):
+                                          compute_beat=False, max_files = 1000):
     """
     Same as dirWavFeatureExtraction, but instead of a single dir it
     takes a list of paths as input and returns a list of feature matrices.
@@ -248,7 +249,7 @@ def multiple_directory_feature_extraction(path_list, mid_window, mid_step,
         f, fn, feature_names = \
             directory_feature_extraction(d, mid_window, mid_step,
                                          short_window, short_step,
-                                         compute_beat=compute_beat)
+                                         compute_beat=compute_beat, max_files=max_files)
         if f.shape[0] > 0:
             # if at least one audio file has been found in the provided folder:
             features.append(f)
