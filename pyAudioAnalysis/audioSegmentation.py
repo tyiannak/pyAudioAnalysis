@@ -11,14 +11,17 @@ import pickle as cpickle
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import sklearn.discriminant_analysis
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import audioTrainTest as at
-from pyAudioAnalysis import MidTermFeatures as mtf
-from pyAudioAnalysis import ShortTermFeatures as stf
+from sklearn.preprocessing import StandardScaler
+import sys
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
+import pyAudioAnalysis.audioBasicIO as audioBasicIO
+import pyAudioAnalysis.audioTrainTest as at
+import pyAudioAnalysis.MidTermFeatures as mtf
+import pyAudioAnalysis.ShortTermFeatures as stf
+
 
 """ General utility functions """
-
-
 def smooth_moving_avg(signal, window=11):
     window = int(window)
     if signal.ndim != 1:
@@ -45,8 +48,8 @@ def self_similarity_matrix(feature_vectors):
     RETURNS:
      - sim_matrix:         the self-similarity matrix (nVectors x nVectors)
     """
-    norm_feature_vectors, mean, std = at.normalize_features([feature_vectors.T])
-    norm_feature_vectors = norm_feature_vectors[0].T
+    scaler = StandardScaler()
+    norm_feature_vectors = scaler.fit_transform(feature_vectors.T).T
     sim_matrix = 1.0 - distance.squareform(
         distance.pdist(norm_feature_vectors.T, 'cosine'))
     return sim_matrix
@@ -721,8 +724,12 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     # normalize and train the respective svm probabilistic model
 
     # (ONSET vs SILENCE)
-    features_norm, mean, std = at.normalize_features(features)
-    svm = at.train_svm(features_norm, 1.0)
+    features, labels = at.features_to_matrix(features)
+    scaler = StandardScaler()
+    features_norm = scaler.fit_transform(features)
+    mean = scaler.mean_
+    std = scaler.scale_
+    svm = at.train_svm(features_norm, labels, 1.0)
 
     # Step 3: compute onset probability based on the trained svm
     prob_on_set = []
@@ -797,8 +804,8 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     return seg_limits
 
 
-def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
-                        short_window=0.05, lda_dim=35, plot_res=False):
+def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
+                        short_window=0.1, lda_dim=5, plot_res=False):
     """
     ARGUMENTS:
         - filename:        the name of the WAV file to be analyzed
@@ -828,10 +835,9 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
                                    mid_step * sampling_rate,
                                    round(sampling_rate * short_window),
                                    round(sampling_rate * short_window * 0.5))
-
+    
     mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
                                   len(class_names_fm), mid_feats.shape[1]))
-
     for index in range(mid_feats.shape[1]):
         feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
         feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
@@ -842,15 +848,10 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
         mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
         mid_term_features[start:end, index] = p1 + 1e-4
         mid_term_features[end::, index] = p2 + 1e-4
-
-    mid_feats = mid_term_features    # TODO
-    feature_selected = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 41,
-                        42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
-
-    mid_feats = mid_feats[feature_selected, :]
-
-    mid_feats_norm, mean, std = at.normalize_features([mid_feats.T])
-    mid_feats_norm = mid_feats_norm[0].T
+#    mid_term_features = mid_term_features[-len(class_names_all)-len(class_names_fm):, :]
+    # normalize features:
+    scaler = StandardScaler()
+    mid_feats_norm = scaler.fit_transform(mid_feats.T)
     n_wins = mid_feats.shape[1]
 
     # remove outliers:
@@ -912,9 +913,8 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:limit, index] = p1 + 1e-4
             mt_feats_to_red_2[limit::, index] = p2 + 1e-4
         mt_feats_to_red = mt_feats_to_red_2
-        mt_feats_to_red = mt_feats_to_red[feature_selected, :]
-        mt_feats_to_red, mean, std = at.normalize_features([mt_feats_to_red.T])
-        mt_feats_to_red = mt_feats_to_red[0].T
+        scaler = StandardScaler()
+        mt_feats_to_red = scaler.fit_transform(mt_feats_to_red.T).T
         labels = np.zeros((mt_feats_to_red.shape[1], ))
         lda_step = 1.0
         lda_step_ratio = lda_step / short_window
@@ -922,9 +922,9 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
             labels[index] = int(index * short_window / lda_step_ratio)
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=lda_dim)
-        clf.fit(mt_feats_to_red.T, labels)
-        mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
-
+        mid_feats_norm = clf.fit_transform(mt_feats_to_red.T, labels).T
+        #clf.fit(mt_feats_to_red.T, labels)
+        #mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
     if n_speakers <= 0:
         s_range = range(2, 10)
     else:
@@ -987,25 +987,24 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.2,
     # (important: need to retrieve the outlier windows:
     # this is achieved by giving them the value of their
     # nearest non-outlier window)
-    cls = np.zeros((n_wins,))
-    for index in range(n_wins):
-        j = np.argmin(np.abs(index-i_non_outliers))
-        cls[index] = cluster_labels[imax][j]
-        
+#    print(cls)
+#    cls = np.zeros((n_wins,))
+#    for index in range(n_wins):
+#        j = np.argmin(np.abs(index-i_non_outliers))
+#        cls[index] = cluster_labels[imax][j]
     # Post-process method 1: hmm smoothing
-    for index in range(1):
-        # hmm training
-        start_prob, transmat, means, cov = \
-            train_hmm_compute_statistics(mt_feats_norm_or, cls)
-        hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
-        hmm.startprob_ = start_prob
-        hmm.transmat_ = transmat            
-        hmm.means_ = means; hmm.covars_ = cov
-        cls = hmm.predict(mt_feats_norm_or.T)                    
-    
+    if lda_dim <= 0 :
+        for index in range(1):
+            # hmm training
+            start_prob, transmat, means, cov = \
+                train_hmm_compute_statistics(mt_feats_norm_or.T, cls)
+            hmm = hmmlearn.hmm.GaussianHMM(start_prob.shape[0], "diag")
+            hmm.startprob_ = start_prob
+            hmm.transmat_ = transmat            
+            hmm.means_ = means; hmm.covars_ = cov
+            cls = hmm.predict(mt_feats_norm_or)                        
     # Post-process method 2: median filtering:
-    cls = scipy.signal.medfilt(cls, 13)
-    cls = scipy.signal.medfilt(cls, 11)
+    cls = scipy.signal.medfilt(cls, 5)
 
     class_names = ["speaker{0:d}".format(c) for c in range(num_speakers)]
 

@@ -3,12 +3,16 @@ import shutil, struct, simplejson
 from scipy.spatial import distance
 from pylab import *
 import ntpath
+import os
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "../"))
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioTrainTest as aT
 import sklearn
 import sklearn.discriminant_analysis
-import os
 import sys
+from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 
 
 def generateColorMap():
@@ -95,43 +99,9 @@ def text_list_to_colors_simple(names):
     return colors
 
 
-def chordialDiagram(fileStr, SM, Threshold, names, namesCategories):
-    '''
-    Generates a d3js chordial diagram that illustrates similarites
-    '''
-    colors = text_list_to_colors_simple(namesCategories)
-    SM2 = SM.copy()
-    SM2 = (SM2 + SM2.T) / 2.0
-    for i in range(SM2.shape[0]):
-        M = Threshold
-#        a = np.sort(SM2[i,:])[::-1]
-#        M = np.mean(a[0:int(SM2.shape[1]/3+1)])
-        SM2[i, SM2[i, :] < M] = 0;
-    dirChordial = fileStr + "_Chordial"
-    if not os.path.isdir(dirChordial):
-        os.mkdir(dirChordial)
-    jsonPath         = dirChordial + os.sep + "matrix.json"
-    namesPath        = dirChordial + os.sep + "Names.csv"
- 
-    jsonSMMatrix = simplejson.dumps(SM2.tolist())
-    f = open(jsonPath,'w'); f.write(jsonSMMatrix);  f.close()
-    f = open(namesPath,'w'); f.write("name,color\n"); 
-    for i, n in enumerate(names):
-        f.write("{0:s},{1:s}\n".format(n,"#"+str(colors[i])))
-    f.close()
-
-    shutil.copyfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                 "data", "similarities.html"),
-                    dirChordial+os.sep+"similarities.html")
-    shutil.copyfile(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                 "data",
-                                 "style.css"),
-                    dirChordial+os.sep+"style.css")
-
-
 def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none"):
     '''
-    This function generates a chordial visualization for the recordings
+    This function generates a  content visualization for the recordings
      of the provided path.
     ARGUMENTS:
         - folder:        path of the folder that contains the WAV files 
@@ -158,8 +128,9 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
         names_to_viz = [ntpath.basename(w).replace('.wav', '')
                         for w in wav_files];
 
-        (F, MEAN, STD) = aT.normalize_features([all_mt_feat])
-        F = np.concatenate(F)
+
+        scaler = StandardScaler()
+        F = scaler.fit_transform(all_mt_feat)
         
         # check that the new PCA dimension is at most equal
         # to the number of samples
@@ -204,8 +175,8 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
                     YsNew[indices] = i
             ldaLabels = YsNew
 
-        (F, MEAN, STD) = aT.normalize_features([all_mt_feat])
-        F = np.array(F[0])
+        scaler = StandardScaler()
+        F = scaler.fit_transform(all_mt_feat)
 
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=10)
@@ -237,21 +208,9 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
     plt.ylim([1.2*finalDims[:,1].min(), 1.2*finalDims[:,1].max()])            
     plt.show()
 
-    SM = 1.0 - distance.squareform(distance.pdist(finalDims2, 'cosine'))
-    for i in range(SM.shape[0]):
-        SM[i,i] = 0.0;
-
-
-    chordialDiagram("visualization", SM, 0.50, names_to_viz,
-                    names_category_toviz)
-
     SM = 1.0 - distance.squareform(distance.pdist(F, 'cosine'))
-    for i in range(SM.shape[0]):
-        SM[i,i] = 0.0;
-    chordialDiagram("visualizationInitial", SM, 0.50, names_to_viz,
-                    names_category_toviz)
-
-    # plot super-categories (i.e. artistname
+    
+    # plot super-categories (i.e. artistname)
     unames_category_toviz = sort(list(set(names_category_toviz)))
     finalDimsGroup = np.zeros( (len(unames_category_toviz),
                                 finalDims2.shape[1] ) )
@@ -262,10 +221,13 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 
     SMgroup = 1.0 - distance.squareform(distance.pdist(finalDimsGroup,
                                                        'cosine'))
-    for i in range(SMgroup.shape[0]):
-        SMgroup[i,i] = 0.0;
-    chordialDiagram("visualizationGroup", SMgroup, 0.50,
-                    unames_category_toviz, unames_category_toviz)
 
-
+    data=SMgroup
+    fig = px.imshow(data,
+                labels=dict(x="Day of Week", y="Time of Day", color="Productivity"),
+                x=unames_category_toviz,
+                y=unames_category_toviz
+               )
+    fig.update_xaxes(side="top")
+    fig.show()
 
