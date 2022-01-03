@@ -4,9 +4,9 @@
 *This is general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki and [here](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for a more generic intro to audio data handling*
 
 ## News
+ * [2022-01-01] If you are not interested in training audio models from your own data, you can check the [Deep Audio API] (https://labs-repos.iit.demokritos.gr/MagCIL/deep_audio_api.html), were you can directly send audio data and receive predictions with regards to the respective audio content (speech vs silence, musical genre, speaker gender, etc). 
  * [2021-08-30] New article: [Deep Multimodal Emotion Recognition on Human Speech: A Review](https://www.mdpi.com/2076-3417/11/17/7962)
  * [2021-08-06] [deep-audio-features](https://github.com/tyiannak/deep_audio_features) deep audio classification and feature extraction using CNNs and Pytorch 
- * [2020-09-12] ["Intro to audio analysis"](https://medium.com/behavioral-signals-ai/intro-to-audio-analysis-recognizing-sounds-using-machine-learning-20fd646a0ec5): intro to  audio feature extraction, classification and segmentation
  * Check out [paura](https://github.com/tyiannak/paura) a Python script for realtime recording and analysis of audio data
 
 ## General
