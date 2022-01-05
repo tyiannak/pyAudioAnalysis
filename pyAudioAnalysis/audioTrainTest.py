@@ -233,7 +233,7 @@ def train_random_forest_regression(features, labels, n_estimators):
 
 def extract_features_and_train(paths, mid_window, mid_step, short_window,
                                short_step, classifier_type, model_name,
-                               compute_beat=False, train_percentage=0.90, list_of_ids=None):
+                               compute_beat=False, train_percentage=0.90, dict_of_ids=None):
     """
     This function is used as a wrapper to segment-based audio feature extraction
     and classifier training.
@@ -246,17 +246,22 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
         classifier_type:            "svm" or "knn" or "randomforest" or
                                     "gradientboosting" or "extratrees"
         model_name:                 name of the model to be saved
+        dict_of_ids:                a dictionary which has as keys the full path of audio files and as values the respective group ids
     RETURNS:
         None. Resulting classifier along with the respective model
         parameters are saved on files.
     """
 
     # STEP A: Feature Extraction:
-    features, class_names, _ = \
+    features, class_names, file_names = \
         aF.multiple_directory_feature_extraction(paths, mid_window, mid_step,
                                                  short_window, short_step,
                                                  compute_beat=compute_beat)
-
+    file_names = [item for sublist in file_names for item in sublist]
+    if dict_of_ids:
+        list_of_ids = [dict_of_ids[file] for file in file_names]
+    else:
+        list_of_ids = None
     if len(features) == 0:
         print("trainSVM_feature ERROR: No data found in any input folder!")
         return
