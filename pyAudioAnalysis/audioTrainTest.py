@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "../"))
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioBasicIO
-
+from sklearn.model_selection import GroupShuffleSplit
 
 shortTermWindow = 0.050
 shortTermStep = 0.050
@@ -233,7 +233,7 @@ def train_random_forest_regression(features, labels, n_estimators):
 
 def extract_features_and_train(paths, mid_window, mid_step, short_window,
                                short_step, classifier_type, model_name,
-                               compute_beat=False, train_percentage=0.90):
+                               compute_beat=False, train_percentage=0.90, dict_of_ids=None):
     """
     This function is used as a wrapper to segment-based audio feature extraction
     and classifier training.
@@ -246,17 +246,22 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
         classifier_type:            "svm" or "knn" or "randomforest" or
                                     "gradientboosting" or "extratrees"
         model_name:                 name of the model to be saved
+        dict_of_ids:                a dictionary which has as keys the full path of audio files and as values the respective group ids
     RETURNS:
         None. Resulting classifier along with the respective model
         parameters are saved on files.
     """
 
     # STEP A: Feature Extraction:
-    features, class_names, _ = \
+    features, class_names, file_names = \
         aF.multiple_directory_feature_extraction(paths, mid_window, mid_step,
                                                  short_window, short_step,
                                                  compute_beat=compute_beat)
-
+    file_names = [item for sublist in file_names for item in sublist]
+    if dict_of_ids:
+        list_of_ids = [dict_of_ids[file] for file in file_names]
+    else:
+        list_of_ids = None
     if len(features) == 0:
         print("trainSVM_feature ERROR: No data found in any input folder!")
         return
@@ -296,7 +301,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     features = temp_features
 
     best_param = evaluate_classifier(features, class_names, classifier_type,
-                                     classifier_par, 0, n_exp=-1,
+                                     classifier_par, 0, list_of_ids, n_exp=-1,
                                      train_percentage=train_percentage)
 
     print("Selected params: {0:.5f}".format(best_param))
@@ -536,9 +541,27 @@ def load_model(model_name, is_regression=False):
         return svm_model, mean, std, classNames, mid_window, mid_step, \
                short_window, short_step, compute_beat
 
+def group_split(X, y, train_indeces, test_indeces, split_id):
+    """
+    This function splits the data in train and test set according to train/test indeces based on LeaveOneGroupOut
+    ARGUMENTS:
+        X: array-like of shape (n_samples, n_features)
+        y: array-like of shape (n_samples,)
+        train_indeces: The training set indices
+        test_indeces: The testing set indices
+        split_id: the split number
+    RETURNS:
+         List containing train-test split of inputs.
+
+    """
+    train_index = train_indeces[split_id]
+    test_index = test_indeces[split_id]
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+    return X_train, X_test, y_train, y_test
 
 def evaluate_classifier(features, class_names, classifier_name, params,
-                        parameter_mode, n_exp=-1, train_percentage=0.90):
+                        parameter_mode, list_of_ids=None, n_exp=-1, train_percentage=0.90):
     """
     ARGUMENTS:
         features:     a list ([numOfClasses x 1]) whose elements containt
@@ -578,8 +601,17 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     # (so that if number of samples is >10K only one train-val repetition
     # is performed)
     n_samples_total = X.shape[0]
+
     if n_exp == -1:
         n_exp = int(10000 / n_samples_total) + 1
+
+    if list_of_ids:
+        train_indeces, test_indeces = [], []
+        gss = GroupShuffleSplit(n_splits=n_exp, train_size=.8)
+        for train_index, test_index in gss.split(X, y, list_of_ids):
+            train_indeces.append(train_index)
+            test_indeces.append(test_index)
+
 
     for Ci, C in enumerate(params):
         # for each param value
@@ -590,8 +622,12 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             print("Param = {0:.5f} - classifier Evaluation "
                   "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
             # split features:
-            X_train, X_test, y_train, y_test = \
-                train_test_split(X, y, test_size=1-train_percentage)
+
+            if list_of_ids:
+                X_train, X_test, y_train, y_test = group_split(X, y, train_indeces, test_indeces, e)
+            else:
+                X_train, X_test, y_train, y_test = \
+                    train_test_split(X, y, test_size=1-train_percentage)
 
             # mean/std scale the features:
             scaler = StandardScaler()
@@ -620,6 +656,15 @@ def evaluate_classifier(features, class_names, classifier_name, params,
                                                  classifier_name, 
                                                  X_test[i_test_sample, :])[0])
             cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
+
+            if cmt.size != cm.size:
+                all_classes = set(y)
+                split_classes = set(y_test)
+                missing_classes = all_classes.difference(split_classes)
+                missing_classes = list(missing_classes)
+                missing_classes = [int(x) for x in missing_classes]
+                cmt = np.insert(cmt, missing_classes, 0, axis=0)
+                cmt = np.insert(cmt, missing_classes, 0, axis=1)
             cm = cm + cmt
         cm = cm + 0.0000000010
 
