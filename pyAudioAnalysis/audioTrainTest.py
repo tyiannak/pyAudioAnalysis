@@ -22,6 +22,8 @@ sys.path.insert(0, os.path.join(
 from pyAudioAnalysis import MidTermFeatures as aF
 from pyAudioAnalysis import audioBasicIO
 from sklearn.model_selection import GroupShuffleSplit
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 shortTermWindow = 0.050
 shortTermStep = 0.050
@@ -233,7 +235,9 @@ def train_random_forest_regression(features, labels, n_estimators):
 
 def extract_features_and_train(paths, mid_window, mid_step, short_window,
                                short_step, classifier_type, model_name,
-                               compute_beat=False, train_percentage=0.90, dict_of_ids=None):
+                               compute_beat=False, train_percentage=0.90, 
+                               dict_of_ids=None,
+                               use_smote=False):
     """
     This function is used as a wrapper to segment-based audio feature extraction
     and classifier training.
@@ -302,7 +306,8 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
 
     best_param = evaluate_classifier(features, class_names, classifier_type,
                                      classifier_par, 0, list_of_ids, n_exp=-1,
-                                     train_percentage=train_percentage)
+                                     train_percentage=train_percentage,
+                                     smote=use_smote)
 
     print("Selected params: {0:.5f}".format(best_param))
 
@@ -561,7 +566,9 @@ def group_split(X, y, train_indeces, test_indeces, split_id):
     return X_train, X_test, y_train, y_test
 
 def evaluate_classifier(features, class_names, classifier_name, params,
-                        parameter_mode, list_of_ids=None, n_exp=-1, train_percentage=0.90):
+                        parameter_mode, list_of_ids=None, n_exp=-1, 
+                        train_percentage=0.90, 
+                        smote=False):
     """
     ARGUMENTS:
         features:     a list ([numOfClasses x 1]) whose elements containt
@@ -603,7 +610,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     n_samples_total = X.shape[0]
 
     if n_exp == -1:
-        n_exp = int(10000 / n_samples_total) + 1
+        n_exp = int(50000 / n_samples_total) + 1
 
     if list_of_ids:
         train_indeces, test_indeces = [], []
@@ -616,6 +623,11 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     for Ci, C in enumerate(params):
         # for each param value
         cm = np.zeros((n_classes, n_classes))
+        f1_per_exp = []
+        r1t_all = []
+        p1t_all = []
+        y_pred_all = []
+        y_test_all = []
         for e in range(n_exp):
             y_pred, y_real = [], []
             # for each cross-validation iteration:
@@ -631,9 +643,13 @@ def evaluate_classifier(features, class_names, classifier_name, params,
 
             # mean/std scale the features:
             scaler = StandardScaler()
+            if smote:
+                sm = SMOTE(random_state = 2)
+                #sm = RandomUnderSampler(random_state=0)
+                X_train, y_train = sm.fit_resample(X_train, y_train)
             scaler.fit(X_train)
             X_train = scaler.transform(X_train)
-
+            
             # train multi-class svms:
             if classifier_name == "svm":
                 classifier = train_svm(X_train, y_train, C)
@@ -656,7 +672,13 @@ def evaluate_classifier(features, class_names, classifier_name, params,
                                                  classifier_name, 
                                                  X_test[i_test_sample, :])[0])
             cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
-
+            f1t = sklearn.metrics.f1_score(y_test, y_pred, average='macro')
+            r1t_all.append(sklearn.metrics.recall_score(y_test, y_pred, average='macro'))
+            p1t_all.append(sklearn.metrics.precision_score(y_test, y_pred, average='macro'))
+            y_pred_all += y_pred
+            y_test_all += y_test.tolist()
+            
+            f1_per_exp.append(f1t)
             if cmt.size != cm.size:
                 all_classes = set(y)
                 split_classes = set(y_test)
@@ -677,6 +699,16 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         rec_classes_all.append(rec)
 
         f1 = 2 * rec * pre / (rec + pre)
+
+        # this is just for debugging (it should be equal to f1)
+        f1_b = sklearn.metrics.f1_score(y_test_all, y_pred_all, 
+                                        average='macro')
+        # Note: np.mean(f1_per_exp) will not be exacty equal to the 
+        # overall f1 (i.e. f1 and f1_b because these are calculated on a 
+        # per-sample basis)
+        f1_std = np.std(f1_per_exp)
+        print(np.mean(f1), f1_b, f1_std)
+
         f1_classes_all.append(f1)
         ac_all.append(np.sum(np.diagonal(cm)) / np.sum(cm))
 
