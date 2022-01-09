@@ -1,4 +1,9 @@
 from __future__ import print_function
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import GroupShuffleSplit
+from pyAudioAnalysis import audioBasicIO
+from pyAudioAnalysis import MidTermFeatures as aF
 import sys
 import numpy as np
 import os
@@ -19,11 +24,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "../"))
-from pyAudioAnalysis import MidTermFeatures as aF
-from pyAudioAnalysis import audioBasicIO
-from sklearn.model_selection import GroupShuffleSplit
-from imblearn.over_sampling import SMOTE
-from imblearn.under_sampling import RandomUnderSampler
 
 shortTermWindow = 0.050
 shortTermStep = 0.050
@@ -45,7 +45,7 @@ class Knn:
         P = np.zeros((n_classes,))
         for i in range(n_classes):
             P[i] = np.nonzero(self.labels[i_sort[0]
-                [0:self.neighbors]] == i)[0].shape[0] / float(self.neighbors)
+                                          [0:self.neighbors]] == i)[0].shape[0] / float(self.neighbors)
         return np.argmax(P), P
 
 
@@ -108,7 +108,7 @@ def regression_wrapper(model, model_type, test_sample):
     """
     if model_type == "svm" or model_type == "randomforest" or \
             model_type == "svm_rbf":
-        return model.predict(test_sample.reshape(1,-1))[0]
+        return model.predict(test_sample.reshape(1, -1))[0]
 
     #    elif classifier_type == "knn":
     #    TODO
@@ -235,7 +235,7 @@ def train_random_forest_regression(features, labels, n_estimators):
 
 def extract_features_and_train(paths, mid_window, mid_step, short_window,
                                short_step, classifier_type, model_name,
-                               compute_beat=False, train_percentage=0.90, 
+                               compute_beat=False, train_percentage=0.90,
                                dict_of_ids=None,
                                use_smote=False):
     """
@@ -285,7 +285,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     elif classifier_type == "randomforest":
         classifier_par = np.array([10, 25, 50, 100, 200, 500])
     elif classifier_type == "knn":
-        classifier_par = np.array([1, 3, 5, 7, 9, 11, 13, 15])        
+        classifier_par = np.array([1, 3, 5, 7, 9, 11, 13, 15])
     elif classifier_type == "gradientboosting":
         classifier_par = np.array([10, 25, 50, 100, 200, 500])
     elif classifier_type == "extratrees":
@@ -311,7 +311,6 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
 
     print("Selected params: {0:.5f}".format(best_param))
 
-
     # STEP C: Train and Save the classifier to file
 
     # First Use mean/std standard feature scaling:
@@ -333,7 +332,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     elif classifier_type == "extratrees":
         classifier = train_extra_trees(features, labels, best_param)
 
-    # And save the model to a file, along with 
+    # And save the model to a file, along with
     # - the scaling -mean/std- vectors)
     # - the feature extraction parameters
     if classifier_type == "knn":
@@ -439,9 +438,9 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         print("Regression task " + r)
         bestParam, error, berror = evaluate_regression(f_final[iRegression],
                                                        regression_labels[
-                                                          iRegression],
-                                                       100, model_type,
-                                                       model_params)
+            iRegression],
+            100, model_type,
+            model_params)
         errors.append(error)
         errors_base.append(berror)
         best_params.append(bestParam)
@@ -466,10 +465,10 @@ def feature_extraction_train_regression(folder_name, mid_window, mid_step,
         if model_type == "randomforest":
             classifier, _ = train_random_forest_regression(features_norm,
                                                            regression_labels[
-                                                            iRegression],
+                                                               iRegression],
                                                            bestParam)
 
-        # Save the model to a file, along with 
+        # Save the model to a file, along with
         # - the scaling -mean/std- vectors)
         # - the feature extraction parameters
         if model_type == "svm" or model_type == "svm_rbf" \
@@ -508,10 +507,10 @@ def load_model_knn(knn_model_name, is_regression=False):
 
     if is_regression:
         return classifier, mean, std, mid_window, mid_step, short_window, \
-               short_step, compute_beat
+            short_step, compute_beat
     else:
         return classifier, mean, std, classes, mid_window, mid_step, \
-               short_window, short_step, compute_beat
+            short_window, short_step, compute_beat
 
 
 def load_model(model_name, is_regression=False):
@@ -541,10 +540,11 @@ def load_model(model_name, is_regression=False):
 
     if is_regression:
         return svm_model, mean, std, mid_window, mid_step, short_window, \
-               short_step, compute_beat
+            short_step, compute_beat
     else:
         return svm_model, mean, std, classNames, mid_window, mid_step, \
-               short_window, short_step, compute_beat
+            short_window, short_step, compute_beat
+
 
 def group_split(X, y, train_indeces, test_indeces, split_id):
     """
@@ -565,9 +565,10 @@ def group_split(X, y, train_indeces, test_indeces, split_id):
     y_train, y_test = y[train_index], y[test_index]
     return X_train, X_test, y_train, y_test
 
+
 def evaluate_classifier(features, class_names, classifier_name, params,
-                        parameter_mode, list_of_ids=None, n_exp=-1, 
-                        train_percentage=0.90, 
+                        parameter_mode, list_of_ids=None, n_exp=-1,
+                        train_percentage=0.90,
                         smote=False):
     """
     ARGUMENTS:
@@ -619,7 +620,6 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             train_indeces.append(train_index)
             test_indeces.append(test_index)
 
-
     for Ci, C in enumerate(params):
         # for each param value
         cm = np.zeros((n_classes, n_classes))
@@ -636,7 +636,8 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             # split features:
 
             if list_of_ids:
-                X_train, X_test, y_train, y_test = group_split(X, y, train_indeces, test_indeces, e)
+                X_train, X_test, y_train, y_test = group_split(
+                    X, y, train_indeces, test_indeces, e)
             else:
                 X_train, X_test, y_train, y_test = \
                     train_test_split(X, y, test_size=1-train_percentage)
@@ -644,12 +645,12 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             # mean/std scale the features:
             scaler = StandardScaler()
             if smote:
-                sm = SMOTE(random_state = 2)
+                sm = SMOTE(random_state=2)
                 #sm = RandomUnderSampler(random_state=0)
                 X_train, y_train = sm.fit_resample(X_train, y_train)
             scaler.fit(X_train)
             X_train = scaler.transform(X_train)
-            
+
             # train multi-class svms:
             if classifier_name == "svm":
                 classifier = train_svm(X_train, y_train, C)
@@ -662,22 +663,24 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             elif classifier_name == "gradientboosting":
                 classifier = train_gradient_boosting(X_train, y_train, C)
             elif classifier_name == "extratrees":
-                classifier = train_extra_trees(X_train, y_train,C)
+                classifier = train_extra_trees(X_train, y_train, C)
 
             # get predictions and compute current comfusion matrix
             cmt = np.zeros((n_classes, n_classes))
             X_test = scaler.transform(X_test)
             for i_test_sample in range(X_test.shape[0]):
                 y_pred.append(classifier_wrapper(classifier,
-                                                 classifier_name, 
+                                                 classifier_name,
                                                  X_test[i_test_sample, :])[0])
             cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
             f1t = sklearn.metrics.f1_score(y_test, y_pred, average='macro')
-            r1t_all.append(sklearn.metrics.recall_score(y_test, y_pred, average='macro'))
-            p1t_all.append(sklearn.metrics.precision_score(y_test, y_pred, average='macro'))
+            r1t_all.append(sklearn.metrics.recall_score(
+                y_test, y_pred, average='macro'))
+            p1t_all.append(sklearn.metrics.precision_score(
+                y_test, y_pred, average='macro'))
             y_pred_all += y_pred
             y_test_all += y_test.tolist()
-            
+
             f1_per_exp.append(f1t)
             if cmt.size != cm.size:
                 all_classes = set(y)
@@ -690,9 +693,9 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             cm = cm + cmt
         cm = cm + 0.0000000010
 
-        rec = np.array([cm[ci, ci] / np.sum(cm[ci, :]) 
-                        for ci in range(cm.shape[0])]) 
-        pre = np.array([cm[ci, ci] / np.sum(cm[:, ci]) 
+        rec = np.array([cm[ci, ci] / np.sum(cm[ci, :])
+                        for ci in range(cm.shape[0])])
+        pre = np.array([cm[ci, ci] / np.sum(cm[:, ci])
                         for ci in range(cm.shape[0])])
 
         pre_class_all.append(pre)
@@ -701,10 +704,10 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         f1 = 2 * rec * pre / (rec + pre)
 
         # this is just for debugging (it should be equal to f1)
-        f1_b = sklearn.metrics.f1_score(y_test_all, y_pred_all, 
+        f1_b = sklearn.metrics.f1_score(y_test_all, y_pred_all,
                                         average='macro')
-        # Note: np.mean(f1_per_exp) will not be exacty equal to the 
-        # overall f1 (i.e. f1 and f1_b because these are calculated on a 
+        # Note: np.mean(f1_per_exp) will not be exacty equal to the
+        # overall f1 (i.e. f1 and f1_b because these are calculated on a
         # per-sample basis)
         f1_std = np.std(f1_per_exp)
         print(np.mean(f1), f1_b, f1_std)
@@ -781,50 +784,50 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
     er_train_all = []
     er_base_all = []
     for Ci, C in enumerate(params):   # for each param value
-                errors = []
-                errors_train = []
-                errors_baseline = []
-                for e in range(n_exp):   # for each cross-validation iteration:
-                    # split features:
-                    randperm = np.random.permutation(range(n_samples))
-                    n_train = int(round(per_train * n_samples))
-                    f_train = [features_norm[randperm[i]]
-                               for i in range(n_train)]
-                    f_test = [features_norm[randperm[i+n_train]]
-                              for i in range(n_samples - n_train)]
-                    l_train = [labels[randperm[i]] for i in range(n_train)]
-                    l_test = [labels[randperm[i + n_train]]
-                              for i in range(n_samples - n_train)]
+        errors = []
+        errors_train = []
+        errors_baseline = []
+        for e in range(n_exp):   # for each cross-validation iteration:
+            # split features:
+            randperm = np.random.permutation(range(n_samples))
+            n_train = int(round(per_train * n_samples))
+            f_train = [features_norm[randperm[i]]
+                       for i in range(n_train)]
+            f_test = [features_norm[randperm[i+n_train]]
+                      for i in range(n_samples - n_train)]
+            l_train = [labels[randperm[i]] for i in range(n_train)]
+            l_test = [labels[randperm[i + n_train]]
+                      for i in range(n_samples - n_train)]
 
-                    # train multi-class svms:                    
-                    f_train = np.matrix(f_train)                                 
-                    if method_name == "svm":                                        
-                        classifier, train_err = \
-                            train_svm_regression(f_train, l_train, C)
-                    elif method_name == "svm_rbf":                      
-                        classifier, train_err = \
-                            train_svm_regression(f_train, l_train, C,
-                                                 kernel='rbf')
-                    elif method_name == "randomforest":
-                        classifier, train_err = \
-                            train_random_forest_regression(f_train, l_train, C)
-                    error_test = []
-                    error_test_baseline = []
-                    for itest, fTest in enumerate(f_test):
-                        R = regression_wrapper(classifier, method_name, fTest)
-                        Rbaseline = np.mean(l_train)
-                        error_test.append((R - l_test[itest]) *
-                                          (R - l_test[itest]))
-                        error_test_baseline.append((Rbaseline - l_test[itest]) *
-                                                  (Rbaseline - l_test[itest]))
-                    error = np.array(error_test).mean()
-                    error_baseline = np.array(error_test_baseline).mean()
-                    errors.append(error)
-                    errors_train.append(train_err)
-                    errors_baseline.append(error_baseline)
-                errors_all.append(np.array(errors).mean())
-                er_train_all.append(np.array(errors_train).mean())
-                er_base_all.append(np.array(errors_baseline).mean())
+            # train multi-class svms:
+            f_train = np.matrix(f_train)
+            if method_name == "svm":
+                classifier, train_err = \
+                    train_svm_regression(f_train, l_train, C)
+            elif method_name == "svm_rbf":
+                classifier, train_err = \
+                    train_svm_regression(f_train, l_train, C,
+                                         kernel='rbf')
+            elif method_name == "randomforest":
+                classifier, train_err = \
+                    train_random_forest_regression(f_train, l_train, C)
+            error_test = []
+            error_test_baseline = []
+            for itest, fTest in enumerate(f_test):
+                R = regression_wrapper(classifier, method_name, fTest)
+                Rbaseline = np.mean(l_train)
+                error_test.append((R - l_test[itest]) *
+                                  (R - l_test[itest]))
+                error_test_baseline.append((Rbaseline - l_test[itest]) *
+                                           (Rbaseline - l_test[itest]))
+            error = np.array(error_test).mean()
+            error_baseline = np.array(error_test_baseline).mean()
+            errors.append(error)
+            errors_train.append(train_err)
+            errors_baseline.append(error_baseline)
+        errors_all.append(np.array(errors).mean())
+        er_train_all.append(np.array(errors_train).mean())
+        er_base_all.append(np.array(errors_baseline).mean())
 
     best_ind = np.argmin(errors_all)
 
@@ -837,7 +840,7 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
                                                                 er_base_all[i]),
               end="")
         if i == best_ind:
-            print("\t\t best",end="")
+            print("\t\t best", end="")
         print("")
     return params[best_ind], errors_all[best_ind], er_base_all[best_ind]
 
@@ -900,7 +903,7 @@ def features_to_matrix(features):
 
 def pca_wrapper(features, dimensions):
     features, labels = features_to_matrix(features)
-    pca = sklearn.decomposition.PCA(n_components = dimensions)
+    pca = sklearn.decomposition.PCA(n_components=dimensions)
     pca.fit(features)
     coeff = pca.components_
     coeff = coeff[:, 0:dimensions]
@@ -956,7 +959,7 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
                                    "data/models/svm_rbf_4class",
                                    "svm_rbf", "speech")
     """
-    
+
     class_names = []
     y_true_binary = []
     y_true = []
@@ -977,7 +980,7 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
             c, p, probs_names = file_classification(w, model_name, model_type)
             y_pred.append(c)
             y_true.append(probs_names.index(class_names[i]))
-            if i==probs_names.index(positive_class):
+            if i == probs_names.index(positive_class):
                 y_true_binary.append(1)
             else:
                 y_true_binary.append(0)
@@ -986,7 +989,8 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
             probs_positive.append(prob_positive)
     pre, rec, thr_prre = sklearn.metrics.precision_recall_curve(y_true_binary,
                                                                 probs_positive)
-    fpr, tpr, thr_roc = sklearn.metrics.roc_curve(y_true_binary, probs_positive)
+    fpr, tpr, thr_roc = sklearn.metrics.roc_curve(
+        y_true_binary, probs_positive)
     cm = sklearn.metrics.confusion_matrix(y_true, y_pred)
     rec_c,  pre_c, f1_c = compute_class_rec_pre_f1(cm)
     f1 = (sklearn.metrics.f1_score(y_true, y_pred, average='macro'))
@@ -1013,12 +1017,13 @@ def evaluate_model_for_folders(input_test_folders, model_name, model_type,
         mark_prop3 = dict(color='rgba(250, 150, 150, 0.5)',
                           line=dict(color='rgba(250, 150, 150, 1)', width=3))
         b1 = go.Bar(x=class_names, y=rec_c, name="Recall", marker=mark_prop1)
-        b2 = go.Bar(x=class_names, y=pre_c, name="Precision", marker=mark_prop2)
+        b2 = go.Bar(x=class_names, y=pre_c,
+                    name="Precision", marker=mark_prop2)
         b3 = go.Bar(x=class_names, y=f1_c, name="F1", marker=mark_prop3)
 
-        figs.append_trace(heatmap, 1, 1);
+        figs.append_trace(heatmap, 1, 1)
         figs.append_trace(b1, 1, 2)
-        figs.append_trace(b2, 1, 2);
+        figs.append_trace(b2, 1, 2)
         figs.append_trace(b3, 1, 2)
         figs.append_trace(go.Scatter(x=thr_prre, y=pre, name="Precision",
                                      marker=mark_prop1), 2, 1)
@@ -1131,7 +1136,8 @@ def file_regression(input_file, model_name, model_type):
                 or model_type == 'randomforest':
             model, mean, std, _, _, _, _, _ = load_model(r, True)
         curFV = (mid_features - mean) / std  # normalization
-        R.append(regression_wrapper(model, model_type, curFV))  # classification
+        # classification
+        R.append(regression_wrapper(model, model_type, curFV))
     return R, regression_names
 
 
@@ -1185,7 +1191,7 @@ def train_speaker_models():
                     for name in os.listdir(dir_name)
                     if os.path.isdir(os.path.join(dir_name, name))]
     extract_features_and_train(list_of_dirs, mt_win, mt_step, st_win, st_step,
-                    "knn", "data/knnSpeakerAll",
+                               "knn", "data/knnSpeakerAll",
                                compute_beat=False, train_percentage=0.50)
 
     dir_name = "DIARIZATION_ALL/female_male"
@@ -1193,7 +1199,7 @@ def train_speaker_models():
                     for name in os.listdir(dir_name)
                     if os.path.isdir(os.path.join(dir_name, name))]
     extract_features_and_train(list_of_dirs, mt_win, mt_step, st_win, st_step,
-                    "knn", "data/knnSpeakerFemaleMale",
+                               "knn", "data/knnSpeakerFemaleMale",
                                compute_beat=False, train_percentage=0.50)
 
 
