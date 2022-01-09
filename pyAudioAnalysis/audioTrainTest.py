@@ -305,7 +305,7 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     features = temp_features
 
     best_param = evaluate_classifier(features, class_names, classifier_type,
-                                     classifier_par, 0, list_of_ids, n_exp=-1,
+                                     classifier_par, 1, list_of_ids, n_exp=-1,
                                      train_percentage=train_percentage,
                                      smote=use_smote)
 
@@ -600,6 +600,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     n_classes = len(features)
     ac_all = []
     f1_all = []
+    f1_std_all = []
     pre_class_all = []
     rec_classes_all = []
     f1_classes_all = []
@@ -611,7 +612,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     n_samples_total = X.shape[0]
 
     if n_exp == -1:
-        n_exp = int(50000 / n_samples_total) + 1
+        n_exp = int(500 / n_samples_total) + 1
 
     if list_of_ids:
         train_indeces, test_indeces = [], []
@@ -624,8 +625,6 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         # for each param value
         cm = np.zeros((n_classes, n_classes))
         f1_per_exp = []
-        r1t_all = []
-        p1t_all = []
         y_pred_all = []
         y_test_all = []
         for e in range(n_exp):
@@ -674,10 +673,6 @@ def evaluate_classifier(features, class_names, classifier_name, params,
                                                  X_test[i_test_sample, :])[0])
             cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
             f1t = sklearn.metrics.f1_score(y_test, y_pred, average='macro')
-            r1t_all.append(sklearn.metrics.recall_score(
-                y_test, y_pred, average='macro'))
-            p1t_all.append(sklearn.metrics.precision_score(
-                y_test, y_pred, average='macro'))
             y_pred_all += y_pred
             y_test_all += y_test.tolist()
 
@@ -710,13 +705,14 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         # overall f1 (i.e. f1 and f1_b because these are calculated on a
         # per-sample basis)
         f1_std = np.std(f1_per_exp)
-        print(np.mean(f1), f1_b, f1_std)
+        #print(np.mean(f1), f1_b, f1_std)
 
         f1_classes_all.append(f1)
         ac_all.append(np.sum(np.diagonal(cm)) / np.sum(cm))
 
         cms_all.append(cm)
         f1_all.append(np.mean(f1))
+        f1_std_all.append(f1_std)
 
     print("\t\t", end="")
     for i, c in enumerate(class_names):
@@ -758,6 +754,8 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         # keep parameters that maximize overall f1 measure:
         print("Confusion Matrix:")
         print_confusion_matrix(cms_all[best_f1_ind], class_names)
+        print(f"Best macro f1 {100 * f1_all[best_f1_ind]:.1f}")
+        print(f"Best macro f1 std {100 * f1_std_all[best_f1_ind]:.1f}")
         return params[best_f1_ind]
 
 
