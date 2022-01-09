@@ -312,9 +312,14 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     print("Selected params: {0:.5f}".format(best_param))
 
     # STEP C: Train and Save the classifier to file
-
-    # First Use mean/std standard feature scaling:
+    # Get featues in the X, y format:
     features, labels = features_to_matrix(features)
+    # Apply smote if necessary:
+    if use_smote:
+        sm = SMOTE(random_state=2)
+        features, labels = sm.fit_resample(features, labels)
+   
+    # Use mean/std standard feature scaling:
     scaler = StandardScaler()
     features = scaler.fit_transform(features)
     mean = scaler.mean_.tolist()
