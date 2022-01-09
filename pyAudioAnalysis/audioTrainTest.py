@@ -617,7 +617,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
     n_samples_total = X.shape[0]
 
     if n_exp == -1:
-        n_exp = int(500 / n_samples_total) + 1
+        n_exp = int(50000 / n_samples_total) + 1
 
     if list_of_ids:
         train_indeces, test_indeces = [], []
