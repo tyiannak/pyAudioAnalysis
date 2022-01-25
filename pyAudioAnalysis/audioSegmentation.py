@@ -589,6 +589,8 @@ def mid_term_file_classification(input_file, model_name, model_type,
 
     # convert fix-sized flags to segments and classes
     segs, classes = labels_to_segments(labels, mid_step)
+    for i in range(len(segs)):
+        print(segs[i], classes[i])
     segs[-1] = len(signal) / float(sampling_rate)
     # Load grount-truth:
     labels_gt, class_names_gt, accuracy, cm = \
@@ -605,6 +607,7 @@ def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
         # load ground truth and class names
         labels_gt, class_names_gt = load_ground_truth_segments(gt_file,
                                                                mid_step)
+
         # map predicted labels to ground truth class names
         # Note: if a predicted label does not belong to the ground truth
         #       classes --> -1
@@ -618,7 +621,8 @@ def load_ground_truth(gt_file, labels, class_names, mid_step, plot_results):
         cm = calculate_confusion_matrix(labels_new, labels_gt, class_names_gt)
 
         accuracy = plot_segmentation_results(labels_new, labels_gt,
-                                        class_names, mid_step, not plot_results)
+                                             class_names_gt, mid_step, 
+                                             not plot_results)
         if accuracy >= 0:
             print("Overall Accuracy: {0:.2f}".format(accuracy))
 
