@@ -633,7 +633,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         y_pred_all = []
         y_test_all = []
         for e in range(n_exp):
-            y_pred, y_real = [], []
+            y_pred = []
             # for each cross-validation iteration:
             print("Param = {0:.5f} - classifier Evaluation "
                   "Experiment {1:d} of {2:d}".format(C, e+1, n_exp))
@@ -676,8 +676,11 @@ def evaluate_classifier(features, class_names, classifier_name, params,
                 y_pred.append(classifier_wrapper(classifier,
                                                  classifier_name,
                                                  X_test[i_test_sample, :])[0])
+            # current confusion matrices and F1:
             cmt = sklearn.metrics.confusion_matrix(y_test, y_pred)
             f1t = sklearn.metrics.f1_score(y_test, y_pred, average='macro')
+            # aggregated predicted and ground truth labels 
+            # (used for the validation of final F1)
             y_pred_all += y_pred
             y_test_all += y_test.tolist()
 
@@ -803,7 +806,7 @@ def evaluate_regression(features, labels, n_exp, method_name, params):
                       for i in range(n_samples - n_train)]
 
             # train multi-class svms:
-            f_train = np.matrix(f_train)
+            f_train = np.array(f_train)
             if method_name == "svm":
                 classifier, train_err = \
                     train_svm_regression(f_train, l_train, C)

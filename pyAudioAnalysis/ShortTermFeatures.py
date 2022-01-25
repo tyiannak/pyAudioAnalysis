@@ -299,7 +299,7 @@ def chroma_features(signal, sampling_rate, num_fft):
     C2 = C2.reshape(int(C2.shape[0] / 12), 12)
     # for i in range(12):
     #    finalC[i] = np.sum(C[i:C.shape[0]:12])
-    final_matrix = np.matrix(np.sum(C2, axis=0)).T
+    final_matrix = np.sum(C2, axis=0).reshape(1, -1).T
 
     spec_sum = spec.sum()
     if spec_sum == 0:
