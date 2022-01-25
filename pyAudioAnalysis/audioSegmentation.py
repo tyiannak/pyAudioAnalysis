@@ -807,8 +807,7 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
 
     return seg_limits
 
-
-def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
+def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
                         short_window=0.1, lda_dim=5, plot_res=False):
     """
     ARGUMENTS:
@@ -829,40 +828,44 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
                             "data/models")
 
     classifier_all, mean_all, std_all, class_names_all, _, _, _, _, _ = \
-        at.load_model_knn(os.path.join(base_dir, "knn_speaker_10"))
+        at.load_model(os.path.join(base_dir, "svm_rbf_speaker_10"))
     classifier_fm, mean_fm, std_fm, class_names_fm, _, _, _, _,  _ = \
-        at.load_model_knn(os.path.join(base_dir, "knn_speaker_male_female"))
+        at.load_model(os.path.join(base_dir, "svm_rbf_speaker_male_female"))
 
-    mid_feats, st_feats, _ = \
+
+#    labels, _, _, _ = mid_term_file_classification(filename, os.path.join(base_dir, "svm_rbf_speaker_10"), "svm_rbf")
+#    print(labels)
+#    labels, _, _, _ = mid_term_file_classification(filename, os.path.join(base_dir, "svm_rbf_speaker_male_female"), "svm_rbf")
+#    print(labels)
+
+    mid_feats, st_feats, a = \
         mtf.mid_feature_extraction(signal, sampling_rate,
                                    mid_window * sampling_rate,
                                    mid_step * sampling_rate,
-                                   round(sampling_rate * short_window),
-                                   round(sampling_rate * short_window * 0.5))
-    
+                                   round(sampling_rate * 0.05),
+                                   round(sampling_rate * 0.05))
+
     mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
                                   len(class_names_fm), mid_feats.shape[1]))
     for index in range(mid_feats.shape[1]):
         feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
         feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
-        _, p1 = at.classifier_wrapper(classifier_all, "knn", feature_norm_all)
-        _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
+        _, p1 = at.classifier_wrapper(classifier_all, "svm_rbf", feature_norm_all)
+        _, p2 = at.classifier_wrapper(classifier_fm, "svm_rbf", feature_norm_fm)
         start = mid_feats.shape[0]
         end = mid_feats.shape[0] + len(class_names_all)
         mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
         mid_term_features[start:end, index] = p1 + 1e-4
         mid_term_features[end::, index] = p2 + 1e-4
-#    mid_term_features = mid_term_features[-len(class_names_all)-len(class_names_fm):, :]
     # normalize features:
     scaler = StandardScaler()
-    mid_feats_norm = scaler.fit_transform(mid_feats.T)
-    n_wins = mid_feats.shape[1]
+    mid_feats_norm = scaler.fit_transform(mid_term_features.T)
 
     # remove outliers:
     dist_all = np.sum(distance.squareform(distance.pdist(mid_feats_norm.T)),
                       axis=0)
     m_dist_all = np.mean(dist_all)
-    i_non_outliers = np.nonzero(dist_all < 1.2 * m_dist_all)[0]
+    i_non_outliers = np.nonzero(dist_all < 1.1 * m_dist_all)[0]
 
     # TODO: Combine energy threshold for outlier removal:
     # EnergyMin = np.min(mt_feats[1,:])
@@ -939,12 +942,10 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
     
     for speakers in s_range:
         k_means = sklearn.cluster.KMeans(n_clusters=speakers)
-        k_means.fit(mid_feats_norm.T)
-        cls = k_means.labels_        
-        means = k_means.cluster_centers_
-
+        k_means.fit(mid_feats_norm)
+        cls = k_means.labels_ 
         cluster_labels.append(cls)
-        cluster_centers.append(means)
+#        cluster_centers.append(means)
         sil_1 = []; sil_2 = []
         for c in range(speakers):
             # for each speaker (i.e. for each extracted cluster)
@@ -954,7 +955,7 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
                 sil_2.append(0.0)
             else:
                 # get subset of feature vectors
-                mt_feats_norm_temp = mid_feats_norm[:, cls == c]
+                mt_feats_norm_temp = mid_feats_norm[cls == c, :]
                 # compute average distance between samples
                 # that belong to the cluster (a values)
                 dist = distance.pdist(mt_feats_norm_temp.T)
@@ -965,9 +966,9 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
                     if c2 != c:
                         clust_per_cent_2 = np.nonzero(cls == c2)[0].shape[0] /\
                                            float(len(cls))
-                        mid_features_temp = mid_feats_norm[:, cls == c2]
-                        dist = distance.cdist(mt_feats_norm_temp.T,
-                                              mid_features_temp.T)
+                        mid_features_temp = mid_feats_norm[cls == c2, :]
+                        dist = distance.cdist(mt_feats_norm_temp,
+                                              mid_features_temp)
                         sil_temp.append(np.mean(dist)*(clust_per_cent
                                                        + clust_per_cent_2)/2.0)
                 sil_temp = np.array(sil_temp)
@@ -1011,6 +1012,108 @@ def speaker_diarization(filename, n_speakers, mid_window=2.0, mid_step=0.1,
     cls = scipy.signal.medfilt(cls, 5)
 
     class_names = ["speaker{0:d}".format(c) for c in range(num_speakers)]
+
+    # load ground-truth if available
+    gt_file = filename.replace('.wav', '.segments')
+    # if groundtruth exists
+    if os.path.isfile(gt_file):
+        seg_start, seg_end, seg_labs = read_segmentation_gt(gt_file)
+        flags_gt, class_names_gt = segments_to_labels(seg_start, seg_end,
+                                                      seg_labs, mid_step)
+
+    if plot_res:
+        fig = plt.figure()    
+        if n_speakers > 0:
+            ax1 = fig.add_subplot(111)
+        else:
+            ax1 = fig.add_subplot(211)
+        ax1.set_yticks(np.array(range(len(class_names))))
+        ax1.axis((0, duration, -1, len(class_names)))
+        ax1.set_yticklabels(class_names)
+        ax1.plot(np.array(range(len(cls))) * mid_step + mid_step / 2.0, cls)
+
+    if os.path.isfile(gt_file):
+        if plot_res:
+            ax1.plot(np.array(range(len(flags_gt))) *
+                     mid_step + mid_step / 2.0, flags_gt, 'r')
+        purity_cluster_m, purity_speaker_m = \
+            evaluate_speaker_diarization(cls, flags_gt)
+        print("{0:.1f}\t{1:.1f}".format(100 * purity_cluster_m,
+                                        100 * purity_speaker_m))
+        if plot_res:
+            plt.title("Cluster purity: {0:.1f}% - "
+                      "Speaker purity: {1:.1f}%".format(100 * purity_cluster_m,
+                                                        100 * purity_speaker_m))
+    if plot_res:
+        plt.xlabel("time (seconds)")
+        if n_speakers <= 0:
+            plt.subplot(212)
+            plt.plot(s_range, sil_all)
+            plt.xlabel("number of clusters")
+            plt.ylabel("average clustering's sillouette")
+        plt.show()
+    return cls
+
+
+def speaker_diarization_2(filename, n_speakers, mid_window=1.0, mid_step=0.1,
+                        short_window=0.1, lda_dim=5, plot_res=False):
+    """
+    ARGUMENTS:
+        - filename:        the name of the WAV file to be analyzed
+        - n_speakers       the number of speakers (clusters) in
+                           the recording (<=0 for unknown)
+        - mid_window (opt)    mid-term window size
+        - mid_step (opt)    mid-term window step
+        - short_window  (opt)    short-term window size
+        - lda_dim (opt     LDA dimension (0 for no LDA)
+        - plot_res         (opt)   0 for not plotting the results 1 for plotting
+    """
+    sampling_rate, signal = audioBasicIO.read_audio_file(filename)
+    signal = audioBasicIO.stereo_to_mono(signal)
+    duration = len(signal) / sampling_rate
+
+    base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            "data/models")
+
+    classifier_all, mean_all, std_all, class_names_all, _, _, _, _, _ = \
+        at.load_model(os.path.join(base_dir, "svm_rbf_speaker_10"))
+    classifier_fm, mean_fm, std_fm, class_names_fm, _, _, _, _,  _ = \
+        at.load_model(os.path.join(base_dir, "svm_rbf_speaker_male_female"))
+
+    mid_feats, st_feats, a = \
+        mtf.mid_feature_extraction(signal, sampling_rate,
+                                   mid_window * sampling_rate,
+                                   mid_step * sampling_rate,
+                                   round(sampling_rate * 0.05),
+                                   round(sampling_rate * 0.05))
+    print(a)  
+    mid_term_features = np.zeros((mid_feats.shape[0] + len(class_names_all) +
+                                  len(class_names_fm), mid_feats.shape[1]))
+    for index in range(mid_feats.shape[1]):
+        feature_norm_all = (mid_feats[:, index] - mean_all) / std_all
+        feature_norm_fm = (mid_feats[:, index] - mean_fm) / std_fm
+        _, p1 = at.classifier_wrapper(classifier_all, "svm_rbf", feature_norm_all)
+        _, p2 = at.classifier_wrapper(classifier_fm, "svm_rbf", feature_norm_fm)
+        start = mid_feats.shape[0]
+        end = mid_feats.shape[0] + len(class_names_all)
+        mid_term_features[0:mid_feats.shape[0], index] = mid_feats[:, index]
+        mid_term_features[start:end, index] = p1 + 1e-4
+        mid_term_features[end::, index] = p2 + 1e-4
+        #print(p1)
+        #print(p2)
+    #mid_term_features = mid_term_features[-len(class_names_all)-len(class_names_fm):, :]
+#    mid_term_features = mid_term_features[0:3, :]
+    # normalize features:
+    scaler = StandardScaler()
+    mid_feats_norm = scaler.fit_transform(mid_feats.T)
+    
+    k_means = sklearn.cluster.KMeans(n_clusters=n_speakers)
+    k_means.fit(mid_feats_norm)
+    cls = k_means.labels_
+    print(len(cls))
+    cls = scipy.signal.medfilt(cls, 5)
+
+    class_names = ["speaker{0:d}".format(c) for c in range(n_speakers)]
 
     # load ground-truth if available
     gt_file = filename.replace('.wav', '.segments')
