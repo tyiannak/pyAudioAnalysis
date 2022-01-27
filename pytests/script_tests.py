@@ -31,9 +31,14 @@ def test_feature_extraction_segment():
     assert mt.shape[1] == 5, "Wrong number of short-term windows"
     assert mt.shape[0] == len(mt_names),  "Number of features and feature " \
                                           "names are not the same"
-#    assert F.shape[1] == 20, "Wrong number of shor-term windows"
-#    assert F.shape[0] == len(f_names), "Number of features and feature " \
-#                                       "names are not the same"
+
+
+def test_speaker_diarization():
+    labels, purity_cluster_m, purity_speaker_m = \
+        aS.speaker_diarization("test_data/diarizationExample.wav", 
+                                4, 1, 0.1, 0.1, 0, False)
+    assert purity_cluster_m > 0.9, "Diarization cluster purity is low"
+    assert purity_speaker_m > 0.9, "Diarization speaker purity is low"
 
 
     """
