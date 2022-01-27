@@ -221,11 +221,11 @@ def mfcc_filter_banks(sampling_rate, num_fft, lowfreq=133.33, linc=200 / 3,
 
         lid = np.arange(np.floor(low_freqs * num_fft / sampling_rate) + 1,
                         np.floor(cent_freqs * num_fft / sampling_rate) + 1,
-                        dtype=np.int)
+                        dtype=int)
         lslope = heights[i] / (cent_freqs - low_freqs)
         rid = np.arange(np.floor(cent_freqs * num_fft / sampling_rate) + 1,
                         np.floor(high_freqs * num_fft / sampling_rate) + 1,
-                        dtype=np.int)
+                        dtype=int)
         rslope = heights[i] / (high_freqs - cent_freqs)
         fbank[i][lid] = lslope * (nfreqs[lid] - low_freqs)
         fbank[i][rid] = rslope * (high_freqs - nfreqs[rid])
