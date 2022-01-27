@@ -807,6 +807,7 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
 
     return seg_limits
 
+
 def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
                         short_window=0.1, lda_dim=5, plot_res=False):
     """
@@ -1032,6 +1033,7 @@ def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
         ax1.set_yticklabels(class_names)
         ax1.plot(np.array(range(len(cls))) * mid_step + mid_step / 2.0, cls)
 
+    purity_cluster_m, purity_speaker_m = -1, -1
     if os.path.isfile(gt_file):
         if plot_res:
             ax1.plot(np.array(range(len(flags_gt))) *
@@ -1052,7 +1054,7 @@ def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
             plt.xlabel("number of clusters")
             plt.ylabel("average clustering's sillouette")
         plt.show()
-    return cls
+    return cls, purity_cluster_m, purity_speaker_m
 
 
 def speaker_diarization_evaluation(folder_name, lda_dimensions):
