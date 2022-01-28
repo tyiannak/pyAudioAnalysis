@@ -228,7 +228,7 @@ def silenceRemovalWrapper(inputFile, smoothingWindow, weight):
 
 def speakerDiarizationWrapper(inputFile, numSpeakers, useLDA):
     if useLDA:
-        aS.speaker_diarization(inputFile, numSpeakers, plot_res=True)
+        aS.speaker_diarization(inputFile, numSpeakers, lda_dim=5, plot_res=True)
     else:
         aS.speaker_diarization(inputFile, numSpeakers, lda_dim=0, plot_res=True)
 
