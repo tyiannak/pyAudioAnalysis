@@ -7,7 +7,7 @@ from pyAudioAnalysis import ShortTermFeatures
 from pyAudioAnalysis import MidTermFeatures
 from pyAudioAnalysis import audioTrainTest as aT
 from pyAudioAnalysis import audioSegmentation as aS
-
+import numpy as np
 
 root_data_path = "/Users/tyiannak/ResearchData/Audio Dataset/pyAudioAnalysisData/"
 
@@ -36,9 +36,27 @@ def test_feature_extraction_segment():
 def test_speaker_diarization():
     labels, purity_cluster_m, purity_speaker_m = \
         aS.speaker_diarization("test_data/diarizationExample.wav", 
-                                4, 1, 0.1, 0.1, 0, False)
+                                4, plot_res=False)
     assert purity_cluster_m > 0.9, "Diarization cluster purity is low"
     assert purity_speaker_m > 0.9, "Diarization speaker purity is low"
+
+
+def test_train_and_evaluate_classifier():
+    aT.extract_features_and_train(["test_data/3_class/music",
+                                   "test_data/3_class/silence",
+                                   "test_data/3_class/speech"], 
+                                   1, 1, 0.05, 0.05, "svm_rbf", "temp")
+    cm, thr_prre, pre, rec, thr_roc, fpr, tpr = \
+        aT.evaluate_model_for_folders(["test_data/3_class/music",
+                                       "test_data/3_class/silence",
+                                       "test_data/3_class/speech"], 
+                                      "temp", "svm_rbf", "music", False)
+    acc = np.sum(np.diag(cm)) / np.sum(cm)
+    assert acc > 0.9, "Low classification accuracy on training data"
+
+    #TODOs 
+    # 1) mid term classification (scottish using existing model in rep) 
+    # 2) regression
 
 
     """
