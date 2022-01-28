@@ -809,7 +809,7 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
 
 
 def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
-                        short_window=0.1, lda_dim=5, plot_res=False):
+                        short_window=0.1, lda_dim=0, plot_res=False):
     """
     ARGUMENTS:
         - filename:        the name of the WAV file to be analyzed
@@ -833,11 +833,6 @@ def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
     classifier_fm, mean_fm, std_fm, class_names_fm, _, _, _, _,  _ = \
         at.load_model(os.path.join(base_dir, "svm_rbf_speaker_male_female"))
 
-
-#    labels, _, _, _ = mid_term_file_classification(filename, os.path.join(base_dir, "svm_rbf_speaker_10"), "svm_rbf")
-#    print(labels)
-#    labels, _, _, _ = mid_term_file_classification(filename, os.path.join(base_dir, "svm_rbf_speaker_male_female"), "svm_rbf")
-#    print(labels)
 
     mid_feats, st_feats, a = \
         mtf.mid_feature_extraction(signal, sampling_rate,
@@ -913,9 +908,9 @@ def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
         for index in range(mt_feats_to_red.shape[1]):
             feature_norm_all = (mt_feats_to_red[:, index] - mean_all) / std_all
             feature_norm_fm = (mt_feats_to_red[:, index] - mean_fm) / std_fm
-            _, p1 = at.classifier_wrapper(classifier_all, "knn",
+            _, p1 = at.classifier_wrapper(classifier_all, "svm_rbf",
                                           feature_norm_all)
-            _, p2 = at.classifier_wrapper(classifier_fm, "knn", feature_norm_fm)
+            _, p2 = at.classifier_wrapper(classifier_fm, "svm_rbf", feature_norm_fm)
             mt_feats_to_red_2[0:mt_feats_to_red.shape[0], index] = \
                 mt_feats_to_red[:, index]
             mt_feats_to_red_2[mt_feats_to_red.shape[0]:limit, index] = p1 + 1e-4
@@ -930,7 +925,7 @@ def speaker_diarization(filename, n_speakers, mid_window=1.0, mid_step=0.1,
             labels[index] = int(index * short_window / lda_step_ratio)
         clf = sklearn.discriminant_analysis.\
             LinearDiscriminantAnalysis(n_components=lda_dim)
-        mid_feats_norm = clf.fit_transform(mt_feats_to_red.T, labels).T
+        mid_feats_norm = clf.fit_transform(mt_feats_to_red.T, labels)
         #clf.fit(mt_feats_to_red.T, labels)
         #mid_feats_norm = (clf.transform(mid_feats_norm.T)).T
     if n_speakers <= 0:
