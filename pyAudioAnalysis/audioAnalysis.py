@@ -84,13 +84,18 @@ def fileChromagramWrapper(wav_file):
 def trainClassifierWrapper(method, beat_feats, directories, model_name):
     if len(directories) < 2:
         raise Exception("At least 2 directories are needed")
-    aT.extract_features_and_train(directories, 1, 1, aT.shortTermWindow, aT.shortTermStep,
-                                  method.lower(), model_name, compute_beat=beat_feats)
+    aT.extract_features_and_train(directories, 1, 1, aT.shortTermWindow, 
+                                  aT.shortTermStep, method.lower(), model_name, 
+                                  compute_beat=beat_feats, 
+                                  train_percentage=0.90,
+                                  dict_of_ids=None,
+                                  use_smote=False)
 
 
 def trainRegressionWrapper(method, beat_feats, dirName, model_name):
     aT.feature_extraction_train_regression(dirName, 1, 1, aT.shortTermWindow,
-                                           aT.shortTermStep, method.lower(), model_name,
+                                           aT.shortTermStep, method.lower(), 
+                                           model_name,
                                            compute_beat=beat_feats)
 
 
@@ -201,7 +206,8 @@ def segmentclassifyFileWrapper(inputWavFile, model_name, model_type):
         gtFile = inputWavFile.replace(".wav", ".segments")
     if inputWavFile[-4::]==".mp3":
         gtFile = inputWavFile.replace(".mp3", ".segments")
-    aS.mid_term_file_classification(inputWavFile, model_name, model_type, True, gtFile)
+    aS.mid_term_file_classification(inputWavFile, model_name, model_type, True, 
+                                    gtFile)
 
 
 def segmentclassifyFileWrapperHMM(wavFile, hmmModelName):
