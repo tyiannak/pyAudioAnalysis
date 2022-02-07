@@ -687,12 +687,14 @@ def evaluate_classifier(features, class_names, classifier_name, params,
             f1_per_exp.append(f1t)
             if cmt.size != cm.size:
                 all_classes = set(y)
-                split_classes = set(y_test)
+                split_classes = set(y_test.tolist() + y_pred)
                 missing_classes = all_classes.difference(split_classes)
                 missing_classes = list(missing_classes)
                 missing_classes = [int(x) for x in missing_classes]
-                cmt = np.insert(cmt, missing_classes, 0, axis=0)
-                cmt = np.insert(cmt, missing_classes, 0, axis=1)
+                for mm in missing_classes:
+                    cmt = np.insert(cmt, mm, 0, axis=0)
+                for mm in missing_classes:
+                    cmt = np.insert(cmt, mm, 0, axis=1)
             cm = cm + cmt
         cm = cm + 0.0000000010
 
