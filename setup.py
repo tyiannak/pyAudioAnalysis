@@ -11,7 +11,7 @@ def read(fname):
 requirements = read('requirements.txt').splitlines()
 
 setup(name='pyAudioAnalysis',
-      version='0.3.13',
+      version='0.3.14',
       description='Python Audio Analysis Library: Feature Extraction, Classification, Segmentation and Applications',
       url='https://github.com/tyiannak/pyAudioAnalysis',
       author='Theodoros Giannakopoulos',
