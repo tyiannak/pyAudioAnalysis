@@ -199,6 +199,26 @@ def directory_feature_extraction(folder_path, mid_window, mid_step,
 
         mid_features = np.transpose(mid_features)
         mid_features = mid_features.mean(axis=0)
+
+        print(mid_features.shape)
+        from deep_audio_features.bin.basic_test import test_model
+        r, soft = test_model(modelpath="filler.pt",
+                             ifile=file_path,
+                             layers_dropped=1,
+                             test_segmentation=True,
+                             verbose=False)
+
+        model_features = np.squeeze(np.array(soft))
+        if model_features.ndim>1:
+            # long-term average the CNN posteriors or CAE representations
+            # (along different CNN/CAE segment-decisions)
+            deep_features = np.mean(model_features, axis=0).ravel()
+        else:
+            # if only 1 segment exists in the data:
+            deep_features = model_features
+        print(deep_features.shape)
+        mid_features = np.concatenate([mid_features, deep_features])
+        print(mid_features.shape)
         # long term averaging of mid-term statistics
         if (not np.isnan(mid_features).any()) and \
                 (not np.isinf(mid_features).any()):
