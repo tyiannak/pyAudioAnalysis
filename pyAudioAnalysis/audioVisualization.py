@@ -224,10 +224,9 @@ def visualizeFeaturesFolder(folder, dimReductionMethod, priorKnowledge = "none")
 
     data=SMgroup
     fig = px.imshow(data,
-                labels=dict(x="Day of Week", y="Time of Day", color="Productivity"),
+                labels=dict(x="", y="", color="Category similarity"),
                 x=unames_category_toviz,
-                y=unames_category_toviz
-               )
+                y=unames_category_toviz)
     fig.update_xaxes(side="top")
     fig.show()
 
