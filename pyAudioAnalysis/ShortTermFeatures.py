@@ -332,7 +332,7 @@ def chromagram(signal, sampling_rate, window, step, plot=False,
         sampling_rate:          the sampling freq (in Hz)
         window:         the short-term window size (in samples)
         step:        the short-term window step (in samples)
-        plot:        flag, 1 if results are to be ploted
+        plot:        flag, 1 if results are to be plotted
     RETURNS:
     """
     window = int(window)
@@ -397,7 +397,7 @@ def spectrogram(signal, sampling_rate, window, step, plot=False,
         sampling_rate:  the sampling freq (in Hz)
         window:         the short-term window size (in samples)
         step:           the short-term window step (in samples)
-        plot:           flag, 1 if results are to be ploted
+        plot:           flag, 1 if results are to be plotted
         show_progress flag for showing progress using tqdm
     RETURNS:
     """

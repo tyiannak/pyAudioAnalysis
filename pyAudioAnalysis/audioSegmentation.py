@@ -682,10 +682,10 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
          - signal:                the input audio signal
          - sampling_rate:               sampling freq
          - st_win, st_step:    window size and step in seconds
-         - smoothWindow:     (optinal) smooth window (in seconds)
-         - weight:           (optinal) weight factor (0 < weight < 1)
+         - smoothWindow:     (optional) smooth window (in seconds)
+         - weight:           (optional) weight factor (0 < weight < 1)
                               the higher, the more strict
-         - plot:             (optinal) True if results are to be plotted
+         - plot:             (optional) True if results are to be plotted
     RETURNS:
          - seg_limits:    list of segment limits in seconds (e.g [[0.1, 0.9],
                           [1.4, 3.0]] means that

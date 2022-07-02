@@ -711,7 +711,7 @@ def evaluate_classifier(features, class_names, classifier_name, params,
         # this is just for debugging (it should be equal to f1)
         f1_b = sklearn.metrics.f1_score(y_test_all, y_pred_all,
                                         average='macro')
-        # Note: np.mean(f1_per_exp) will not be exacty equal to the
+        # Note: np.mean(f1_per_exp) will not be exactly equal to the
         # overall f1 (i.e. f1 and f1_b because these are calculated on a
         # per-sample basis)
         f1_std = np.std(f1_per_exp)
