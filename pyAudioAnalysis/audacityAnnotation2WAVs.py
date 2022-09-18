@@ -25,8 +25,7 @@ def annotation2files(wavFile, csvFile):
             T2 = float(row[1].replace(",","."))            
             label = "%s_%s_%.2f_%.2f.wav" % (wavFile, row[2], T1, T2)
             label = label.replace(" ", "_")
-            xtemp = x[int(round(T1*Fs)):int(round(T2*Fs))]            
-            print(T1, T2, label, xtemp.shape)
+            xtemp = x[int(round(T1*Fs)):int(round(T2*Fs))]     
             wavfile.write(label, Fs, xtemp)  
             
 def annotation2folders(wavFile: str, csvFile: str, folderPath: str):
@@ -46,7 +45,7 @@ def annotation2folders(wavFile: str, csvFile: str, folderPath: str):
         for j, row in enumerate(reader):
             T1 = float(row[0].replace(",","."))
             T2 = float(row[1].replace(",","."))
-            label = os.path.join(folderPath, row[2].replace(' ', '_'), "%s_%.2f_%.2f.wav" % (wavFile.split('/')[-1], T1, T2))
+            label = os.path.join(folderPath, row[2].replace(' ', '_'), "%s_%.2f_%.2f.wav" % (os.path.split(wavFile.split)[1], T1, T2))
             if not os.path.exists(os.path.join(folderPath, row[2].replace(' ', '_'))):
                 os.makedirs(os.path.join(folderPath, row[2].replace(' ', '_')))
             label = label.replace(" ", "_")
