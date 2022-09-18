@@ -527,12 +527,16 @@ def mid_term_file_classification(input_file, model_name, model_type,
         - model_type:        svm or knn depending on the classifier type
         - plot_results:      True if results are to be plotted using
                              matplotlib along with a set of statistics
-
+        - gt_file:           path to the ground truth file, if exists, 
+                             for calculating classification performance
     RETURNS:
-          - segs:           a sequence of segment's endpoints: segs[i] is the
-                            endpoint of the i-th segment (in seconds)
-          - classes:        a sequence of class flags: class[i] is the
-                            class ID of the i-th segment
+    labels, class_names, accuracy, cm
+          - labels:         a sequence of segment's labels: segs[i] is the label
+                            of the i-th segment
+          - class_names:    a string sequence of class_names used in classification:
+                            class_names[i] is the name of classes[i]
+          - accuracy:       the accuracy of the classification.
+          - cm:             the confusion matrix of this classification
     """
     labels = []
     accuracy = 0.0

@@ -294,6 +294,8 @@ def extract_features_and_train(paths, mid_window, mid_step, short_window,
     # get optimal classifier parameter:
     temp_features = []
     for feat in features:
+        if feat.ndim == 1: # this class has only 1 sample
+            feat = feat.reshape((1, feat.shape[0]))
         temp = []
         for i in range(feat.shape[0]):
             temp_fv = feat[i, :]
