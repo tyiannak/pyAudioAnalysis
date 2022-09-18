@@ -50,7 +50,6 @@ def annotation2folders(wavFile: str, csvFile: str, folderPath: str):
                 os.makedirs(os.path.join(folderPath, row[2].replace(' ', '_')))
             label = label.replace(" ", "_")
             xtemp = x[int(round(T1*Fs)):int(round(T2*Fs))]            
-            print(T1, T2, label, xtemp.shape)
             wavfile.write(label, Fs, xtemp)
     
 def folderAnnotation2folders(sourceFolder, targetFolder):
