@@ -791,8 +791,7 @@ def silence_removal(signal, sampling_rate, st_win, st_step, smooth_window=0.5,
     seg_limits = seg_limits_2
 
     if plot:
-        time_x = np.arange(0, signal.shape[0] / float(sampling_rate), 1.0 /
-                           sampling_rate)
+        time_x = np.arange(0, len(signal)) * (1.0 / sampling_rate)
 
         plt.subplot(2, 1, 1)
         plt.plot(time_x, signal)
