@@ -8,5 +8,5 @@ pydub==0.25.1
 scikit_learn==0.24.2
 tqdm==4.52.0
 plotly==5.3.1
-pandas==1.2.4
+pandas>=1.2.4
 imblearn
