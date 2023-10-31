@@ -1121,14 +1121,14 @@ def file_regression(input_file, model_name, model_type):
             = load_model(regression_models[0], True)
 
     # read audio file and convert to mono
-    samping_rate, signal = audioBasicIO.read_audio_file(input_file)
+    sampling_rate, signal = audioBasicIO.read_audio_file(input_file)
     signal = audioBasicIO.stereo_to_mono(signal)
     # feature extraction:
     mid_features, s, _ = \
-        aF.mid_feature_extraction(signal, samping_rate, mid_window * samping_rate,
-                                  mid_step * samping_rate,
-                                  round(samping_rate * short_window),
-                                  round(samping_rate * short_step))
+        aF.mid_feature_extraction(signal, sampling_rate, mid_window * sampling_rate,
+                                  mid_step * sampling_rate,
+                                  round(sampling_rate * short_window),
+                                  round(sampling_rate * short_step))
     # long term averaging of mid-term statistics
     mid_features = mid_features.mean(axis=1)
     if compute_beat:
