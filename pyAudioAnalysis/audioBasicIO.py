@@ -150,6 +150,10 @@ def read_audio_generic(input_file):
             signal = np.array(temp_signal).T
     except:
         print("Error: file not found or other I/O error. (DECODING FAILED)")
+
+    if signal.ndim == 2 and signal.shape[1] == 1:
+        signal = signal.flatten()
+    
     return sampling_rate, signal
 
 
