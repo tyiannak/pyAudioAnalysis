@@ -18,6 +18,7 @@ pyAudioAnalysis is a Python library covering a wide range of audio analysis task
  * Perform *unsupervised segmentation* (e.g. speaker diarization) and extract audio *thumbnails*
  * Train and use *audio regression* models (example application: emotion recognition)
  * Apply dimensionality reduction to *visualize* audio data and content similarities
+ * **NEW**: Compute *ARCO arcograms* and *RCI* (Rational Coherence Index) for periodicity analysis
 
 ## Installation
  * Clone the source of this library: `git clone https://github.com/tyiannak/pyAudioAnalysis.git`
@@ -39,6 +40,61 @@ aT.file_classification("data/doremi.wav", "svmSMtemp","svm")
 (0.0, array([ 0.90156761,  0.09843239]), ['music', 'speech'])
 
 In addition, command-line support is provided for all functionalities. E.g. the following command extracts the spectrogram of an audio signal stored in a WAV file: `python audioAnalysis.py fileSpectrogram -i data/doremi.wav`
+
+## ARCO-RCI: Periodicity Analysis
+
+pyAudioAnalysis now includes ARCO (Rational-Arc Fingerprint) and RCI (Rational Coherence Index) for analyzing periodic patterns in audio and other 1D signals.
+
+### Quick Example
+
+```python
+from pyAudioAnalysis.audioBasicIO import read_audio_file, stereo_to_mono
+from pyAudioAnalysis_ARCO_RCI import ARCOSpectrum
+
+# Load audio
+fs, signal = read_audio_file('audio.wav')
+signal = stereo_to_mono(signal)
+
+# Compute arcograms
+arco = ARCOSpectrum(max_q=30, base_sigma=0.5)
+arcograms, rci_windows, positions = arco.compute(
+    signal, fs, window_size=int(0.5*fs), step=int(0.1*fs)
+)
+
+print(f"Mean RCI: {rci_windows.mean():.3f}")
+print(f"Periodicity strength: {'High' if rci_windows.mean() > 0.7 else 'Moderate' if rci_windows.mean() > 0.4 else 'Low'}")
+```
+
+### Command-Line Usage
+
+```bash
+# Analyze audio file and generate plots
+python -m pyAudioAnalysis_ARCO_RCI.cli \
+    --input audio.wav \
+    --save-arcogram arcogram.csv \
+    --save-plot arcogram.png
+
+# Batch process directory
+python -m pyAudioAnalysis_ARCO_RCI.cli --input audio_folder/ --save-arcogram results/
+```
+
+### Features
+
+- **Arcogram computation**: Power spectrum projected onto rational frequency bands
+- **RCI metrics**: Quantify periodicity strength (0=noise, 1=perfect periodicity)
+- **ML-ready features**: Fixed-length ARCO-print vectors for classification/regression
+- **GPU acceleration**: Optional PyTorch implementation for large-scale processing
+- **Multi-track support**: Analyze multiple feature channels simultaneously
+
+### Documentation
+
+For detailed documentation, see [docs/ARCO_RCI.md](docs/ARCO_RCI.md)
+
+### Applications
+
+- **Audio**: Pitch tracking, voiced/unvoiced detection, music tempo analysis
+- **Physiological signals**: ECG heart rate variability, EEG analysis
+- **Bioinformatics**: Protein heptad repeat detection, sequence periodicity
 
 ## Further reading
 
