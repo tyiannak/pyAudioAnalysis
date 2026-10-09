@@ -5,11 +5,6 @@
 
 *This is general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki and [here](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for a more generic intro to audio data handling*
 
-## News
- * [2025-03-29] Check [Behavioral Signals Python SDK](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python) that demonstrates how to use [Behavioral Signals' API](https://platform.behavioralsignals.com/) to send speech data and retrieve predictions related to emotions and behaviors using Python code. It works in both batch and streaming mode. Now [Behavioral Signals' API](https://platform.behavioralsignals.com/) also supports a Speaker Agnostic Deep Fake Detector.
- * [2021-08-06] [deep-audio-features](https://github.com/tyiannak/deep_audio_features) deep audio classification and feature extraction using CNNs and Pytorch 
- * Check out [paura](https://github.com/tyiannak/paura) a Python script for realtime recording and analysis of audio data
-
 ## General
 pyAudioAnalysis is a Python library covering a wide range of audio analysis tasks. Through pyAudioAnalysis you can:
  * Extract audio *features* and representations (e.g. mfccs, spectrogram, chromagram)
@@ -68,7 +63,7 @@ For Matlab-related audio analysis material check  [this book](http://www.amazon.
 <img src="https://tyiannak.github.io/files/3.JPG" align="left" height="100"/>
 
 [Theodoros Giannakopoulos](https://tyiannak.github.io),
-Principal Researcher of Multimodal Machine Learning at the [Multimedia Analysis Group of the Computational Intelligence Lab (MagCIL)](https://labs-repos.iit.demokritos.gr/MagCIL/index.html) of the Institute of Informatics and Telecommunications, of the National Center for Scientific Research "Demokritos"
+Director of Research in Multimodal Machine Learning at [MagCIL](https://magcil.github.io), the Multimodal Analysis Group of the Institute of Informatics and Telecommunications, of the National Center for Scientific Research "Demokritos"
 
 
 ## About MagCIL
