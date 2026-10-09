@@ -1,6 +1,8 @@
 
 # <img src="icon.png" align="left" height="130"/> A Python library for audio feature extraction, classification, segmentation and applications
 
+> Developed at [**MagCIL**](https://magcil.github.io), the Multimodal Analysis Group of the Institute of Informatics and Telecommunications, [NCSR "Demokritos"](https://www.demokritos.gr/), Athens, Greece.
+
 *This is general info. Click [here](https://github.com/tyiannak/pyAudioAnalysis/wiki) for the complete wiki and [here](https://hackernoon.com/audio-handling-basics-how-to-process-audio-files-using-python-cli-jo283u3y) for a more generic intro to audio data handling*
 
 ## News
@@ -68,3 +70,25 @@ For Matlab-related audio analysis material check  [this book](http://www.amazon.
 [Theodoros Giannakopoulos](https://tyiannak.github.io),
 Principal Researcher of Multimodal Machine Learning at the [Multimedia Analysis Group of the Computational Intelligence Lab (MagCIL)](https://labs-repos.iit.demokritos.gr/MagCIL/index.html) of the Institute of Informatics and Telecommunications, of the National Center for Scientific Research "Demokritos"
 
+
+## About MagCIL
+
+This repository comes from [MagCIL](https://magcil.github.io), the Multimodal Analysis Group of the
+Institute of Informatics and Telecommunications at the National Centre for Scientific Research
+"Demokritos" in Athens, Greece. We work on multimodal deep learning for audio, speech, music and
+video, from fundamental research to deployed systems.
+
+- Group website: <https://magcil.github.io>
+- Publications: <https://magcil.github.io/pub.html>
+- All our open-source code and data: <https://magcil.github.io/code.html>
+- Work with us, in industry projects or research consortia: <https://magcil.github.io/collaborate.html>
+
+Other tools from the group:
+
+- [`deep_audio_features`](https://github.com/tyiannak/deep_audio_features) &mdash; training and using CNNs for audio classification (PyTorch)
+- [`deepaudio-x`](https://github.com/magcil/deepaudio-x) &mdash; a PyTorch framework for audio classification
+- [`deepaudio-lab`](https://github.com/magcil/deepaudio-lab) &mdash; a no-code platform for training, evaluating and deploying audio classifiers
+- [`amvoc`](https://github.com/tyiannak/amvoc) &mdash; analysis of mouse vocal communication
+- [`paura`](https://github.com/tyiannak/paura) &mdash; real-time audio recording and analysis
+
+The full list is at <https://github.com/magcil>.
