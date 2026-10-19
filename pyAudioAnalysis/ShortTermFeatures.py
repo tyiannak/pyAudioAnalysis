@@ -290,8 +290,10 @@ def chroma_features(signal, sampling_rate, num_fft):
     else:
         I = np.nonzero(num_chroma > num_chroma.shape[0])[0][0]
         C = np.zeros((num_chroma.shape[0],))
-        C[num_chroma[0:I - 1]] = spec
-        C /= num_freqs_per_chroma
+        if I > 1:
+            # If I <= 1 there are no chroma features that can be extracted
+            C[num_chroma[0:I - 1]] = spec[num_chroma[0:I - 1]]
+            C /= num_freqs_per_chroma
     final_matrix = np.zeros((12, 1))
     newD = int(np.ceil(C.shape[0] / 12.0) * 12)
     C2 = np.zeros((newD,))
